@@ -463,18 +463,20 @@ void area::SvArea::buttonPressed()
      }
       
     case bntReadSocket:
-      if(udp->isActive()) {
-        udp->stop();
-        while(udp->isActive()) QApplication::processEvents();
-      }
       
-      else 
-        udp->start();
+//      if(udp->isActive()) {
+//        udp->stop();
+        
+//        while(udp->isActive()) QApplication::processEvents();
+//      }
       
-      button->setChecked(_socketIsActive);
+//      else 
+//        udp->start();
       
-      _socketIsActive = !_socketIsActive;
-      qDebug() << "udp socket is NOT active" << _socketIsActive;
+//      button->setChecked(_socketIsActive);
+      
+//      _socketIsActive = !_socketIsActive;
+//      qDebug() << "udp socket is NOT active" << _socketIsActive;
 
       break;
       
@@ -524,25 +526,25 @@ void area::SvArea::mousePressed(QMouseEvent * event)
   _mouseButton = event->button();
   _mousePos = event->pos();
   
-  if(_editMode && (_mouseButton == Qt::LeftButton))
-  {
-    QPointF coord = point2geo(&_area_data, _mousePos.x(), _mousePos.y());
+//  if(_editMode && (_mouseButton == Qt::LeftButton))
+//  {
+//    QPointF coord = point2geo(&_area_data, _mousePos.x(), _mousePos.y());
     
-    BEACONEDITOR_UI = new SvBeaconEditor(this, -1, coord.x(), coord.y());
-    if(BEACONEDITOR_UI->exec() == QDialog::Accepted)
-    {
-      SvMapObjectBeaconPlanned* beacon = new SvMapObjectBeaconPlanned(this);
-      beacon->setId(BEACONEDITOR_UI->t_id);
-      beacon->setGeo(BEACONEDITOR_UI->t_lon, BEACONEDITOR_UI->t_lat);
-      beacon->setUid(BEACONEDITOR_UI->t_uid);
-      beacon->setDateTime(BEACONEDITOR_UI->t_date_time);
+//    BEACONEDITOR_UI = new SvBeaconEditor(this, -1, coord.x(), coord.y());
+//    if(BEACONEDITOR_UI->exec() == QDialog::Accepted)
+//    {
+//      SvMapObjectBeaconPlanned* beacon = new SvMapObjectBeaconPlanned(this);
+//      beacon->setId(BEACONEDITOR_UI->t_id);
+//      beacon->setGeo(BEACONEDITOR_UI->t_lon, BEACONEDITOR_UI->t_lat);
+//      beacon->setUid(BEACONEDITOR_UI->t_uid);
+//      beacon->setDateTime(BEACONEDITOR_UI->t_date_time);
       
-      scene->addMapObject(beacon);
-      setScale(_area_data.scale);      
-    }
-    BEACONEDITOR_UI->~SvBeaconEditor();
+//      scene->addMapObject(beacon);
+//      setScale(_area_data.scale);      
+//    }
+//    BEACONEDITOR_UI->~SvBeaconEditor();
     
-  }
+//  }
 }
 
 void area::SvArea::mouseReleased(QMouseEvent * event)
@@ -573,7 +575,8 @@ void area::SvArea::scaleInc()
   _area_data.scale *= 1.25;
   setScale(_area_data.scale);
   
-  centerAirplane();
+  if(_trackAirplane)
+    centerAirplane();
 }
 
 void area::SvArea::scaleDec()
@@ -584,7 +587,8 @@ void area::SvArea::scaleDec()
   _area_data.scale /= 1.25;
   setScale(_area_data.scale);
 
-  centerAirplane();
+  if(_trackAirplane)
+    centerAirplane();
 }
 
 void area::SvArea::setScale(qreal scale)
@@ -663,16 +667,16 @@ area::SvAreaView::SvAreaView(QWidget *parent, AREA_DATA *area_data) :
 {
   _area_data = area_data;
   
-  this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-  this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   
 //  this->setAlignment(Qt::AlignTop | Qt::AlignLeft); //!!
 //  this->setAlignment(Qt::AlignCenter | Qt::AlignHCenter);
     
-  this->setRenderHint(QPainter::Antialiasing, true);
+  setRenderHint(QPainter::Antialiasing, true);
 //  this->setDragMode(QGraphicsView::ScrollHandDrag); //  ScrollHandDrag RubberBandDrag  NoDrag);
-  this->setOptimizationFlags(QGraphicsView::DontSavePainterState);
-  this->setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
+  setOptimizationFlags(QGraphicsView::DontSavePainterState);
+  setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
   setStyleSheet("background-color: rgb(255, 255, 250)");
   setFocusPolicy(Qt::ClickFocus);
   
@@ -698,7 +702,7 @@ area::SvAreaView::SvAreaView(QWidget *parent, AREA_DATA *area_data) :
   _pen_coastLine.setStyle(Qt::SolidLine);
   _pen_coastLine.setWidth(2);  
   
-  this->setVisible(true);
+  setVisible(true);
   
 }
 
@@ -717,12 +721,13 @@ void area::SvAreaView::drawBackground(QPainter *painter, const QRectF &r)
     QPointF p0 = geo2point(_area_data, nodes.value(0).first, nodes.value(0).second);
     path.moveTo(p0);
     
-    for(int i = 1; i < nodes.count(); i++)
-    {
+    for(int i = 1; i < nodes.count(); i++) {
+      
       QPointF p1 = geo2point(_area_data, nodes.value(i).first, nodes.value(i).second);
       path.lineTo(p1);
 
     }
+    
     painter->drawPath(path);
 
   }
