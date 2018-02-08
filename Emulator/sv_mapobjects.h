@@ -15,8 +15,8 @@
 #include <QGradient>
 #include <QRadialGradient>
 
-#include "sv_mapobjects.h"
-#include "../../../Common/sv_sqlite.h"
+//#include "sv_mapobjects.h"
+#include "../../svlib/sv_sqlite.h"
 //#include "sv_beaconeditor.h"
 #include "geo_calculations.h"
 

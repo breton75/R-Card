@@ -1,0 +1,24 @@
+<RCC>
+  <qresource prefix="/buttons">
+    <file>Icons/Health.ico</file>
+    <file>Icons/Download.ico</file>
+    <file>Icons/Fullscreen.ico</file>
+    <file>Icons/Gear.ico</file>
+    <file>Icons/Gears.ico</file>
+    <file>Icons/Globe.ico</file>
+    <file>Icons/Hand.ico</file>
+    <file>Icons/Plane.ico</file>
+    <file>Icons/Down.ico</file>
+    <file>Icons/Left.ico</file>
+    <file>Icons/Right.ico</file>
+    <file>Icons/Up.ico</file>
+    <file>Icons/ZoomIn.ico</file>
+    <file>Icons/ZoomOut.ico</file>
+    <file>Icons/Pen.ico</file>
+    <file>Icons/Save.ico</file>
+    <file>Icons/Cancel.ico</file>
+    <file>Icons/AddBeacon.ico</file>
+    <file>Icons/Link.ico</file>
+    <file>Icons/Search.ico</file>
+  </qresource>
+</RCC>

@@ -29,13 +29,13 @@
 
 
 #include "../../svlib/sv_settings.h"
-#include "sv_vesselsymbol.h"
+//#include "sv_vesselsymbol.h"
 #include "geo_calculations.h"
 #include "sv_mapobjects.h"
 //#include "sv_udpstream.h"
 #include "../../svlib/sv_sqlite.h"
 
-//#include "sv_beaconeditor.h"
+#include "sv_vesseleditor.h"
 
 #define VALUES_INTERVAL MAJOR_LINE_INTERVAL/2
 #define RULER_SIZE 40
@@ -131,15 +131,15 @@ public:
     qreal scale();
     void setScale(qreal scale);
     
-    SvAreaScene* scene;
-    SvAreaView* view;
+    area::SvAreaScene* scene;
+    area::SvAreaView* view;
     
-    SvUdpReader* udp;
+//    SvUdpReader* udp;
     
     
     
-    SvHRuler* hruler;
-    SvVRuler* vruler;
+    area::SvHRuler* hruler;
+    area::SvVRuler* vruler;
 
     
     /* виджеты */
@@ -149,12 +149,12 @@ public:
     QFrame* frameRight;
     QVBoxLayout* vlayFrameRight;
     QWidget* widgetMap;
-    QList<AreaButton*> buttonsLeft;
-    QList<AreaButton*> buttonsRight;
+    QList<area::AreaButton*> buttonsLeft;
+    QList<area::AreaButton*> buttonsRight;
     
     QLabel* hint = nullptr;
 
-    
+    void updateGridStep();
     
     
 private:

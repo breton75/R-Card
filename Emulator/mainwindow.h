@@ -3,6 +3,11 @@
 
 #include <QMainWindow>
 #include <QDateTime>
+#include <QMessageBox>
+
+#include "sv_area.h"
+#include "../../svlib/sv_settings.h"
+#include "../../svlib/sv_sqlite.h"
 
 namespace Ui {
 class MainWindow;
@@ -17,10 +22,13 @@ public:
   ~MainWindow();
   
 public slots:
-  void on_bnStart_clicked();
+//  void on_bnStart_clicked();
   
 private:
   Ui::MainWindow *ui;
+  
+  area::SvArea* _area;
+  
 };
 
 #endif // MAINWINDOW_H

@@ -11,7 +11,7 @@
 
 #include "sv_area.h"
 
-class SvArea;
+//class SvArea;
 
 enum SvGraphicSymbolTypes
 {
@@ -23,7 +23,7 @@ enum SvGraphicSymbolTypes
 class SvBeackonSymbol: public QGraphicsItem
 {
 public:
-  explicit SvBeackonSymbol(SvArea* parent,
+  explicit SvBeackonSymbol(area::SvArea *parent,
                            bool allowEdit,
                            int id,
                            QString name,
@@ -39,7 +39,7 @@ public:
   QPainterPath shape() const Q_DECL_OVERRIDE;
   void paint(QPainter *painter, const QStyleOptionGraphicsItem *item, QWidget *widget) Q_DECL_OVERRIDE;
 
-  SvArea* parent;
+  area::SvArea* parent;
   int id;
   QString name;
   int item_type;

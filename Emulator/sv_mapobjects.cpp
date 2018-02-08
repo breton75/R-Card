@@ -1,7 +1,7 @@
 #include "sv_mapobjects.h"
 
 extern SvSQLITE* SQLITE;
-extern SvBeaconEditor* BEACONEDITOR_UI;
+//extern SvBeaconEditor* BEACONEDITOR_UI;
 
 SvMapObject::SvMapObject(QWidget* parent, qreal lon, qreal lat)
 {
@@ -145,12 +145,12 @@ SvMapObjectBeaconPlanned::SvMapObjectBeaconPlanned(QWidget *parent):
 
 void SvMapObjectBeaconPlanned::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
-  BEACONEDITOR_UI = new SvBeaconEditor(nullptr, id());
-  if(BEACONEDITOR_UI->exec() == QDialog::Accepted)
-  {
+//  BEACONEDITOR_UI = new SvBeaconEditor(nullptr, id());
+//  if(BEACONEDITOR_UI->exec() == QDialog::Accepted)
+//  {
  
-  }
-  BEACONEDITOR_UI->~SvBeaconEditor();
+//  }
+//  BEACONEDITOR_UI->~SvBeaconEditor();
 
   SvMapObject::mouseDoubleClickEvent(event);
 
@@ -164,23 +164,23 @@ void SvMapObjectBeaconPlanned::contextMenuEvent(QGraphicsSceneContextMenuEvent *
   menu.addAction(removeAction);
   
   QAction *a = menu.exec(event->screenPos());
-  if(removeAction == a)
-  {
-    QSqlError err = SQLITE->execSQL(QString("delete from plan where id=%1").arg(id()));
-    if(err.type() != QSqlError::NoError)
-     QMessageBox::critical(0, "Ошибка", err.databaseText(), QMessageBox::Ok);
+//  if(removeAction == a)
+//  {
+//    QSqlError err = SQLITE->execSQL(QString("delete from plan where id=%1").arg(id()));
+//    if(err.type() != QSqlError::NoError)
+//     QMessageBox::critical(0, "Ошибка", err.databaseText(), QMessageBox::Ok);
     
-    this->scene()->removeItem(this);
-  }
-  else if (editAction == a)
-  {
-    BEACONEDITOR_UI = new SvBeaconEditor(nullptr, id());
-    if(BEACONEDITOR_UI->exec() == QDialog::Accepted)
-    {
+//    this->scene()->removeItem(this);
+//  }
+//  else if (editAction == a)
+//  {
+//    BEACONEDITOR_UI = new SvBeaconEditor(nullptr, id());
+//    if(BEACONEDITOR_UI->exec() == QDialog::Accepted)
+//    {
      
-    }
-    BEACONEDITOR_UI->~SvBeaconEditor();
-  }
+//    }
+//    BEACONEDITOR_UI->~SvBeaconEditor();
+//  }
 }
 
 /** ************** BEACON ACTIVE ****************** **/
@@ -260,7 +260,8 @@ void SvMapObjectRadius::setup(SvMapObjectAirplane* airplane, SvMapObjectBeaconPl
   _course = airplane->angle();
   
   /* выводим расстояние */
-  qreal distance = geo1_geo2_distance(airplane->lon(), airplane->lat(), beacon->lon(), beacon->lat());
+//  geo::geo1_geo2_distance(1.0, 2.0, 3.0, 4.0);
+  qreal distance = geo::geo1_geo2_distance(airplane->lon(), airplane->lat(), beacon->lon(), beacon->lat());
   QString lbl = distance > 1000 ? QString("%1 км.").arg(distance / 1000.0, 0, 'g', 2) : QString("%1 м.").arg(int(distance));
   _pathText.addText(beacon->pos().x() - this->x(), beacon->pos().y() - this->y() + 12, QFont("Courier New", 10), lbl);
 

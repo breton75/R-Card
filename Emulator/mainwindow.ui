@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>473</width>
+    <width>439</width>
     <height>482</height>
    </rect>
   </property>
@@ -28,7 +28,7 @@
       </property>
       <widget class="QWidget" name="tabSelf">
        <attribute name="title">
-        <string>Собственные параметры</string>
+        <string>Собственные параметры движения</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_11">
         <item>
@@ -451,7 +451,6 @@
          </spacer>
         </item>
        </layout>
-       <zorder>groupBox_8</zorder>
        <zorder>groupBox_6</zorder>
        <zorder>groupBox_2</zorder>
        <zorder>groupBox_8</zorder>
@@ -490,7 +489,7 @@
               <string/>
              </property>
              <property name="icon">
-              <iconset resource="../../MAX/test_1/res.qrc">
+              <iconset>
                <normaloff>:/Common/Icons/google/Rss-Upload.ico</normaloff>:/Common/Icons/google/Rss-Upload.ico</iconset>
              </property>
              <property name="flat">
@@ -630,8 +629,8 @@
                  <string/>
                 </property>
                 <property name="icon">
-                 <iconset resource="../../MAX/test_1/res.qrc">
-                  <normaloff>:/Common/Icons/Basic/Health.ico</normaloff>:/Common/Icons/Basic/Health.ico</iconset>
+                 <iconset resource="res.qrc">
+                  <normaloff>:/buttons/Icons/Health.ico</normaloff>:/buttons/Icons/Health.ico</iconset>
                 </property>
                 <property name="flat">
                  <bool>true</bool>
@@ -653,8 +652,8 @@
                  <string/>
                 </property>
                 <property name="icon">
-                 <iconset resource="../../MAX/test_1/res.qrc">
-                  <normaloff>:/Common/Icons/Basic/Pen.ico</normaloff>:/Common/Icons/Basic/Pen.ico</iconset>
+                 <iconset resource="res.qrc">
+                  <normaloff>:/buttons/Icons/Pen.ico</normaloff>:/buttons/Icons/Pen.ico</iconset>
                 </property>
                 <property name="flat">
                  <bool>true</bool>
@@ -676,8 +675,8 @@
                  <string/>
                 </property>
                 <property name="icon">
-                 <iconset resource="../../MAX/test_1/res.qrc">
-                  <normaloff>:/Common/Icons/Basic/Cancel.ico</normaloff>:/Common/Icons/Basic/Cancel.ico</iconset>
+                 <iconset resource="res.qrc">
+                  <normaloff>:/buttons/Icons/Cancel.ico</normaloff>:/buttons/Icons/Cancel.ico</iconset>
                 </property>
                 <property name="flat">
                  <bool>true</bool>
@@ -748,7 +747,7 @@
               <string/>
              </property>
              <property name="icon">
-              <iconset resource="../../MAX/test_1/res.qrc">
+              <iconset>
                <normaloff>:/Common/Icons/google/Rss-Upload.ico</normaloff>:/Common/Icons/google/Rss-Upload.ico</iconset>
              </property>
              <property name="flat">
@@ -873,7 +872,7 @@
               <string/>
              </property>
              <property name="icon">
-              <iconset resource="../../MAX/test_1/res.qrc">
+              <iconset>
                <normaloff>:/Common/Icons/google/Rss-Upload.ico</normaloff>:/Common/Icons/google/Rss-Upload.ico</iconset>
              </property>
              <property name="flat">
@@ -1235,7 +1234,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>473</width>
+     <width>439</width>
      <height>21</height>
     </rect>
    </property>
@@ -1249,10 +1248,24 @@
    </attribute>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QDockWidget" name="dockWidget">
+   <property name="floating">
+    <bool>true</bool>
+   </property>
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents">
+    <layout class="QVBoxLayout" name="vlayDock"/>
+   </widget>
+  </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
-  <include location="../../MAX/test_1/res.qrc"/>
+  <include location="res.qrc"/>
  </resources>
  <connections/>
 </ui>

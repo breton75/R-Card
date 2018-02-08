@@ -229,15 +229,15 @@ void area::SvArea::trackAirplane(qreal lon, qreal lat, int angle)
   dir->setPen(QColor(0, 255, 100, 200).dark(), Qt::SolidLine, 1);
   scene->addMapObject(dir);
   
-  _trackPoints.insert(GEO(lon, lat, QDateTime::currentDateTime()), dir); // scene->addEllipse(newPoint.x(), newPoint.y(), 3, 3, _trackPen, _trackBrush));
+  _trackPoints.insert(geo::POSITION(lon, lat, angle, QDateTime::currentDateTime()), dir); // scene->addEllipse(newPoint.x(), newPoint.y(), 3, 3, _trackPen, _trackBrush));
   
   /* лишние точки убираем */
-  foreach (GEO geo, _trackPoints.keys()) {
-    if(geo.time.secsTo(QDateTime::currentDateTime()) > _track_secs)
+  foreach (geo::POSITION geopos, _trackPoints.keys()) {
+    if(geopos.utc().secsTo(QDateTime::currentDateTime()) > _track_secs)
     {
-      scene->removeMapObject(_trackPoints.value(geo)); // MapObject(_trackPoints.value(geo));
-      _trackPoints.value(geo)->~QGraphicsItem();
-      _trackPoints.remove(geo);      
+      scene->removeMapObject(_trackPoints.value(geopos)); // MapObject(_trackPoints.value(geo));
+      _trackPoints.value(geopos)->~QGraphicsItem();
+      _trackPoints.remove(geopos);      
     }
   }
   
@@ -600,7 +600,7 @@ void area::SvArea::setScale(qreal scale)
   _area_data.koeff.lat = _area_data.area_curr_size.height() / (_area_data.geo_bounds.max_lat - _area_data.geo_bounds.min_lat);
   
   /* подбираем шаг сетки */
-  getGridStep(&_area_data);
+  updateGridStep();
   
   /* обновляем сцену */
   scene->setSceneRect(QRectF(0, 0, _area_data.area_curr_size.width(), _area_data.area_curr_size.height()));
@@ -640,6 +640,21 @@ void area::SvArea::centerAirplane()
   view->move(xc - airplane_pos.x(), yc - airplane_pos.y());
 }
 
+void area::SvArea::updateGridStep()
+{
+  /* считаем в метрах */
+//  qreal area_meters = 1000 * lon1_lon2_distance(_area_data.geo_bounds.min_lon, _area_data.geo_bounds.max_lon, area_data->geo_bounds.max_lat);
+  qreal area_meters = 1000 * lat1_lat2_distance(_area_data.geo_bounds.min_lat, _area_data.geo_bounds.max_lat, _area_data.geo_bounds.max_lon);
+  
+  int line_count = _area_data.area_curr_size.width() / MINOR_LINE_INTERVAL;
+  _area_data.gridCellDistance = quint64(trunc(area_meters / line_count));
+  
+  while(_area_data.gridCellDistance % 50)
+    _area_data.gridCellDistance++;
+  
+  _area_data.gridCellStep = _area_data.gridCellDistance * _area_data.area_curr_size.width() / area_meters;
+  
+}
 
 /** ****** AREA SCENE ****** **/
 area::SvAreaScene::SvAreaScene(AREA_DATA *area_data)

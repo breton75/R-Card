@@ -17,7 +17,7 @@ namespace geo {
   class POSITION;
   class BOUNDS;
   
-  qreal geo1_geo2_distance(qreal lon1, qreal lat1, qreal lon2, qreal lat2);
+   qreal geo1_geo2_distance(qreal lon1, qreal lat1, qreal lon2, qreal lat2);
   
 }
 
@@ -54,8 +54,8 @@ public:
   
 //  bool operator !=(const geo::POSITION &other) const { return (_latitude != other.latitude && _longtitude != other.longtitude); }
 //  bool operator ==(const geo::POSITION &other) const { return (_latitude == other.latitude && _longtitude == other.longtitude); }
-//  bool operator >(const geo::POSITION &other) const  { return (_latitude >  other.latitude && _longtitude > other.longtitude); }
-//  bool operator <(const geo::POSITION &other) const  { return (_latitude <  other.latitude && _longtitude < other.longtitude); }
+  bool operator > (const geo::POSITION &other) const { return (this->_latitude >  other._latitude && this->_longtitude > other._longtitude); }
+  bool operator < (const geo::POSITION &other) const { return (this->_latitude <  other._latitude && this->_longtitude < other._longtitude); }
 //  bool operator <=(const geo::POSITION &other) const { return (_latitude <= other.latitude && _longtitude <= other.longtitude); }
 //  bool operator >=(const geo::POSITION &other) const { return (_latitude >= other.latitude && _longtitude >= other.longtitude); }
 

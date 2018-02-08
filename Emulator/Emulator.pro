@@ -29,7 +29,10 @@ SOURCES += main.cpp\
     sv_vessel.cpp \
     sv_area.cpp \
     sv_vesselsymbol.cpp \
-    sv_mapobjects.cpp
+    sv_mapobjects.cpp \
+    ../../svlib/sv_settings.cpp \
+    ../../svlib/sv_sqlite.cpp \
+    sv_vesseleditor.cpp
 
 HEADERS  += mainwindow.h \
     types.h \
@@ -37,6 +40,13 @@ HEADERS  += mainwindow.h \
     sv_vessel.h \
     sv_area.h \
     sv_vesselsymbol.h \
-    sv_mapobjects.h
+    sv_mapobjects.h \
+    ../../svlib/sv_settings.h \
+    ../../svlib/sv_sqlite.h \
+    sv_vesseleditor.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    sv_vesseleditor.ui
+
+RESOURCES += \
+    res.qrc

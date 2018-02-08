@@ -25,7 +25,7 @@ qreal LON1DL[90] =
  111.7, 111.7, 111.7, 111.7, 111.7, 111.7, 111.7, 111.7, 111.7, 111.7  };
 
 
-qreal geo1_geo2_distance(qreal lon1, qreal lat1, qreal lon2, qreal lat2)
+qreal geo::geo1_geo2_distance(qreal lon1, qreal lat1, qreal lon2, qreal lat2)
 {
   /* расстояние между двумя долготами */
   qreal lat = (lat1 + lat2) / 2.0; // средняя широта

@@ -1,6 +1,6 @@
 #include "sv_vesselsymbol.h"
 
-SvBeackonSymbol::SvBeackonSymbol(SvArea *parent,
+SvBeackonSymbol::SvBeackonSymbol(area::SvArea *parent,
                                  bool allowEdit,
                                  int id,
                                  QString name,
