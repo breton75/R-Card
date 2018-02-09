@@ -131,6 +131,9 @@ public:
     qreal scale();
     void setScale(qreal scale);
     
+    area::AREA_DATA* areaData() const { return &_area_data; }
+    geo::BOUNDS bounds() const { return _area_data.geo_bounds; }
+    
     area::SvAreaScene* scene;
     area::SvAreaView* view;
     

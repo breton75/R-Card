@@ -8,6 +8,7 @@
 #include "sv_area.h"
 #include "../../svlib/sv_settings.h"
 #include "../../svlib/sv_sqlite.h"
+#include "sv_vessel.h"
 
 namespace Ui {
 class MainWindow;
@@ -23,6 +24,13 @@ public:
   
 public slots:
 //  void on_bnStart_clicked();
+ 
+  vsl::InitParams fillVesselInitParams(QSqlQuery* q) const;
+  vsl::VesselStaticData fillVesselStaticData(QSqlQuery* q) const;
+  vsl::VesselVoyageData fillVesselVoyageData(QSqlQuery* q) const;
+  geo::POSITION fillVesselPosition(QSqlQuery* q) const;
+  QString fillVesselNavStatus(QSqlQuery* q) const;
+  
   
 private:
   Ui::MainWindow *ui;

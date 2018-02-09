@@ -1,21 +1,25 @@
 #include "sv_vessel.h"
 
-SvVessel::SvVessel(const vsl::GPSParams &params, QObject *parent) :
+vsl::SvVessel* SELF;
+QMap<int, vsl::SvVessel*> VESSELS;
+
+vsl::SvVessel::SvVessel(QObject *parent) :
   QObject(parent)
 {
 //   qRegisterMetaType<gps::GEO>("gps::GEO");
    
-   _gps_params = params;
+//   _init_params = params;
+//   _static_data = sdata;
+//   _voyage_data = vdata;
    
-   _gps_thr = new SvGPSThread(_gps_params);
-   connect(_gps_thr, &QThread::finished, &QThread::deleteLater);
-   connect(_gps_thr, SIGNAL(new_position(qreal, qreal, qreal)), this, SLOT(new_position(qreal, qreal, qreal)));
-   _gps_thr->start();
+//   _dynamic_data.position.setCoordinates(_init_params.);
+   
+
    
    
 }
 
-SvVessel::~SvVessel()
+vsl::SvVessel::~SvVessel()
 {
   if(_gps_thr) 
     delete _gps_thr;
@@ -24,34 +28,40 @@ SvVessel::~SvVessel()
   
 }
 
-void SvVessel::new_position(qreal lon, qreal lat, qreal course)
+void vsl::SvVessel::new_position(qreal lon, qreal lat, qreal course)
 {
 //  data.
 }
 
-
+void vsl::SvVessel::start()
+{
+   _gps_thr = new vsl::SvGPSThread(_init_params);
+   connect(_gps_thr, &QThread::finished, &QThread::deleteLater);
+   connect(_gps_thr, SIGNAL(new_position(qreal, qreal, qreal)), this, SLOT(new_position(qreal, qreal, qreal)));
+   _gps_thr->start();
+}
 
 /*************** SvGPSThread ***************/
-SvGPSThread::SvGPSThread(const vsl::GPSParams &gpsParams, geo::BOUNDS *bounds)
+vsl::SvGPSThread::SvGPSThread(const InitParams &initParams, geo::BOUNDS *bounds)
 {
-  _gps_params = gpsParams;
+  _init_params = initParams;
   _bounds = bounds;
   
 }
 
-SvGPSThread::~SvGPSThread()
+vsl::SvGPSThread::~SvGPSThread()
 {
   stop();
   deleteLater();
 }
 
-void SvGPSThread::stop()
+void vsl::SvGPSThread::stop()
 {
   _started = false;
   while(!_finished) QApplication::processEvents();
 }
 
-void SvGPSThread::run()
+void vsl::SvGPSThread::run()
 {
   /* свои начальные координаты */
   _current_position.setLongtitude((_bounds->min_lon+ _bounds->max_lon) / 2);
@@ -66,9 +76,9 @@ void SvGPSThread::run()
   
   while(_started) {
     
-    if(_gps_params.course_change_ratio && 
-       _gps_params.course_change_segment && 
-       (course_segment_counter > _gps_params.course_change_segment)) {
+    if(_init_params.course_change_ratio && 
+       _init_params.course_change_segment && 
+       (course_segment_counter > _init_params.course_change_segment)) {
       
       /* вычисляем новый угол поворота */
 //      int a = qrand() % _gps_params.course_change_ratio;
@@ -79,9 +89,9 @@ void SvGPSThread::run()
       
     }
     
-    if(_gps_params.speed_change_ratio && 
-       _gps_params.speed_change_segment && 
-       (speed_segment_counter > _gps_params.speed_change_segment)) {
+    if(_init_params.speed_change_ratio && 
+       _init_params.speed_change_segment && 
+       (speed_segment_counter > _init_params.speed_change_segment)) {
       
       
       
@@ -89,7 +99,7 @@ void SvGPSThread::run()
     
     emit new_position(_current_position.longtitude(), _current_position.latitude(), _current_position.course());
     
-    msleep(_gps_params.gps_timeout);
+    msleep(_init_params.gps_timeout);
     
   }
   

@@ -32,7 +32,9 @@ SOURCES += main.cpp\
     sv_mapobjects.cpp \
     ../../svlib/sv_settings.cpp \
     ../../svlib/sv_sqlite.cpp \
-    sv_vesseleditor.cpp
+    sv_vesseleditor.cpp \
+    sv_vesselmotioneditor.cpp \
+    sv_vesselposition.cpp
 
 HEADERS  += mainwindow.h \
     types.h \
@@ -43,10 +45,16 @@ HEADERS  += mainwindow.h \
     sv_mapobjects.h \
     ../../svlib/sv_settings.h \
     ../../svlib/sv_sqlite.h \
-    sv_vesseleditor.h
+    sv_vesseleditor.h \
+    sv_vesselmotioneditor.h \
+    sv_vesselposition.h
 
 FORMS    += mainwindow.ui \
-    sv_vesseleditor.ui
+    sv_vesseleditor.ui \
+    sv_vesselmotioneditor.ui \
+    sv_vesselposition.ui
 
 RESOURCES += \
     res.qrc
+
+STATECHARTS +=

@@ -15,41 +15,43 @@
 namespace geo {
 
   class POSITION;
-  class BOUNDS;
+  struct BOUNDS;
+  struct COORD;
   
    qreal geo1_geo2_distance(qreal lon1, qreal lat1, qreal lon2, qreal lat2);
   
+   quint32 get_rnd_course();
+   geo::COORD get_rnd_position(geo::BOUNDS &bounds) const;
 }
 
 class geo::POSITION 
 {
 public:
-  explicit POSITION(qreal longtitude, qreal latitude, qreal course, QDateTime utc)  {
+  explicit POSITION(geo::COORD coord, qreal course, QDateTime utc)  {
     
     qRegisterMetaType<geo::POSITION>("geo::POSITION");
     
-    _longtitude = longtitude;
-    _latitude = latitude;
+    _coord.latitude =   coord.latitude;
+    _coord.longtitude = coord.longtitude;
     _course = course;
     _utc = utc;
   }
   
   explicit POSITION() {  }  
   
-  void setLatitude(qreal latitude) { _latitude = latitude; }
-  void setLongtitude(qreal longtitude) { _longtitude = longtitude; }
+  void setCoordinates(geo::COORD coord) { _coord.latitude =   coord.latitude;
+                                          _coord.longtitude = coord.longtitude; }
   void setCourse(qreal course) { _course = course; }
   void setUTC(QDateTime utc) { _utc = utc; }
   
-  qreal latitude() { return _latitude; }
-  qreal longtitude() { return _longtitude; }
+  geo::COORD coordinates() { return _coord; }
   qreal course() { return _course; }
   qreal angular_speed() { return _angular_speed; } // Угловая скорость поворота
   QDateTime utc() { return _utc; }
   
   
-  qreal distanceTo(geo::POSITION& o) { 
-    return geo::geo1_geo2_distance(_longtitude, o.longtitude(), _latitude, o.latitude());
+  qreal distanceTo(geo::COORD& coord) { 
+    return geo::geo1_geo2_distance(_coord.longtitude, coord.longtitude, _coord.latitude, coord.latitude);
   }
   
 //  bool operator !=(const geo::POSITION &other) const { return (_latitude != other.latitude && _longtitude != other.longtitude); }
@@ -60,8 +62,7 @@ public:
 //  bool operator >=(const geo::POSITION &other) const { return (_latitude >= other.latitude && _longtitude >= other.longtitude); }
 
 private:  
-  qreal _latitude;
-  qreal _longtitude;
+  geo::COORD _coord;
   qreal _course;
   qreal _angular_speed;
   QDateTime _utc;
@@ -73,6 +74,11 @@ struct geo::BOUNDS {
   qreal min_lon;
   qreal max_lat; 
   qreal max_lon;
+};
+
+struct geo::COORD {
+  qreal latitude;
+  qreal longtitude;  
 };
 
 struct KOEFF {

@@ -46,6 +46,33 @@ qreal geo::geo1_geo2_distance(qreal lon1, qreal lat1, qreal lon2, qreal lat2)
   
 }
 
+quint32 geo::get_rnd_course()
+{
+  /* начальный угол поворота */
+  QTime t(0,0,0);
+  qsrand(t.secsTo(QTime::currentTime()));
+
+  quint32 result = qrand() % 360;
+  
+  return result;
+}
+
+geo::COORD geo::get_rnd_position(geo::BOUNDS &bounds)
+{
+  geo::COORD result;
+  QTime t(0,0,0);
+  qreal lat_diff = bounds.max_lat - bounds.min_lat;
+  qreal lon_diff = bounds.max_lon - bounds.min_lon;
+  
+  qsrand(t.secsTo(QTime::currentTime()));
+  
+  result.latitude = bounds.min_lat + rnd % lat_diff;
+  result.longtitude = bounds.min_lon + rnd % lon_diff;
+  
+  return result;
+  
+}
+
 qreal lon1_lon2_distance(qreal min_lon, qreal max_lon, qreal lat)
 {
   /* для северной широты ! */  

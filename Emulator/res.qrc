@@ -1,5 +1,8 @@
 <RCC>
   <qresource prefix="/buttons">
+    <file>Icons/Info.ico</file>
+    <file>Icons/Info2.ico</file>
+    <file>Icons/Loop.ico</file>
     <file>Icons/Health.ico</file>
     <file>Icons/Download.ico</file>
     <file>Icons/Fullscreen.ico</file>
