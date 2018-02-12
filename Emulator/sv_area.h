@@ -30,7 +30,7 @@
 
 #include "../../svlib/sv_settings.h"
 //#include "sv_vesselsymbol.h"
-#include "geo_calculations.h"
+#include "geo.h"
 #include "sv_mapobjects.h"
 //#include "sv_udpstream.h"
 #include "../../svlib/sv_sqlite.h"
@@ -131,7 +131,7 @@ public:
     qreal scale();
     void setScale(qreal scale);
     
-    area::AREA_DATA* areaData() const { return &_area_data; }
+    area::AREA_DATA* areaData() { return &_area_data; }
     geo::BOUNDS bounds() const { return _area_data.geo_bounds; }
     
     area::SvAreaScene* scene;
@@ -169,7 +169,10 @@ private:
   int _last_airplane_angle = -1;
 
 //  QMap<GEO, QGraphicsEllipseItem*> _trackPoints;
+  
+  /**
   QMap<geo::POSITION, SvMapObjectDirection*> _trackPoints;
+  **/
   
   QTime _track_time = QTime(0, 0, 30, 0);
   quint64 _track_secs;

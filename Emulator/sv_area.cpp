@@ -172,6 +172,7 @@ area::SvArea::~SvArea()
 
 void area::SvArea::trackAirplane(qreal lon, qreal lat, int angle)
 {
+  /**
   QPointF newPoint = geo2point(&_area_data, lon, lat);
   
   SvMapObjectRadius* mapRadius = nullptr;
@@ -182,7 +183,7 @@ void area::SvArea::trackAirplane(qreal lon, qreal lat, int angle)
     
     switch (obj->type()) {
       
-      case motAirplane:  /* новое положение самолета */
+      case motAirplane: 
         
         airplane = (SvMapObjectAirplane*)obj;
         airplane->setGeo(lon, lat);
@@ -221,7 +222,7 @@ void area::SvArea::trackAirplane(qreal lon, qreal lat, int angle)
   if(airplane && mapRadius && nearestBeacon)
     mapRadius->setup(airplane, nearestBeacon); // nearestBeacon->pos().x(), nearestBeacon->pos().y(), distance, angle);
   
-  /* новая точка пути */
+  // новая точка пути 
   SvMapObjectDirection* dir = new SvMapObjectDirection(this, lon, lat);
   dir->setPos(newPoint);
   dir->setAngle(angle);
@@ -231,7 +232,7 @@ void area::SvArea::trackAirplane(qreal lon, qreal lat, int angle)
   
   _trackPoints.insert(geo::POSITION(lon, lat, angle, QDateTime::currentDateTime()), dir); // scene->addEllipse(newPoint.x(), newPoint.y(), 3, 3, _trackPen, _trackBrush));
   
-  /* лишние точки убираем */
+  // лишние точки убираем 
   foreach (geo::POSITION geopos, _trackPoints.keys()) {
     if(geopos.utc().secsTo(QDateTime::currentDateTime()) > _track_secs)
     {
@@ -243,7 +244,7 @@ void area::SvArea::trackAirplane(qreal lon, qreal lat, int angle)
   
   if(_trackAirplane)
     centerAirplane();
-  
+  **/
   scene->update();
 }
 
@@ -613,13 +614,13 @@ void area::SvArea::setScale(qreal scale)
   scene->rbsq->setPos(_area_data.area_curr_size.width() - cs - 2, _area_data.area_curr_size.height() - cs - 2);
 
   view->resize(_area_data.area_curr_size.width(), _area_data.area_curr_size.height());
-  
-  /* пересчитываем координаты всех объектов */
+  /**
+  // пересчитываем координаты всех объектов 
   foreach (SvMapObject* item, scene->mapObjects()) {
     const QPointF p = geo2point(&_area_data, item->lon(), item->lat());
     item->setPos(p);
   }
-  
+  **/
 }
 
 void area::SvArea::centerAirplane()

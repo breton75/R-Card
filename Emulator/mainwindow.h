@@ -9,6 +9,10 @@
 #include "../../svlib/sv_settings.h"
 #include "../../svlib/sv_sqlite.h"
 #include "sv_vessel.h"
+#include "sv_idevice.h"
+#include "sv_gps.h"
+
+#include "sql_defs.h"
 
 namespace Ui {
 class MainWindow;
@@ -25,7 +29,7 @@ public:
 public slots:
 //  void on_bnStart_clicked();
  
-  vsl::InitParams fillVesselInitParams(QSqlQuery* q) const;
+//  gps::GPSParams fillVesselInitParams(QSqlQuery* q) const;
   vsl::VesselStaticData fillVesselStaticData(QSqlQuery* q) const;
   vsl::VesselVoyageData fillVesselVoyageData(QSqlQuery* q) const;
   geo::POSITION fillVesselPosition(QSqlQuery* q) const;

@@ -4,7 +4,7 @@
 #include <QDialog>
 
 namespace Ui {
-class SvVesselMotionEditor;
+class SvVesselMotionEditorDialog;
 }
 
 class SvVesselMotionEditor : public QDialog
@@ -16,7 +16,7 @@ public:
   ~SvVesselMotionEditor();
   
 private:
-  Ui::SvVesselMotionEditor *ui;
+  Ui::SvVesselMotionEditorDialog *ui;
 };
 
 #endif // SV_VESSELMOTIONEDITOR_H

@@ -3,7 +3,7 @@
 
 SvVesselMotionEditor::SvVesselMotionEditor(QWidget *parent) :
   QDialog(parent),
-  ui(new Ui::SvVesselMotionEditor)
+  ui(new Ui::SvVesselMotionEditorDialog)
 {
   ui->setupUi(this);
 }

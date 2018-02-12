@@ -1,4 +1,4 @@
-#include "geo_calculations.h"
+#include "geo.h"
 
 /* длина 1 градуса в зависимости от широты, км */
 qreal LAT1DL[91] = 
@@ -57,7 +57,7 @@ quint32 geo::get_rnd_course()
   return result;
 }
 
-geo::COORD geo::get_rnd_position(geo::BOUNDS &bounds)
+geo::COORD geo::get_rnd_position(const geo::BOUNDS& bounds)
 {
   geo::COORD result;
   QTime t(0,0,0);
@@ -66,9 +66,10 @@ geo::COORD geo::get_rnd_position(geo::BOUNDS &bounds)
   
   qsrand(t.secsTo(QTime::currentTime()));
   
-  result.latitude = bounds.min_lat + rnd % lat_diff;
+  /**
+  result.latitude = bounds.min_lat + rnd() % lat_diff;
   result.longtitude = bounds.min_lon + rnd % lon_diff;
-  
+  **/
   return result;
   
 }

@@ -3,13 +3,13 @@
 extern SvSQLITE* SQLITE;
 //extern SvBeaconEditor* BEACONEDITOR_UI;
 
-SvMapObject::SvMapObject(QWidget* parent, qreal lon, qreal lat)
+SvMapObject::SvMapObject(QWidget* parent, const geo::COORD &coord, qreal course)
 {
   setFlags(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemClipsToShape);
   setAcceptHoverEvents(true);
   
-  _lon = lon;
-  _lat = lat;
+//  _lon = lon;
+//  _lat = lat;
   
   _path = new QPainterPath();
 }
@@ -21,8 +21,10 @@ SvMapObject::~SvMapObject()
 
 void SvMapObject::hoverEnterEvent(QGraphicsSceneHoverEvent *)
 {
+  /**
   this->setToolTip(QString("Долгота: %1\n Широта: %2").arg(_lon).arg(_lat));
   this->update();
+  **/
 }
 
 void SvMapObject::hoverLeaveEvent(QGraphicsSceneHoverEvent *)
@@ -102,8 +104,8 @@ QPainterPath SvMapObject::shape() const
 /** ************** AIRPLANE ************************/
 /** ************************************************/
 
-SvMapObjectAirplane::SvMapObjectAirplane(QWidget *parent, qreal lon, qreal lat):
-  SvMapObject(parent, lon, lat)
+SvMapObjectAirplane::SvMapObjectAirplane(QWidget *parent, const geo::COORD &coord, qreal course):
+  SvMapObject(parent, coord, course)
 {
   /* формируем контур фигуры */
   path()->moveTo(points[0]);  
@@ -117,6 +119,7 @@ SvMapObjectAirplane::SvMapObjectAirplane(QWidget *parent, qreal lon, qreal lat):
 /** ************** BEACON **************************/
 /** ************************************************/
 
+/**
 SvMapObjectBeaconAbstract::SvMapObjectBeaconAbstract(QWidget* parent, const qreal lon, const qreal lat,
                                                      const int id, const QString &uid, const QDateTime &dateTime):
   SvMapObject(parent, lon, lat)
@@ -125,6 +128,7 @@ SvMapObjectBeaconAbstract::SvMapObjectBeaconAbstract(QWidget* parent, const qrea
   _uid = uid;
   _date_time = dateTime;
 }
+**/
 
 /** ************** BEACON PLANNED ****************** **/
 SvMapObjectBeaconPlanned::SvMapObjectBeaconPlanned(QWidget *parent):
@@ -221,8 +225,8 @@ void SvMapObjectBeaconActive::paint(QPainter *painter, const QStyleOptionGraphic
 /** ************** RADIUS **************************/
 /** ************************************************/
 
-SvMapObjectRadius::SvMapObjectRadius(QWidget *parent, qreal lon, qreal lat):
-  SvMapObject(parent, lon, lat)
+SvMapObjectRadius::SvMapObjectRadius(QWidget *parent, const geo::COORD &coord, qreal course):
+  SvMapObject(parent, coord, course)
 {
   setFlags(0);
   setAcceptHoverEvents(false);
@@ -257,14 +261,17 @@ void SvMapObjectRadius::setup(SvMapObjectAirplane* airplane, SvMapObjectBeaconPl
   _pathRadius.lineTo(beacon->pos().x() - this->x(), beacon->pos().y() - this->y());
   _pathCircle.addEllipse(-_radius, -_radius, _radius * 2, _radius * 2);
   _pathCourse.lineTo(0, -_radius);
+  /**
   _course = airplane->angle();
+  **/
   
   /* выводим расстояние */
 //  geo::geo1_geo2_distance(1.0, 2.0, 3.0, 4.0);
+  /**
   qreal distance = geo::geo1_geo2_distance(airplane->lon(), airplane->lat(), beacon->lon(), beacon->lat());
   QString lbl = distance > 1000 ? QString("%1 км.").arg(distance / 1000.0, 0, 'g', 2) : QString("%1 м.").arg(int(distance));
   _pathText.addText(beacon->pos().x() - this->x(), beacon->pos().y() - this->y() + 12, QFont("Courier New", 10), lbl);
-
+**/
   update();
 }
 
@@ -305,18 +312,19 @@ QPainterPath SvMapObjectRadius::shape() const
 /** ************** DIRECTION ***********************/
 /** ************************************************/
 
+/**
 SvMapObjectDirection::SvMapObjectDirection(QWidget* parent, qreal lon, qreal lat):
   SvMapObject(parent, lon, lat)
 {
   setFlags(QGraphicsItem::ItemStacksBehindParent);
   setAcceptHoverEvents(false);
 
-  /* формируем контур фигуры */
+  // формируем контур фигуры 
   path()->moveTo(-3, 2); 
   path()->lineTo(0, -2);
   path()->lineTo(3, 2);
   path()->lineTo(-3, 2);
 
 }
-
+**/
 

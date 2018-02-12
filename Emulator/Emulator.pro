@@ -25,7 +25,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    geo_calculations.cpp \
     sv_vessel.cpp \
     sv_area.cpp \
     sv_vesselsymbol.cpp \
@@ -34,11 +33,12 @@ SOURCES += main.cpp\
     ../../svlib/sv_sqlite.cpp \
     sv_vesseleditor.cpp \
     sv_vesselmotioneditor.cpp \
-    sv_vesselposition.cpp
+    sv_vesselposition.cpp \
+    geo.cpp \
+    sv_gps.cpp
 
 HEADERS  += mainwindow.h \
     types.h \
-    geo_calculations.h \
     sv_vessel.h \
     sv_area.h \
     sv_vesselsymbol.h \
@@ -47,7 +47,11 @@ HEADERS  += mainwindow.h \
     ../../svlib/sv_sqlite.h \
     sv_vesseleditor.h \
     sv_vesselmotioneditor.h \
-    sv_vesselposition.h
+    sv_vesselposition.h \
+    sql_defs.h \
+    sv_idevice.h \
+    geo.h \
+    sv_gps.h
 
 FORMS    += mainwindow.ui \
     sv_vesseleditor.ui \

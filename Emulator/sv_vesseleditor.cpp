@@ -6,10 +6,10 @@ extern SvSQLITE *SQLITE;
 
 SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId) :
   QDialog(parent),
-  ui(new Ui::SvVesselDialog)
+  ui(new Ui::SvVesselEditorDialog)
 {
   ui->setupUi(this);
-  
+  /**
   showMode = beaconId == -1 ? smNew : smEdit;
 
   t_lon = lon;
@@ -53,16 +53,17 @@ SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId) :
   
   this->setModal(true);
   this->show();
-  
+  **/
 }
 
-SvVesselEditor::~SvBeaconEditor()
+SvVesselEditor::~SvVesselEditor()
 {
   delete ui;
 }
 
 void SvVesselEditor::accept()
 {
+  /**
   t_uid = ui->editUID->text();
   t_description = ui->textDescription->toPlainText();
   
@@ -124,5 +125,5 @@ void SvVesselEditor::accept()
 
   if(result) QDialog::accept();
   else QDialog::reject();
-  
+  **/
 }

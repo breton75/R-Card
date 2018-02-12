@@ -3,7 +3,7 @@
 
 SvVesselPosition::SvVesselPosition(QWidget *parent) :
   QDialog(parent),
-  ui(new Ui::SvVesselPosition)
+  ui(new Ui::SvVesselPositionDialog)
 {
   ui->setupUi(this);
 }

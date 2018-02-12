@@ -1,5 +1,5 @@
-#ifndef SV_BEACONEDITOR_H
-#define SV_BEACONEDITOR_H
+#ifndef SV_VESSELEDITOR_H
+#define SV_VESSELEDITOR_H
 
 #include <QDialog>
 #include <QDateTime>
@@ -10,7 +10,7 @@
 #define SQL_SELECT_BEACON "select plan.id, plan.uid, plan.lon, plan.lat, plan.date_time, plan.description from plan where id=%1"
 
 namespace Ui {
-class SvVesselDialog;
+class SvVesselEditorDialog;
 }
 
 class SvVesselEditor : public QDialog
@@ -55,8 +55,8 @@ public slots:
 //  void slotSelectModel();
   
 private:
-  Ui::SvVesselDialog *ui;
+  Ui::SvVesselEditorDialog *ui;
   
 };
 
-#endif // SV_BEACONEDITOR_H
+#endif // SV_VESSELEDITOR_H

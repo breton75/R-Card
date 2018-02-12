@@ -18,17 +18,21 @@
 //#include "sv_mapobjects.h"
 #include "../../svlib/sv_sqlite.h"
 //#include "sv_beaconeditor.h"
-#include "geo_calculations.h"
+#include "geo.h"
+#include "sv_vessel.h"
 
 enum SvMapObjectTypes
 {
-  motAirplane = 65537,
-  motBeaconPlanned,
-  motBeaconActive,
+  motVessel = 65537,
+  motNavtek,
   motNode,
   motRadius,
   motDirection,
-  motZone
+  motZone,
+  motBeaconPlanned,
+  motBeaconActive,
+  motAirplane
+  
 };
 
 #define DEFAULT_SELECTION_COLOR 0xffef0b
@@ -42,15 +46,19 @@ class SvMapObject : public QGraphicsItem
   
   public:
   
-    explicit SvMapObject(QWidget* parent, qreal lon, qreal lat);
+    explicit SvMapObject(QWidget* parent, const geo::COORD &coord, qreal course = 0);
     ~SvMapObject();
     
     virtual int type() const { return -1; }
+
+    geo::COORD coordinates() const { return _coord; }
     
-    qreal lon() const { return _lon; }
-    qreal lat() const { return _lat; }
+    //    qreal angle() const { return _angle; }
+    //    void setAngle(const qreal angle) { _angle = angle; setRotation(_angle); }  
+//    qreal lon() const { return _lon; }
+//    qreal lat() const { return _lat; }
     
-    void setGeo(const qreal lon, const qreal lat) { _lon = lon; _lat = lat; }
+//    void setGeo(const qreal lon, const qreal lat) { _lon = lon; _lat = lat; }
     
     QPainterPath* path() const { return _path; }
     
@@ -84,9 +92,7 @@ class SvMapObject : public QGraphicsItem
   
     bool isEditable() const { return _isEditable; }
     void setEditable(const bool editable) { _isEditable = editable; }
-    
-    qreal angle() const { return _angle; }
-    void setAngle(const qreal angle) { _angle = angle; setRotation(_angle); }
+
  
     virtual QRectF boundingRect() const Q_DECL_OVERRIDE;
     virtual QPainterPath shape() const Q_DECL_OVERRIDE;
@@ -101,9 +107,9 @@ class SvMapObject : public QGraphicsItem
     virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent *) Q_DECL_OVERRIDE;
   
   private:
-    qreal _lat = 0.0;
-    qreal _lon = 0.0;
-    qreal _angle = 0.0;
+    qreal _course = 0.0;
+
+    geo::COORD _coord;
     
     bool _isEditable = false;
     QPainterPath* _path = nullptr;
@@ -144,9 +150,9 @@ class SvMapObjectAirplane : public SvMapObject/*, public QObject*/
   };
   
   public:
-    explicit SvMapObjectAirplane(QWidget* parent, qreal lon, qreal lat);
+    explicit SvMapObjectAirplane(QWidget* parent, const geo::COORD &coord, qreal course = 0);
     
-    int type() const { return motAirplane; }
+    int type() const { return motVessel; }
 
 };
 
@@ -154,10 +160,10 @@ class SvMapObjectBeaconAbstract : public SvMapObject
 {
   public:
     
-    explicit SvMapObjectBeaconAbstract(QWidget* parent):SvMapObject(parent, 0, 0) {  }
+    explicit SvMapObjectBeaconAbstract(QWidget* parent):SvMapObject(parent, geo::COORD(0.0, 0.0), 0) {  }
   
-    explicit SvMapObjectBeaconAbstract(QWidget* parent, const qreal lon, const qreal lat,
-                                       const int id, const QString &uid, const QDateTime &dateTime);
+//    explicit SvMapObjectBeaconAbstract(QWidget* parent, const qreal lon, const qreal lat,
+//                                       const int id, const QString &uid, const QDateTime &dateTime);
   
     int id() const { return _id; }
     void setId(const int id) { _id = id; }
@@ -250,7 +256,7 @@ class SvMapObjectBeaconActive : public SvMapObjectBeaconAbstract
 class SvMapObjectRadius : public SvMapObject
 {
   public:
-    explicit SvMapObjectRadius(QWidget* parent, qreal lon, qreal lat);
+    explicit SvMapObjectRadius(QWidget* parent, const geo::COORD &coord, qreal course = 0);
     
     int type() const { return motRadius; }
     qreal radius() const { return _radius; }
@@ -282,6 +288,7 @@ class SvMapObjectRadius : public SvMapObject
     
 };
 
+/**
 class SvMapObjectDirection : public SvMapObject
 {
   public:
@@ -290,5 +297,6 @@ class SvMapObjectDirection : public SvMapObject
     int type() const { return motDirection; }
      
 };
+**/
 
 #endif // MAPOBJECTS_H

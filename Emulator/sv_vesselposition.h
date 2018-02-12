@@ -4,7 +4,7 @@
 #include <QDialog>
 
 namespace Ui {
-class SvVesselPosition;
+class SvVesselPositionDialog;
 }
 
 class SvVesselPosition : public QDialog
@@ -16,7 +16,7 @@ public:
   ~SvVesselPosition();
   
 private:
-  Ui::SvVesselPosition *ui;
+  Ui::SvVesselPositionDialog *ui;
 };
 
 #endif // SV_VESSELPOSITION_H

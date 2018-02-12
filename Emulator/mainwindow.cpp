@@ -40,64 +40,68 @@ MainWindow::MainWindow(QWidget *parent) :
   
   /*! необходима проверка, что в таблице vessels существует запись с флагом sef == true !*/
   /** ------ читаем информацию о собственном судне --------- **/
-  if(QSqlError::NoError != SQLITE->execSQL(QString("select * from vessels where self=true"), q).type()) {
-    qDebug() << q->lastError().databaseText();
+  if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELCT_VESSELS).arg("true"), q).type()) {
+    
+    QMessageBox::critical(this, "Ошибка", q->lastError().databaseText(), QMessageBox::Ok);
     q->finish();
     return;
   }
   
   if(!q->next()) {
-    q->finish();
     QMessageBox::critical(this, "Ошибка", "В БД нет сведений о собственном судне", QMessageBox::Ok);
+    q->finish();
     return;    
   }
   
-  // создаем объект собственного судна
-  
-  // проверяем, что все значения проинициализированы. иначе назначаем свои значения
-  vsl::InitParams iprms = fillVesselInitParams(q) ;
+// читаем информацию из БД  
+//  gps::Params iprms = fillVesselInitParams(q) ;
   vsl::VesselStaticData sdata = fillVesselStaticData(q);
   vsl::VesselVoyageData vdata = fillVesselVoyageData(q);
   geo::POSITION pos = fillVesselPosition(q);
-  QString nav_status = fillVesselNavStatus(q);
+//  QString navstat = fillVesselNavStatus(q);
+
+  q->finish();
   
-  
-//  iprms.gps_timeout = 
-  
+  // создаем объект собственного судна
   SELF = new vsl::SvVessel(this);
-  SELF->setInitParams(iprms);
+//  SELF->setInitParams(iprms);
   SELF->setStaticData(sdata);
   SELF->setVoyageData(vdata);
   SELF->setPosition(pos);
-  SELF->setNavStatus(nav_status);
+//  SELF->setNavStatus(navstat);
   
   
   /** ------ читаем список судов --------- **/
-//  QSqlQuery* q = new QSqlQuery(SQLITE->db);
-//  if(QSqlError::NoError != SQLITE->execSQL(QString("select * from vessels where self=false"), q).type()) {
+  if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELCT_VESSELS).arg("false"), q).type()) {
     
-//    qDebug() << q->lastError().databaseText();
-//    q->finish();
-//    return;
-//  }
+    QMessageBox::critical(this, "Ошибка", q->lastError().databaseText(), QMessageBox::Ok);
+    q->finish();
+    return;
+  }
   
-//  while(q->next())
-//  {
-//    int id = q->value("id").toInt();
-//    qreal lon = q->value("lon").toDouble();
-//    qreal lat = q->value("lat").toDouble();
-//    QString uid = q->value("uid").toString();
-  
-//    SvMapObjectBeaconPlanned* beacon = new SvMapObjectBeaconPlanned(area);
-//    beacon->setGeo(lon, lat);
-//    beacon->setId(id);
-//    beacon->setUid(uid);
-//    beacon->setBrush(QColor(255, 50, 100, 255), QColor(255, 50, 100, 255));
-//    beacon->setPen(QColor(255, 50, 100, 255).dark());
-//    area->scene->addMapObject(beacon);   
+  while(q->next()) {
     
-//  }
-//  q->finish();
+    // читаем информацию из БД  
+//      vsl::InitParams iprms = fillVesselInitParams(q) ;
+      vsl::VesselStaticData sdata = fillVesselStaticData(q);
+      vsl::VesselVoyageData vdata = fillVesselVoyageData(q);
+      geo::POSITION pos = fillVesselPosition(q);
+//      QString navstat = fillVesselNavStatus(q);
+    
+      q->finish();
+      
+      // создаем объект собственного судна
+      vsl::SvVessel* v = new vsl::SvVessel(this);
+//      v->setInitParams(iprms);
+      v->setStaticData(sdata);
+      v->setVoyageData(vdata);
+      v->setPosition(pos);
+//      v->setNavStatus(navstat);
+      
+      VESSELS.insert(sdata.id, v);
+    
+  }
+  q->finish();
   
   
 }
@@ -107,22 +111,23 @@ MainWindow::~MainWindow()
   delete ui;
 }
 
-vsl::InitParams fillVesselInitParams(QSqlQuery* q)
-{
-  vsl::InitParams result;
-  result.course = q->value("init_course").isNull() ? geo::get_rnd_course() : q->value("init_course").toUInt();
-  result.course_change_ratio = q->value("init_course_change_ratio").isNull() ? 45 : q->value("init_course_change_ratio").toUInt();
-  result.course_change_segment = q->value("init_course_change_segment").isNull() ? 1 : q->value("init_course_change_segment").toUInt();
-  result.speed = q->value("init_speed").isNull() ? geo::get_rnd_course() : q->value("init_speed").toUInt();
-  result.speed_change_ratio = q->value("init_speed_change_ratio").isNull() ? 10 : q->value("init_speed_change_ratio").toUInt();
-  result.speed_change_segment = q->value("init_speed_change_segment").isNull() ? 1 : q->value("init_speed_change_segment").toUInt();
+//vsl::InitParams MainWindow::fillVesselInitParams(QSqlQuery* q) const
+//{
+//  vsl::InitParams result;
+//  result.course = q->value("init_course").isNull() ? geo::get_rnd_course() : q->value("init_course").toUInt();
+//  result.course_change_ratio = q->value("init_course_change_ratio").isNull() ? 45 : q->value("init_course_change_ratio").toUInt();
+//  result.course_change_segment = q->value("init_course_change_segment").isNull() ? 1 : q->value("init_course_change_segment").toUInt();
+//  result.speed = q->value("init_speed").isNull() ? geo::get_rnd_course() : q->value("init_speed").toUInt();
+//  result.speed_change_ratio = q->value("init_speed_change_ratio").isNull() ? 10 : q->value("init_speed_change_ratio").toUInt();
+//  result.speed_change_segment = q->value("init_speed_change_segment").isNull() ? 1 : q->value("init_speed_change_segment").toUInt();
   
-  return result;
-}
+//  return result;
+//}
 
-vsl::VesselStaticData fillVesselStaticData(QSqlQuery* q)
+vsl::VesselStaticData MainWindow::fillVesselStaticData(QSqlQuery* q) const
 {
   vsl::VesselStaticData result;
+  result.id = q->value("id").toUInt();
   result.callsign = q->value("callsign").toString();
   result.length = q->value("length").isNull() ? 20 : q->value("length").toUInt();
   result.width = q->value("width").isNull() ? 20 : q->value("width").toUInt();
@@ -133,7 +138,7 @@ vsl::VesselStaticData fillVesselStaticData(QSqlQuery* q)
   return result;
 }
 
-vsl::VesselVoyageData fillVesselVoyageData(QSqlQuery* q)
+vsl::VesselVoyageData MainWindow::fillVesselVoyageData(QSqlQuery* q) const
 {
   vsl::VesselVoyageData result;
   result.cargo = q->value("cargo_type_name").toString();
@@ -144,22 +149,26 @@ vsl::VesselVoyageData fillVesselVoyageData(QSqlQuery* q)
   return result;
 }
 
-geo::POSITION fillVesselPosition(QSqlQuery* q)
+geo::POSITION MainWindow::fillVesselPosition(QSqlQuery* q) const
 {
   geo::POSITION result;
-  geo::COORD coord;
-  coord.latitude = q->value("dynamic_latitude").isNull() ? geo::get_rnd_position(_area->bounds()).latitude : q->value("dynamic_latitude").toUInt();
-  coord.latitude = q->value("dynamic_longtitude").isNull() ? geo::get_rnd_position(_area->bounds()).longtitude : q->value("dynamic_longtitude").toUInt();
+  qreal lat = q->value("dynamic_latitude").isNull() ? geo::get_rnd_position(_area->bounds()).latitude : q->value("dynamic_latitude").toUInt();
+  qreal lon = q->value("dynamic_longtitude").isNull() ? geo::get_rnd_position(_area->bounds()).longtitude : q->value("dynamic_longtitude").toUInt();
+//  coord.latitude = 
+//  coord.latitude = 
+  geo::COORD coord(lat, lon); 
   
   quint32 course = q->value("dynamic_course").isNull() ? geo::get_rnd_course() : q->value("dynamic_course").toUInt();
   
-  result.setCoordinates(coord);
-  result.setCourse(course);
+  result.coord = coord;
+  result.course = course;
+  
+  result.navstat = q->value("status_name").toString();
   
   return result;
 }
 
-QString fillVesselNavStatus(QSqlQuery* q)
+QString MainWindow::fillVesselNavStatus(QSqlQuery* q) const
 {
   QString result = q->value("status_name").toString();
   
