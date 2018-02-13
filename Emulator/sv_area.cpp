@@ -645,7 +645,7 @@ void area::SvArea::updateGridStep()
 {
   /* считаем в метрах */
 //  qreal area_meters = 1000 * lon1_lon2_distance(_area_data.geo_bounds.min_lon, _area_data.geo_bounds.max_lon, area_data->geo_bounds.max_lat);
-  qreal area_meters = 1000 * lat1_lat2_distance(_area_data.geo_bounds.min_lat, _area_data.geo_bounds.max_lat, _area_data.geo_bounds.max_lon);
+  qreal area_meters = 1000 * geo::lat1_lat2_distance(_area_data.geo_bounds.min_lat, _area_data.geo_bounds.max_lat, _area_data.geo_bounds.max_lon);
   
   int line_count = _area_data.area_curr_size.width() / MINOR_LINE_INTERVAL;
   _area_data.gridCellDistance = quint64(trunc(area_meters / line_count));

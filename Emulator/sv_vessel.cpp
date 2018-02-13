@@ -1,9 +1,9 @@
 #include "sv_vessel.h"
 
-vsl::SvVessel* SELF;
+vsl::SvVessel* SELF_VESSEL;
 QMap<int, vsl::SvVessel*> VESSELS;
 
-vsl::SvVessel::SvVessel(QObject *parent) :
+vsl::SvVessel::SvVessel(QObject *parent, quint32 id) :
   QObject(parent)
 {
 //   qRegisterMetaType<gps::GEO>("gps::GEO");

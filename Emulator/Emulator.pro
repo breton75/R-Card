@@ -35,7 +35,8 @@ SOURCES += main.cpp\
     sv_vesselmotioneditor.cpp \
     sv_vesselposition.cpp \
     geo.cpp \
-    sv_gps.cpp
+    sv_gps.cpp \
+    sv_ais.cpp
 
 HEADERS  += mainwindow.h \
     types.h \
@@ -51,7 +52,8 @@ HEADERS  += mainwindow.h \
     sql_defs.h \
     sv_idevice.h \
     geo.h \
-    sv_gps.h
+    sv_gps.h \
+    sv_ais.h
 
 FORMS    += mainwindow.ui \
     sv_vesseleditor.ui \

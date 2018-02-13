@@ -3,38 +3,39 @@
 
 #define CR "\n"
 
-#define SQL_SELCT_VESSELS "select " CR \
-                           "  vessels.id as id, " CR \
-                           "  vessels.callsign as callsign, " CR \
-                           "  vessels.destination as destination, " CR \
-                           "  vessels.draft as draft, " CR \
-                           "  vessels.cargo_type_id as cargo_type_id, " CR \
-                           "  vessels.imo as imo, " CR \
-                           "  vessels.mmsi as mmsi, " CR \
-                           "  vessels.length as length, " CR \
-                           "  vessels.width as width, " CR \
-                           "  vessels.self as self, " CR \
-                           "  vessels.team as team, " CR \
-                           "  vessels.type_id as type_id, " CR \
-                           "  vessels.init_course as init_course, " CR \
-                           "  vessels.init_course_change_ratio as init_course_change_ratio, " CR \
-                           "  vessels.init_course_change_segment as init_course_change_segment, " CR \
-                           "  vessels.init_speed as init_speed, " CR \
-                           "  vessels.init_speed_change_ratio as init_speed_change_ratio, " CR \
-                           "  vessels.init_speed_change_segment as init_speed_change_segment, " CR \
-                           "  vessels.dynamic_course as dynamic_course, " CR \
-                           "  vessels.dynamic_latitude as dynamic_latitude, " CR \
-                           "  vessels.dynamic_longtitude as dynamic_longtitude, " CR \
-                           "  vessels.dynamic_status_id as status_id, " CR \
-                           "  vessels.dynamic_utc as dynamic_utc, " CR \
-                           "  vessel_types.type_name as vessel_type_name, " CR \
-                           "  cargo_types.type_name as cargo_type_name, " CR \
-                           "  status_types.status_name as status_name  " CR \
-                           "from vessels " CR \
-                           "  left join cargo_types on vessels.cargo_type_id = cargo_types.id " CR \
-                           "  left join vessel_types on vessels.type_id = vessel_types.id " CR \
-                           "  left join status_types on vessels.status_id = status_types.id " CR \
-                           "where vessels.self = '%1' " CR \
-                           "order by vessels.id asc"
+#define SQL_SELECT_VESSELS "SELECT vessels.id AS id, " CR \
+                          "       vessels.self AS self, " CR \
+                          "       ais.static_callsign AS static_callsign, " CR \
+                          "       ais.static_imo AS static_imo, " CR \
+                          "       ais.static_mmsi AS static_mmsi, " CR \
+                          "       ais.static_type_id AS static_type_id, " CR \
+                          "       ais.static_length AS static_length, " CR \
+                          "       ais.static_width AS static_width, " CR \
+                          "       ais.voyage_destination AS voyage_destination, " CR \
+                          "       ais.voyage_draft AS voyage_draft, " CR \
+                          "       ais.voyage_cargo_type_id AS voyage_cargo_type_id, " CR \
+                          "       ais.voyage_team AS voyage_team, " CR \
+                          "       ais.dynamic_course AS dynamic_course, " CR \
+                          "       ais.dynamic_latitude AS dynamic_latitude, " CR \
+                          "       ais.dynamic_longtitude AS dynamic_longtitude, " CR \
+                          "       ais.dynamic_status_id AS status_id, " CR \
+                          "       ais.dynamic_utc AS dynamic_utc, " CR \
+                          "       gps.init_course AS init_course, " CR \
+                          "       gps.init_course_change_ratio AS init_course_change_ratio, " CR \
+                          "       gps.init_course_change_segment AS init_course_change_segment, " CR \
+                          "       gps.init_speed AS init_speed, " CR \
+                          "       gps.init_speed_change_ratio AS init_speed_change_ratio, " CR \
+                          "       gps.init_speed_change_segment AS init_speed_change_segment, " CR \
+                          "       vessel_types.type_name AS vessel_type_name, " CR \
+                          "       cargo_types.type_name AS cargo_type_name, " CR \
+                          "       status_types.status_name AS status_name " CR \
+                          "FROM vessels " CR \
+                          "LEFT JOIN gps ON vessels.id = gps.vessel_id " CR \
+                          "LEFT JOIN ais ON vessels.id = ais.vessel_id " CR \
+                          "LEFT JOIN cargo_types ON ais.voyage_cargo_type_id = cargo_types.id " CR \
+                          "LEFT JOIN vessel_types ON ais.static_type_id = vessel_types.id " CR \
+                          "LEFT JOIN status_types ON ais.dynamic_status_id = status_types.id  " CR \
+                          "WHERE vessels.self = '%1'  " CR \
+                          "ORDER BY vessels.id ASC;"
 
 #endif // SQL_DEFS_H

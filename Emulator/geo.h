@@ -41,10 +41,15 @@ namespace geo {
     
   };
   
-   qreal geo1_geo2_distance(qreal lon1, qreal lat1, qreal lon2, qreal lat2);
+  // расстояние между двумя координатами 
+  qreal geo1_geo2_distance(qreal lon1, qreal lat1, qreal lon2, qreal lat2);
+   
+  // расстояние в километрах между двумя широтами/долготами 
+  qreal lon1_lon2_distance(qreal min_lon, qreal max_lon, qreal lat);
+  qreal lat1_lat2_distance(qreal min_lat, qreal max_lat, qreal lon);
   
-   quint32 get_rnd_course();
-   geo::COORD get_rnd_position(const BOUNDS& bounds);
+  quint32 get_rnd_course();
+  geo::COORD get_rnd_position(BOUNDS *bounds);
 }
 
 
@@ -106,9 +111,6 @@ struct KOEFF {
 
 
 
-/* расстояние в километрах между двумя широтами/долготами */
-qreal lon1_lon2_distance(qreal min_lon, qreal max_lon, qreal lat);
-qreal lat1_lat2_distance(qreal min_lat, qreal max_lat, qreal lon);
 
 //void getGridStep(AREA_DATA* area_data);
 

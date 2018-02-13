@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QDateTime>
 #include <QMessageBox>
+#include <QThread>
 
 #include "sv_area.h"
 #include "../../svlib/sv_settings.h"
@@ -11,6 +12,7 @@
 #include "sv_vessel.h"
 #include "sv_idevice.h"
 #include "sv_gps.h"
+#include "sv_ais.h"
 
 #include "sql_defs.h"
 
@@ -30,10 +32,13 @@ public slots:
 //  void on_bnStart_clicked();
  
 //  gps::GPSParams fillVesselInitParams(QSqlQuery* q) const;
-  vsl::VesselStaticData fillVesselStaticData(QSqlQuery* q) const;
-  vsl::VesselVoyageData fillVesselVoyageData(QSqlQuery* q) const;
-  geo::POSITION fillVesselPosition(QSqlQuery* q) const;
-  QString fillVesselNavStatus(QSqlQuery* q) const;
+//  vsl:: setVesselData(QSqlQuery* q);
+  gps::GPSParams getGPSData(QSqlQuery* q);
+  ais::StaticData getAISStaticData(QSqlQuery* q);
+  ais::VoyageData getAISVoyageData(QSqlQuery* q);
+  ais::DynamicData getAISDynamicData(QSqlQuery* q);
+  
+//  QString fillVesselNavStatus(QSqlQuery* q) const;
   
   
 private:

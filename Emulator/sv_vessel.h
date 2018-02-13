@@ -11,48 +11,11 @@
 #include "types.h"
 #include "geo.h"
 
+#include "sv_gps.h"
+#include "sv_ais.h"
+
 namespace vsl {
 
-  struct VesselStaticData {                     // Информация о судне. Данные передаются каждые 6 минут
-    
-    quint32 id;                           // id судна в БД
-    QString mmsi;                         // Номер MMSI
-    QString imo;                          // Номер Международной морской организации (IMO)
-    QString callsign;                     // Радиопозывной и название плавучего средства
-    quint32 length;                       // Габариты
-    quint32 width;
-    QString type;                         // Тип плавучего средства
-                                          // Данные о месте антенны (от ГНСС Глонасс или GPS)
-      
-  };
-  
-  struct VesselDynamicData {              // Динамическая информация
-      
-    geo::POSITION position;               // Местоположение (широта и долгота)
-                                          // Время (UTC)
-                                          // Возраст информации (как давно обновлялась)
-                                          // Курс истинный (относительно грунта), курсовой угол
-                                          // Скорость истинная
-                                          // Угол крена, дифферента
-                                          // Угол килевой качки
-                                          // Угловая скорость поворота
-    QString navstat;                      // Навигационный статус (к примеру: Лишен возможности управляться или Ограничен в возможности маневрировать)
-
-  };
-  
-  struct VesselVoyageData {               // Рейсовая информация
-
-    QString destination;                  // Пункт назначения
-                                          // Время прибытия (ЕТА)
-    qreal draft;                          // Осадка судна
-    QString cargo;                        // Информация о грузе (класс/категория груза)
-    quint32 team;                         // Количество людей на борту
-                                          // Сообщения для предупреждения и обеспечения безопасности грузоперевозки
-  };
-
-
-  
-  
   class SvVessel;
   
 }
@@ -62,26 +25,32 @@ class vsl::SvVessel : public QObject
   Q_OBJECT
   
 public:
-  SvVessel(QObject* parent);
+  SvVessel(QObject* parent, quint32 id);
     
   ~SvVessel(); 
-  
-//  void setInitParams(const vsl::InitParams& params) { _init_params = params; }
-  void setStaticData(const vsl::VesselStaticData& sdata) { _static_data = sdata; }
-  void setVoyageData(const vsl::VesselVoyageData& vdata) { _voyage_data = vdata; }
-  void setPosition(const geo::POSITION& position) { _dynamic_data.position = position; }
-  void setNavStatus(const QString& status) { _dynamic_data.navstat = status; }
-  
+
   void start();
+
+  void mountAIS(ais::SvAIS* ais_dev) { _ais_dev = ais_dev; }
+  void mountGPS(gps::SvGPS* gps_dev) { _gps_dev = gps_dev; }
+//  void mountLAG(lag::SvLAG* lag_dev) { _lag_dev = lag_dev; }
   
   QString get();
   
   int id = -1;
+
+  geo::COORD coordinates() const { return _coord; }
+  void setCoordinates(const geo::COORD& coord) { _coord = coord; }
+  
+  qreal distanceTo(geo::COORD& coord) { 
+    return geo::geo1_geo2_distance(_coord.longtitude, coord.longtitude, _coord.latitude, coord.latitude); }
   
 private:
-  vsl::VesselStaticData _static_data;
-  vsl::VesselVoyageData _voyage_data;
-  vsl::VesselDynamicData _dynamic_data;
+  geo::COORD _coord;
+  
+  gps::SvGPS* _gps_dev = nullptr;
+  ais::SvAIS* _ais_dev = nullptr;
+//  lag::SvLAG* _lag_dev = nullptr;
   
 public slots:
   void new_position(qreal lon, qreal lat, qreal course);

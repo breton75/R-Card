@@ -57,12 +57,12 @@ quint32 geo::get_rnd_course()
   return result;
 }
 
-geo::COORD geo::get_rnd_position(const geo::BOUNDS& bounds)
+geo::COORD geo::get_rnd_position(geo::BOUNDS* bounds)
 {
   geo::COORD result;
   QTime t(0,0,0);
-  qreal lat_diff = bounds.max_lat - bounds.min_lat;
-  qreal lon_diff = bounds.max_lon - bounds.min_lon;
+  qreal lat_diff = bounds->max_lat - bounds->min_lat;
+  qreal lon_diff = bounds->max_lon - bounds->min_lon;
   
   qsrand(t.secsTo(QTime::currentTime()));
   
@@ -74,7 +74,7 @@ geo::COORD geo::get_rnd_position(const geo::BOUNDS& bounds)
   
 }
 
-qreal lon1_lon2_distance(qreal min_lon, qreal max_lon, qreal lat)
+qreal geo::lon1_lon2_distance(qreal min_lon, qreal max_lon, qreal lat)
 {
   /* для северной широты ! */  
   int parallel = int(trunc(lat));
@@ -88,7 +88,7 @@ qreal lon1_lon2_distance(qreal min_lon, qreal max_lon, qreal lat)
   
 }
 
-qreal lat1_lat2_distance(qreal min_lat, qreal max_lat, qreal lon)
+qreal geo::lat1_lat2_distance(qreal min_lat, qreal max_lat, qreal lon)
 {
   /* для восточной долготы! */  
   int meridian = int(trunc(lon));

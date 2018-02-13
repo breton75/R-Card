@@ -15,8 +15,10 @@ namespace idev {
 
   enum SvSimulatedDeviceTypes {
     sdtUndefined = -1,
-    sdtVessel,
-    sdtNavtek
+    sdtAIS,
+    sdtLAG,
+    sdtNavtek,
+    sdtVessel
   };
 
   class SvIDevice;
@@ -56,27 +58,10 @@ public:
   
   void setOpened(bool isOpened) { _isOpened = isOpened; }
   bool isOpened() { return _isOpened; }
-  
-  void setCoordinates(const geo::COORD& coord) { _coord = coord; }
-//  void setCourse(const qreal course) { _course = course; }
-//  void setUTC(const QDateTime& utc) { _utc = utc; }
-//  void setNavStatus(const QString& navstat) { _navstat = navstat; }
-  
-  geo::COORD coordinates() const { return _coord; }
-//  qreal course() const { return _course; }
-//  qreal angular_speed() const { return _angular_speed; } // Угловая скорость поворота
-//  QDateTime utc() const { return _utc; }
-//  QString navstat() const { return _navstat; }
-  
-  qreal distanceTo(geo::COORD& coord) { 
-    return geo::geo1_geo2_distance(_coord.longtitude, coord.longtitude, _coord.latitude, coord.latitude); }
-  
+
 protected:
   quint32 _id;
   idev::SvSimulatedDeviceTypes _type;
-  
-//  geo::POSITION _position;
-  geo::COORD _coord;
   
   bool _isOpened;
   QString _last_error;
