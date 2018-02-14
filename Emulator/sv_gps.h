@@ -49,7 +49,7 @@ class gps::SvGPS: public QThread
   
 public:
   
-  SvGPS(int vessel_id, const gps::GPSParams& params, geo::BOUNDS* bounds);
+  SvGPS(int vessel_id, GPSParams &params, geo::BOUNDS* bounds);
   ~SvGPS(); 
   
   int vesselId() { return _vessel_id; }
@@ -69,8 +69,8 @@ private:
   geo::BOUNDS* _bounds = nullptr;
   
   geo::COORD _current_coordinates;
-  qreal _current_course;
-  qreal _current_speed;
+  quint32 _current_course;
+  quint32 _current_speed;
   
   // параметры, необходимые для расчетов
   qreal _one_tick_length;         // длина пути в метрах, за один отсчет
@@ -79,12 +79,14 @@ private:
   
   gps::LonLatOffset lonlatOffset();
   
+  void norm_course();
+  
 //public slots:
 //  void new_coordinates(geo::COORD coord);
 //  void new_course(qreal course);
   
 signals:
-  void new_coordinates(const geo::COORD& coord);
+  void new_location(const geo::LOCATION& location);
   void new_course(const qreal course);
   
 };

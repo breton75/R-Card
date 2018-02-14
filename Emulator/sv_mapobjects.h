@@ -24,6 +24,7 @@
 enum SvMapObjectTypes
 {
   motVessel = 65537,
+  motSelfVessel,
   motNavtek,
   motNode,
   motRadius,
@@ -46,12 +47,12 @@ class SvMapObject : public QGraphicsItem
   
   public:
   
-    explicit SvMapObject(QWidget* parent, const geo::COORD &coord, qreal course = 0);
+    explicit SvMapObject(QWidget* parent);
     ~SvMapObject();
     
     virtual int type() const { return -1; }
 
-    geo::COORD coordinates() const { return _coord; }
+//    geo::COORD coordinates() const { return _coord; }
     
     //    qreal angle() const { return _angle; }
     //    void setAngle(const qreal angle) { _angle = angle; setRotation(_angle); }  
@@ -107,9 +108,8 @@ class SvMapObject : public QGraphicsItem
     virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent *) Q_DECL_OVERRIDE;
   
   private:
-    qreal _course = 0.0;
-
-    geo::COORD _coord;
+//    qreal _course = 0.0;
+//    geo::COORD _coord;
     
     bool _isEditable = false;
     QPainterPath* _path = nullptr;
@@ -120,6 +120,11 @@ class SvMapObject : public QGraphicsItem
     QColor _selectionColor = QColor(DEFAULT_SELECTION_COLOR);
   
 };
+
+
+/** ************************************************/
+/** ************** AIRPLANE ************************/
+/** ************************************************/
 
 class SvMapObjectAirplane : public SvMapObject/*, public QObject*/
 {
@@ -150,17 +155,22 @@ class SvMapObjectAirplane : public SvMapObject/*, public QObject*/
   };
   
   public:
-    explicit SvMapObjectAirplane(QWidget* parent, const geo::COORD &coord, qreal course = 0);
+    explicit SvMapObjectAirplane(QWidget* parent);
     
     int type() const { return motVessel; }
 
 };
 
+
+/** ************************************************/
+/** ************** BEACON **************************/
+/** ************************************************/
+
 class SvMapObjectBeaconAbstract : public SvMapObject
 {
   public:
     
-    explicit SvMapObjectBeaconAbstract(QWidget* parent):SvMapObject(parent, geo::COORD(0.0, 0.0), 0) {  }
+    explicit SvMapObjectBeaconAbstract(QWidget* parent):SvMapObject(parent) {  }
   
 //    explicit SvMapObjectBeaconAbstract(QWidget* parent, const qreal lon, const qreal lat,
 //                                       const int id, const QString &uid, const QDateTime &dateTime);
@@ -256,7 +266,7 @@ class SvMapObjectBeaconActive : public SvMapObjectBeaconAbstract
 class SvMapObjectRadius : public SvMapObject
 {
   public:
-    explicit SvMapObjectRadius(QWidget* parent, const geo::COORD &coord, qreal course = 0);
+    explicit SvMapObjectRadius(QWidget* parent);
     
     int type() const { return motRadius; }
     qreal radius() const { return _radius; }
@@ -298,5 +308,72 @@ class SvMapObjectDirection : public SvMapObject
      
 };
 **/
+
+
+/** ********************************************** **/
+/** ***************** VESSEL ********************* **/
+/** ********************************************** **/
+
+class SvMapObjectVesselAbstract : public SvMapObject
+{
+  public:
+    
+    explicit SvMapObjectVesselAbstract(QWidget* parent, vsl::SvVessel* vessel):
+      SvMapObject(parent) { _vessel = vessel; }
+  
+    vsl::SvVessel* vessel() { return _vessel; }
+    
+    int vesselId() const { return _vessel->id; }
+    
+private:
+    vsl::SvVessel* _vessel = nullptr;
+    
+};
+
+class SvMapObjectVessel : public SvMapObjectVesselAbstract
+{
+  const QPointF _points[5] =
+  {
+    QPointF(-5.0, 0.0),   // 0 
+    QPointF(-3.0, -3.0),  // 1
+    QPointF(5.0, -2.0),   // 2
+    QPointF(5.0, 2.0),    // 3
+    QPointF(-3.0, 3.0)    // 4
+  } ;
+  
+  public:
+    explicit SvMapObjectVessel(QWidget* parent, vsl::SvVessel* vessel);
+    
+    int type() const { return motVessel; }
+    
+    QAction *removeAction;
+    QAction *editAction;
+
+//    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
+//    virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
+};
+
+class SvMapObjectSelfVessel : public SvMapObjectVesselAbstract
+{
+  const QPointF _points[5] =
+  {
+    QPointF(-5.0, 0.0),   // 0 
+    QPointF(-3.0, -3.0),  // 1
+    QPointF(5.0, -2.0),   // 2
+    QPointF(5.0, 2.0),    // 3
+    QPointF(-3.0, 3.0)    // 4
+  } ;
+  
+  public:
+    explicit SvMapObjectSelfVessel(QWidget* parent, vsl::SvVessel* vessel);
+    
+    int type() const { return motSelfVessel; }
+    
+    QAction *removeAction;
+    QAction *editAction;
+
+//    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
+//    virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
+};
 
 #endif // MAPOBJECTS_H

@@ -42,7 +42,6 @@ HEADERS  += mainwindow.h \
     types.h \
     sv_vessel.h \
     sv_area.h \
-    sv_vesselsymbol.h \
     sv_mapobjects.h \
     ../../svlib/sv_settings.h \
     ../../svlib/sv_sqlite.h \
@@ -53,7 +52,8 @@ HEADERS  += mainwindow.h \
     sv_idevice.h \
     geo.h \
     sv_gps.h \
-    sv_ais.h
+    sv_ais.h \
+    sv_vessel_graphics.h
 
 FORMS    += mainwindow.ui \
     sv_vesseleditor.ui \

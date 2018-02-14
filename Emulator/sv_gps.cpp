@@ -2,10 +2,11 @@
 
 gps::SvGPS* SELF_GPS;
 
-gps::SvGPS::SvGPS(int vessel_id, const gps::GPSParams& params, geo::BOUNDS *bounds)
+gps::SvGPS::SvGPS(int vessel_id, gps::GPSParams& params, geo::BOUNDS *bounds)
 {
   _vessel_id = vessel_id;
   _gps_params = params;
+  qDebug() << 4;
   _bounds = bounds;
   
   // начальные координаты. если переданные координаты равны 0, то получаем случайные координаты
@@ -16,7 +17,6 @@ gps::SvGPS::SvGPS(int vessel_id, const gps::GPSParams& params, geo::BOUNDS *boun
   _current_coordinates.latitude = (_gps_params.init_random_coordinates || _gps_params.coordinates.latitude == 0) ? 
                                     geo::get_rnd_position(_bounds).latitude : 
                                     _gps_params.coordinates.latitude;
-  
   // начальные курс и скорость
   _current_course = _gps_params.init_random_course ? geo::get_rnd_course() : _gps_params.course;
   _current_speed = _gps_params.speed;
@@ -43,16 +43,6 @@ void gps::SvGPS::stop()
 {
   _started = false;
   while(!_finished) QApplication::processEvents();
-}
-
-void gps::SvGPS::new_coordinates(const geo::COORD& coord)
-{
-//  data.
-}
-
-void gps::SvGPS::new_course(const qreal course)
-{
-//  data.
 }
 
 void gps::SvGPS::run()
@@ -160,13 +150,13 @@ gps::LonLatOffset gps::SvGPS::lonlatOffset()
       break;
   }
 
-  result.dlat = a * _one_tick_length * _lat1m;
-  result.dlon = b * _one_tick_length * _lon1m;
+  result.dlat = a * _one_tick_length * _lat_1m_angular_length;
+  result.dlon = b * _one_tick_length * _lon_1m_angular_length;
   
   return result;
 }
 
-void gps::SvGPSThread::normal_angle()
+void gps::SvGPS::norm_course()
 {
   /**
   _data.angle = _data.angle > 0 ? _data.angle % 360 : 360 - qAbs(_data.angle % 360); //   * (qAbs(int(_data.angle / 360)) + 1) + _data.angle;

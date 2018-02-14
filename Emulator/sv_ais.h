@@ -70,6 +70,10 @@ public:
   void setPosition(const geo::POSITION& position) { _dynamic_data.position = position; }
   void setNavStatus(const QString& status) { _dynamic_data.navstat = status; }
 
+  ais::StaticData *StaticData() { return &_static_data; }
+  ais::VoyageData *VoyageData() { return &_voyage_data; }
+  ais::DynamicData *DynamicData() { return &_dynamic_data; }
+  
   idev::SvSimulatedDeviceTypes type() const { return idev::sdtAIS; }
     
   bool open();
@@ -90,7 +94,7 @@ private:
   QMutex _mutex;
   
 public slots:
-  void new_coordinates(const geo::COORD &coord);
+  void new_location(const geo::LOCATION& location);
   
 };
 
@@ -100,7 +104,7 @@ class ais::SvAISTransmitter : public QThread
   
 public:
   SvAISTransmitter(ais::StaticData *sdata, ais::VoyageData *vdata, ais::DynamicData *ddata, QMutex *mutex);
-  ~SvAISTransmitter(); 
+  ~SvAISTransmitter();
   
   void stop();
   

@@ -3,13 +3,10 @@
 extern SvSQLITE* SQLITE;
 //extern SvBeaconEditor* BEACONEDITOR_UI;
 
-SvMapObject::SvMapObject(QWidget* parent, const geo::COORD &coord, qreal course)
+SvMapObject::SvMapObject(QWidget* parent)
 {
   setFlags(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemClipsToShape);
   setAcceptHoverEvents(true);
-  
-//  _lon = lon;
-//  _lat = lat;
   
   _path = new QPainterPath();
 }
@@ -104,8 +101,8 @@ QPainterPath SvMapObject::shape() const
 /** ************** AIRPLANE ************************/
 /** ************************************************/
 
-SvMapObjectAirplane::SvMapObjectAirplane(QWidget *parent, const geo::COORD &coord, qreal course):
-  SvMapObject(parent, coord, course)
+SvMapObjectAirplane::SvMapObjectAirplane(QWidget *parent):
+  SvMapObject(parent)
 {
   /* формируем контур фигуры */
   path()->moveTo(points[0]);  
@@ -115,14 +112,13 @@ SvMapObjectAirplane::SvMapObjectAirplane(QWidget *parent, const geo::COORD &coor
 }
 
 
+
 /** ************************************************/
 /** ************** BEACON **************************/
 /** ************************************************/
-
 /**
-SvMapObjectBeaconAbstract::SvMapObjectBeaconAbstract(QWidget* parent, const qreal lon, const qreal lat,
-                                                     const int id, const QString &uid, const QDateTime &dateTime):
-  SvMapObject(parent, lon, lat)
+SvMapObjectBeaconAbstract::SvMapObjectBeaconAbstract(QWidget* parent, const int id, const QString &uid, const QDateTime &dateTime):
+  SvMapObject(parent)
 {
   _id = id;
   _uid = uid;
@@ -168,23 +164,25 @@ void SvMapObjectBeaconPlanned::contextMenuEvent(QGraphicsSceneContextMenuEvent *
   menu.addAction(removeAction);
   
   QAction *a = menu.exec(event->screenPos());
-//  if(removeAction == a)
-//  {
-//    QSqlError err = SQLITE->execSQL(QString("delete from plan where id=%1").arg(id()));
-//    if(err.type() != QSqlError::NoError)
-//     QMessageBox::critical(0, "Ошибка", err.databaseText(), QMessageBox::Ok);
+/**
+  if(removeAction == a)
+  {
+    QSqlError err = SQLITE->execSQL(QString("delete from plan where id=%1").arg(id()));
+    if(err.type() != QSqlError::NoError)
+     QMessageBox::critical(0, "Ошибка", err.databaseText(), QMessageBox::Ok);
     
-//    this->scene()->removeItem(this);
-//  }
-//  else if (editAction == a)
-//  {
-//    BEACONEDITOR_UI = new SvBeaconEditor(nullptr, id());
-//    if(BEACONEDITOR_UI->exec() == QDialog::Accepted)
-//    {
+    this->scene()->removeItem(this);
+  }
+  else if (editAction == a)
+  {
+    BEACONEDITOR_UI = new SvBeaconEditor(nullptr, id());
+    if(BEACONEDITOR_UI->exec() == QDialog::Accepted)
+    {
      
-//    }
-//    BEACONEDITOR_UI->~SvBeaconEditor();
-//  }
+    }
+    BEACONEDITOR_UI->~SvBeaconEditor();
+  }
+  **/
 }
 
 /** ************** BEACON ACTIVE ****************** **/
@@ -225,8 +223,8 @@ void SvMapObjectBeaconActive::paint(QPainter *painter, const QStyleOptionGraphic
 /** ************** RADIUS **************************/
 /** ************************************************/
 
-SvMapObjectRadius::SvMapObjectRadius(QWidget *parent, const geo::COORD &coord, qreal course):
-  SvMapObject(parent, coord, course)
+SvMapObjectRadius::SvMapObjectRadius(QWidget *parent):
+  SvMapObject(parent)
 {
   setFlags(0);
   setAcceptHoverEvents(false);
@@ -328,3 +326,50 @@ SvMapObjectDirection::SvMapObjectDirection(QWidget* parent, qreal lon, qreal lat
 }
 **/
 
+
+/** ************************************************/
+/** ***************** VESSEL ***********************/
+/** ************************************************/
+
+SvMapObjectVessel::SvMapObjectVessel(QWidget* parent, vsl::SvVessel* vessel):
+  SvMapObjectVesselAbstract(parent, vessel)
+{
+  path()->moveTo(_points[0]);
+  path()->lineTo(_points[1]);
+  path()->lineTo(_points[2]);
+  path()->lineTo(_points[3]);
+  path()->lineTo(_points[4]);
+  path()->lineTo(_points[0]);
+
+  path()->setFillRule(Qt::OddEvenFill);
+  
+  setBrush(QBrush(QColor(0x14c546)));
+  setPen(QPen(Qt::black));
+  
+  editAction = new QAction(QIcon(":/Icons/Pen.ico"), QString("Редактировать"), 0);
+  removeAction = new QAction(QIcon(":/Icons/Cancel.ico"), QString("Удалить"), 0);
+  
+}
+
+
+
+
+SvMapObjectSelfVessel::SvMapObjectSelfVessel(QWidget* parent, vsl::SvVessel* vessel):
+  SvMapObjectVesselAbstract(parent, vessel)
+{
+  path()->moveTo(_points[0]);
+  path()->lineTo(_points[1]);
+  path()->lineTo(_points[2]);
+  path()->lineTo(_points[3]);
+  path()->lineTo(_points[4]);
+  path()->lineTo(_points[0]);
+
+  path()->setFillRule(Qt::OddEvenFill);
+  
+  setBrush(QBrush(QColor(0x216fb8)));
+  setPen(QPen(Qt::black));
+  
+  editAction = new QAction(QIcon(":/Icons/Pen.ico"), QString("Редактировать"), 0);
+  removeAction = new QAction(QIcon(":/Icons/Cancel.ico"), QString("Удалить"), 0);
+  
+}

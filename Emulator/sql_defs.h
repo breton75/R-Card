@@ -18,7 +18,7 @@
                           "       ais.dynamic_course AS dynamic_course, " CR \
                           "       ais.dynamic_latitude AS dynamic_latitude, " CR \
                           "       ais.dynamic_longtitude AS dynamic_longtitude, " CR \
-                          "       ais.dynamic_status_id AS status_id, " CR \
+                          "       ais.dynamic_status_id AS dynamic_status_id, " CR \
                           "       ais.dynamic_utc AS dynamic_utc, " CR \
                           "       gps.init_course AS init_course, " CR \
                           "       gps.init_course_change_ratio AS init_course_change_ratio, " CR \
@@ -26,9 +26,9 @@
                           "       gps.init_speed AS init_speed, " CR \
                           "       gps.init_speed_change_ratio AS init_speed_change_ratio, " CR \
                           "       gps.init_speed_change_segment AS init_speed_change_segment, " CR \
-                          "       vessel_types.type_name AS vessel_type_name, " CR \
-                          "       cargo_types.type_name AS cargo_type_name, " CR \
-                          "       status_types.status_name AS status_name " CR \
+                          "       vessel_types.type_name AS static_vessel_type_name, " CR \
+                          "       cargo_types.type_name AS voyage_cargo_type_name, " CR \
+                          "       status_types.status_name AS dynamic_status_name " CR \
                           "FROM vessels " CR \
                           "LEFT JOIN gps ON vessels.id = gps.vessel_id " CR \
                           "LEFT JOIN ais ON vessels.id = ais.vessel_id " CR \

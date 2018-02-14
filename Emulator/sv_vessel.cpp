@@ -3,11 +3,14 @@
 vsl::SvVessel* SELF_VESSEL;
 QMap<int, vsl::SvVessel*> VESSELS;
 
-vsl::SvVessel::SvVessel(QObject *parent, quint32 id) :
+vsl::SvVessel::SvVessel(QObject *parent, quint32 id, bool self) :
   QObject(parent)
 {
 //   qRegisterMetaType<gps::GEO>("gps::GEO");
    
+  this->id = id;
+  _self = self;
+  
 //   _init_params = params;
 //   _static_data = sdata;
 //   _voyage_data = vdata;
@@ -25,9 +28,9 @@ vsl::SvVessel::~SvVessel()
   
 }
 
-void vsl::SvVessel::new_position(qreal lon, qreal lat, qreal course)
+void vsl::SvVessel::new_location(const geo::LOCATION& location)
 {
-//  data.
+  
 }
 
 void vsl::SvVessel::start()

@@ -13,7 +13,7 @@ SELECT vessels.id AS id,
        ais.dynamic_course AS dynamic_course,
        ais.dynamic_latitude AS dynamic_latitude,
        ais.dynamic_longtitude AS dynamic_longtitude,
-       ais.dynamic_status_id AS status_id,
+       ais.dynamic_status_id AS dynamic_status_id,
        ais.dynamic_utc AS dynamic_utc,
        gps.init_course AS init_course,
        gps.init_course_change_ratio AS init_course_change_ratio,
@@ -21,9 +21,9 @@ SELECT vessels.id AS id,
        gps.init_speed AS init_speed,
        gps.init_speed_change_ratio AS init_speed_change_ratio,
        gps.init_speed_change_segment AS init_speed_change_segment,
-       vessel_types.type_name AS vessel_type_name,
-       cargo_types.type_name AS cargo_type_name,
-       status_types.status_name AS status_name
+       vessel_types.type_name AS static_vessel_type_name,
+       cargo_types.type_name AS voyage_cargo_type_name,
+       status_types.status_name AS dynamic_status_name
   FROM vessels
        LEFT JOIN gps ON vessels.id = gps.vessel_id
        LEFT JOIN ais ON vessels.id = ais.vessel_id

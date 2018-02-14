@@ -31,10 +31,19 @@ namespace geo {
 
 //  class POSITION;
   
+  struct LOCATION {
+    LOCATION() { }
+    LOCATION(qreal latitude, qreal longtitude, quint32 course) { this->latitude = latitude; this->longtitude = longtitude; this->course = course; }
+    qreal latitude;
+    qreal longtitude; 
+    quint32 course;
+    geo::LOCATION& operator =(const geo::LOCATION& other) { latitude = other.latitude; longtitude = other.longtitude; other.course = course; }
+  };
+  
   struct POSITION {
     geo::COORD coord;
     qreal course;
-    qreal angular_speed;
+//    qreal angular_speed;
     QDateTime utc;
     
     QString navstat;

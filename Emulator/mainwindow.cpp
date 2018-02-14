@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
   QString map_file_name = AppParams::readParam(this, "General", "xml", "").toString();
   QString db_file_name = AppParams::readParam(this, "General", "db", "").toString();
   
+  
   /** -------- создаем область отображения -------- **/
   _area = new area::SvArea(ui->dockWidget);
   ui->vlayDock->addWidget(_area);
@@ -65,26 +66,35 @@ MainWindow::MainWindow(QWidget *parent) :
   ais::DynamicData ddata = getAISDynamicData(q);
   
   q->finish();
-
-  
-  
+ 
   // создаем устройство АИС
   SELF_AIS = new ais::SvAIS(vessel_id);
   SELF_AIS->setStaticData(sdata);
   SELF_AIS->setVoyageData(vdata);
   SELF_AIS->setDynamicData(ddata);
+
+  // создаем устройство LAG
+  
   
   // создаем устройство GPS
   SELF_GPS = new gps::SvGPS(vessel_id, gps_params, _area->bounds());
-  connect(SELF_GPS, &QThread::finished, SELF_GPS, &gps::SvGPS::deleteLater);
-  connect(SELF_GPS, SIGNAL(new_coordinates(geo::COORD)), SELF_AIS, SLOT(new_coordinates(geo::COORD)));
-          
-          
+//  connect(SELF_GPS, &QThread::finished, SELF_GPS, &gps::SvGPS::deleteLater);
+  connect(SELF_GPS, SIGNAL(new_location(geo::LOCATION)), SELF_AIS, SLOT(new_location(geo::LOCATION)));
+  
+ 
+  
   // создаем объект собственного судна
-  SELF_VESSEL = new vsl::SvVessel(this, vessel_id) ;
+  SELF_VESSEL = new vsl::SvVessel(this, vessel_id, true) ;
+  
   SELF_VESSEL->mountAIS(SELF_AIS);
+//  SELF_VESSEL->mountLAG(SELF_LAG);
   SELF_VESSEL->mountGPS(SELF_GPS);
   
+  SELF_VESSEL->assignMapObject(new SvMapObjectSelfVessel(_area, SELF_VESSEL));
+  _area->scene->addMapObject(SELF_VESSEL->mapObject());
+  SELF_VESSEL->mapObject()->setVisible(true);
+  SELF_VESSEL->mapObject()->setZValue(1);
+  connect(SELF_GPS, SIGNAL(new_location(geo::LOCATION)), SELF_VESSEL, SLOT(new_location(geo::LOCATION)));
   
   
   /** ------ читаем список судов --------- **/
@@ -121,6 +131,8 @@ MainWindow::MainWindow(QWidget *parent) :
   q->finish();
   **/
   
+
+  
 }
 
 MainWindow::~MainWindow()
@@ -128,29 +140,29 @@ MainWindow::~MainWindow()
   delete ui;
 }
 
-//vsl::InitParams MainWindow::fillVesselInitParams(QSqlQuery* q) const
-//{
-//  vsl::InitParams result;
-//  result.course = q->value("init_course").isNull() ? geo::get_rnd_course() : q->value("init_course").toUInt();
-//  result.course_change_ratio = q->value("init_course_change_ratio").isNull() ? 45 : q->value("init_course_change_ratio").toUInt();
-//  result.course_change_segment = q->value("init_course_change_segment").isNull() ? 1 : q->value("init_course_change_segment").toUInt();
-//  result.speed = q->value("init_speed").isNull() ? geo::get_rnd_course() : q->value("init_speed").toUInt();
-//  result.speed_change_ratio = q->value("init_speed_change_ratio").isNull() ? 10 : q->value("init_speed_change_ratio").toUInt();
-//  result.speed_change_segment = q->value("init_speed_change_segment").isNull() ? 1 : q->value("init_speed_change_segment").toUInt();
+gps::GPSParams MainWindow::getGPSData(QSqlQuery* q)
+{
+  gps::GPSParams result;
+  result.course = q->value("init_course").isNull() ? geo::get_rnd_course() : q->value("init_course").toUInt();
+  result.course_change_ratio = q->value("init_course_change_ratio").isNull() ? 45 : q->value("init_course_change_ratio").toUInt();
+  result.course_change_segment = q->value("init_course_change_segment").isNull() ? 1 : q->value("init_course_change_segment").toUInt();
+  result.speed = q->value("init_speed").isNull() ? geo::get_rnd_course() : q->value("init_speed").toUInt();
+  result.speed_change_ratio = q->value("init_speed_change_ratio").isNull() ? 10 : q->value("init_speed_change_ratio").toUInt();
+  result.speed_change_segment = q->value("init_speed_change_segment").isNull() ? 1 : q->value("init_speed_change_segment").toUInt();
   
-//  return result;
-//}
+  return result;
+}
 
 ais::StaticData  MainWindow::getAISStaticData(QSqlQuery* q)
 {
   ais::StaticData result;
   result.id = q->value("id").toUInt();
-  result.mmsi = q->value("mmsi").toString();
-  result.imo = q->value("imo").toString();
-  result.callsign = q->value("callsign").toString();
-  result.length = q->value("length").isNull() ? 20 : q->value("length").toUInt();
-  result.width = q->value("width").isNull() ? 20 : q->value("width").toUInt();
-  result.type = q->value("vessel_type_name").toString();
+  result.mmsi = q->value("static_mmsi").toString();
+  result.imo = q->value("static_imo").toString();
+  result.callsign = q->value("static_callsign").toString();
+  result.length = q->value("static_length").isNull() ? 20 : q->value("length").toUInt();
+  result.width = q->value("static_width").isNull() ? 20 : q->value("width").toUInt();
+  result.type = q->value("static_vessel_type_name").toString();
   
   return result;
 }
@@ -158,10 +170,10 @@ ais::StaticData  MainWindow::getAISStaticData(QSqlQuery* q)
 ais::VoyageData MainWindow::getAISVoyageData(QSqlQuery* q)
 {
   ais::VoyageData result;
-  result.cargo = q->value("cargo_type_name").toString();
-  result.destination = q->value("destination").toString();
-  result.draft = q->value("draft").toUInt();
-  result.team = q->value("draft").toUInt();
+  result.cargo = q->value("voyage_cargo_type_name").toString();
+  result.destination = q->value("voyage_destination").toString();
+  result.draft = q->value("voyage_draft").toUInt();
+  result.team = q->value("voyage_team").toUInt();
   
   return result;
 }
@@ -172,7 +184,7 @@ ais::DynamicData MainWindow::getAISDynamicData(QSqlQuery* q)
   result.position.coord.latitude = q->value("dynamic_latitude").toUInt();
   result.position.coord.longtitude = q->value("dynamic_longtitude").toUInt();
   result.position.course = q->value("dynamic_course").toUInt();
-  result.navstat = q->value("status_name").toString();
+  result.navstat = q->value("dynamic_status_name").toString();
   
   return result;
 }

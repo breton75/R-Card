@@ -1,4 +1,4 @@
-#include "sv_vesselsymbol.h"
+#include "sv_vessel_graphics.h"
 
 SvBeackonSymbol::SvBeackonSymbol(area::SvArea *parent,
                                  bool allowEdit,

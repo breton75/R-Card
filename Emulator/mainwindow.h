@@ -5,6 +5,8 @@
 #include <QDateTime>
 #include <QMessageBox>
 #include <QThread>
+#include <QSqlDatabase>
+#include <QSqlQuery>
 
 #include "sv_area.h"
 #include "../../svlib/sv_settings.h"
@@ -13,6 +15,7 @@
 #include "sv_idevice.h"
 #include "sv_gps.h"
 #include "sv_ais.h"
+#include "sv_mapobjects.h"
 
 #include "sql_defs.h"
 
@@ -45,6 +48,12 @@ private:
   Ui::MainWindow *ui;
   
   area::SvArea* _area;
+  
+  SvMapObjectSelfVessel* _self_map_obj;
+  QMap<int, SvMapObjectSelfVessel*> _vessels_map_obj;
+  
+private slots:
+  void setVesselPosition();
   
 };
 

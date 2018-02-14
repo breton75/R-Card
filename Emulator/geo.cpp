@@ -101,6 +101,24 @@ qreal geo::lat1_lat2_distance(qreal min_lat, qreal max_lat, qreal lon)
   return (max_lat - min_lat) * lon1dl;
 }
 
+
+QPointF geo::geo2point(const geo::BOUNDS* bounds, qreal lon, qreal lat)
+{
+  qreal x = area_data->area_curr_size.width() - (bounds->max_lon - lon) * area_data->koeff.lon;
+  qreal y = (bounds->max_lat - lat) * area_data->koeff.lat;
+  return QPointF(x, y);
+}
+
+QPointF geo::point2geo(const geo::BOUNDS* bounds, qreal x, qreal y)
+{
+  qreal lon = bounds->min_lon + x / area_data->koeff.lon;
+  qreal lat = bounds->max_lat - y / area_data->koeff.lon;
+  
+//  qreal x = area_data->area_curr_size.width() - (area_data->geo_bounds.max_lon - lon) * area_data->koeff.lon;
+//  qreal y = (area_data->geo_bounds.max_lat - lat) * area_data->koeff.lat;
+  return QPointF(lon, lat);
+}
+
 //void getGridStep(AREA_DATA* area_data)
 //{
 //  /* считаем в метрах */

@@ -31,7 +31,32 @@ void ais::SvAIS::stop()
   
 }
 
-void ais::SvAIS::new_coordinates(const geo::COORD &coord)
+void ais::SvAIS::new_location(const geo::LOCATION& location);
+{
+  
+}
+
+
+
+
+/** ***   TRANSMITTER  ****** **/
+ais::SvAISTransmitter::SvAISTransmitter(ais::StaticData *sdata, ais::VoyageData *vdata, ais::DynamicData *ddata, QMutex *mutex)
+{
+  
+}
+  
+ais::SvAISTransmitter::~SvAISTransmitter()
+{ 
+  stop();
+  deleteLater();
+}
+
+void ais::SvAISTransmitter::stop()
+{
+  
+}
+
+void ais::SvAISTransmitter::run()
 {
   
 }
