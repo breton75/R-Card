@@ -19,7 +19,7 @@
 #include "../../svlib/sv_sqlite.h"
 //#include "sv_beaconeditor.h"
 #include "geo.h"
-#include "sv_vessel.h"
+//#include "sv_vessel.h"
 
 enum SvMapObjectTypes
 {
@@ -318,15 +318,15 @@ class SvMapObjectVesselAbstract : public SvMapObject
 {
   public:
     
-    explicit SvMapObjectVesselAbstract(QWidget* parent, vsl::SvVessel* vessel):
-      SvMapObject(parent) { _vessel = vessel; }
+    explicit SvMapObjectVesselAbstract(QWidget* parent): //, vsl::SvVessel* vessel):
+      SvMapObject(parent) { /*_vessel = vessel;*/ }
   
-    vsl::SvVessel* vessel() { return _vessel; }
+//    vsl::SvVessel* vessel() { return _vessel; }
     
-    int vesselId() const { return _vessel->id; }
+//    int vesselId() const { return _vessel->id; }
     
 private:
-    vsl::SvVessel* _vessel = nullptr;
+//    vsl::SvVessel* _vessel = nullptr;
     
 };
 
@@ -342,7 +342,7 @@ class SvMapObjectVessel : public SvMapObjectVesselAbstract
   } ;
   
   public:
-    explicit SvMapObjectVessel(QWidget* parent, vsl::SvVessel* vessel);
+    explicit SvMapObjectVessel(QWidget* parent/*, vsl::SvVessel* vessel*/);
     
     int type() const { return motVessel; }
     
@@ -365,7 +365,7 @@ class SvMapObjectSelfVessel : public SvMapObjectVesselAbstract
   } ;
   
   public:
-    explicit SvMapObjectSelfVessel(QWidget* parent, vsl::SvVessel* vessel);
+    explicit SvMapObjectSelfVessel(QWidget* parent);
     
     int type() const { return motSelfVessel; }
     

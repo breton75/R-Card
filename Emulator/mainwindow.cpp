@@ -13,8 +13,20 @@ MainWindow::MainWindow(QWidget *parent) :
 {
   ui->setupUi(this);
   
+  AppParams::WindowParams p;
+  p = AppParams::readWindowParams(this);
+  resize(p.size);
+  move(p.position);
+  setWindowState(p.state);
+  
   QString map_file_name = AppParams::readParam(this, "General", "xml", "").toString();
   QString db_file_name = AppParams::readParam(this, "General", "db", "").toString();
+  
+  /* параметры окна графики */
+  AppParams::WindowParams gw = AppParams::readWindowParams(this, "AREA WINDOW");
+  ui->dockWidget->resize(gw.size);
+  ui->dockWidget->move(gw.position);
+//  ui->dockWidget->setWindowState(gw.state);
   
   
   /** -------- создаем область отображения -------- **/
@@ -79,7 +91,7 @@ MainWindow::MainWindow(QWidget *parent) :
   // создаем устройство GPS
   SELF_GPS = new gps::SvGPS(vessel_id, gps_params, _area->bounds());
 //  connect(SELF_GPS, &QThread::finished, SELF_GPS, &gps::SvGPS::deleteLater);
-  connect(SELF_GPS, SIGNAL(new_location(geo::LOCATION)), SELF_AIS, SLOT(new_location(geo::LOCATION)));
+  connect(SELF_GPS, SIGNAL(newGeoPosition(geo::GEOPOSITION)), SELF_AIS, SLOT(newGeoPosition(geo::GEOPOSITION)));
   
  
   
@@ -90,11 +102,15 @@ MainWindow::MainWindow(QWidget *parent) :
 //  SELF_VESSEL->mountLAG(SELF_LAG);
   SELF_VESSEL->mountGPS(SELF_GPS);
   
-  SELF_VESSEL->assignMapObject(new SvMapObjectSelfVessel(_area, SELF_VESSEL));
+  SELF_VESSEL->assignMapObject(new SvMapObjectSelfVessel(_area/*, SELF_VESSEL*/));
   _area->scene->addMapObject(SELF_VESSEL->mapObject());
   SELF_VESSEL->mapObject()->setVisible(true);
   SELF_VESSEL->mapObject()->setZValue(1);
-  connect(SELF_GPS, SIGNAL(new_location(geo::LOCATION)), SELF_VESSEL, SLOT(new_location(geo::LOCATION)));
+  connect(SELF_GPS, SIGNAL(newGeoPosition(const geo::GEOPOSITION&)), SELF_VESSEL, SLOT(newGeoPosition(const geo::GEOPOSITION&)));
+  
+  connect(SELF_VESSEL, &vsl::SvVessel::updateMapObjectPos, _area->scene, area::SvAreaScene::setMapObjectPos);
+  
+  SELF_VESSEL->newGeoPosition(SELF_GPS->currentGeoPosition());
   
   
   /** ------ читаем список судов --------- **/
@@ -131,12 +147,15 @@ MainWindow::MainWindow(QWidget *parent) :
   q->finish();
   **/
   
-
+  connect(this, SIGNAL(newState(bool)), this, SLOT(stateChanged(bool)));
   
 }
 
 MainWindow::~MainWindow()
 {
+  AppParams::saveWindowParams(this, this->size(), this->pos(), this->windowState());
+  AppParams::saveWindowParams(ui->dockWidget, ui->dockWidget->size(), ui->dockWidget->pos(), ui->dockWidget->windowState(), "AREA WINDOW");
+  
   delete ui;
 }
 
@@ -189,20 +208,80 @@ ais::DynamicData MainWindow::getAISDynamicData(QSqlQuery* q)
   return result;
 }
 
-//QString MainWindow::fillVesselNavStatus(QSqlQuery* q) const
-//{
-//  QString result = q->value("status_name").toString();
+void MainWindow::stateChanged(bool state)
+{
+  if(state) {
+    ui->bnCycle->setText("Стоп");
+    ui->bnCycle->setStyleSheet("background-color: tomato");
+   
+  }
+  else {
+   
+    ui->bnCycle->setText("Старт");
+    ui->bnCycle->setStyleSheet("");
+    
+//    on_bnSaveToFile_clicked(false);
+  }
   
-//  return result;  
-//}
+  ui->tabWidget->setEnabled(!state);
+  ui->bnCycle->setEnabled(true);
+  QApplication::processEvents();
+  
+}
 
-//void MainWindow::on_bnStart_clicked()
-//{
-//  /* начальный угол поворота */
-//  QTime t(0,0,0);
-//  qsrand(t.secsTo(QTime::currentTime()));
-//  qreal start_angle = qrand() % 360;
+void MainWindow::on_bnCycle_clicked()
+{
   
+  ui->bnCycle->setEnabled(false);
+  ui->tabWidget->setEnabled(false);
+  QApplication::processEvents();
   
+  SELF_GPS->start();
+  emit newState(true);
   
-//}
+//  if(!SELF_GPS)
+//  {
+//    SELF_GPS->start();
+    
+//    _serial = new QSerialPort(_available_devices.at(ui->cbDevices->currentIndex()));
+    
+//    if (!_serial)
+//    {
+//      log << svlog::Time << svlog::Critical << "Ошибка при создании устройства." 
+//          << _serial->errorString() << svlog::endl;;
+//      return;
+//    }
+    
+//    if(!_serial->open(QIODevice::ReadWrite)) {
+//      log << svlog::Time << svlog::Critical
+//          << QString("Не удалось открыть порт %1").arg(_available_devices.at(ui->cbDevices->currentIndex()).portName())
+//          << svlog::endl;
+//      return;
+//    }
+    
+//    _tdc100thr = new SvPullTDC1000(_serial, ui->spinTimer->value());
+//    connect(_tdc100thr, SIGNAL(newData(QByteArray&)), this, SLOT(new_data(QByteArray&)));
+//    _tdc100thr->start();
+    
+//    emit newState(true);    
+
+//  }
+//  else
+//  {
+//    SELF_GPS->stop();
+    
+//    _tdc100thr->stop();
+//    _tdc100thr->deleteLater();
+//    delete _tdc100thr;
+//    _tdc100thr = nullptr;      
+    
+//    if(_serial) {
+//      if(_serial->isOpen()) _serial->close();
+//      delete _serial;
+//      _serial = nullptr;
+//    }
+    
+//    emit newState(false);
+    
+//  }
+}

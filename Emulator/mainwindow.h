@@ -53,7 +53,14 @@ private:
   QMap<int, SvMapObjectSelfVessel*> _vessels_map_obj;
   
 private slots:
-  void setVesselPosition();
+  void stateChanged(bool state);
+//  void setVesselPosition();
+  
+  
+  void on_bnCycle_clicked();
+  
+signals:
+  newState(bool state);
   
 };
 

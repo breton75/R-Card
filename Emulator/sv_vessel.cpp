@@ -28,9 +28,10 @@ vsl::SvVessel::~SvVessel()
   
 }
 
-void vsl::SvVessel::new_location(const geo::LOCATION& location)
+void vsl::SvVessel::newGeoPosition(const geo::GEOPOSITION& geopos)
 {
-  
+  _current_geo_position = geopos;
+  emit updateMapObjectPos(_map_object, geopos);
 }
 
 void vsl::SvVessel::start()

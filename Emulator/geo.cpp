@@ -57,19 +57,20 @@ quint32 geo::get_rnd_course()
   return result;
 }
 
-geo::COORD geo::get_rnd_position(geo::BOUNDS* bounds)
+geo::GEOPOSITION geo::get_rnd_position(geo::BOUNDS* bounds)
 {
-  geo::COORD result;
+  geo::GEOPOSITION result;
   QTime t(0,0,0);
   qreal lat_diff = bounds->max_lat - bounds->min_lat;
   qreal lon_diff = bounds->max_lon - bounds->min_lon;
   
   qsrand(t.secsTo(QTime::currentTime()));
   
-  /**
-  result.latitude = bounds.min_lat + rnd() % lat_diff;
-  result.longtitude = bounds.min_lon + rnd % lon_diff;
-  **/
+  result.latitude = bounds->min_lat + (qreal(qrand()) / qreal(RAND_MAX)) * lat_diff;
+  
+  qsrand(t.secsTo(QTime::currentTime()));
+  result.longtitude = bounds->min_lon + (qreal(qrand()) / qreal(RAND_MAX)) * lon_diff;
+  
   return result;
   
 }
@@ -99,24 +100,6 @@ qreal geo::lat1_lat2_distance(qreal min_lat, qreal max_lat, qreal lon)
   
   /* в километрах !!! */
   return (max_lat - min_lat) * lon1dl;
-}
-
-
-QPointF geo::geo2point(const geo::BOUNDS* bounds, qreal lon, qreal lat)
-{
-  qreal x = area_data->area_curr_size.width() - (bounds->max_lon - lon) * area_data->koeff.lon;
-  qreal y = (bounds->max_lat - lat) * area_data->koeff.lat;
-  return QPointF(x, y);
-}
-
-QPointF geo::point2geo(const geo::BOUNDS* bounds, qreal x, qreal y)
-{
-  qreal lon = bounds->min_lon + x / area_data->koeff.lon;
-  qreal lat = bounds->max_lat - y / area_data->koeff.lon;
-  
-//  qreal x = area_data->area_curr_size.width() - (area_data->geo_bounds.max_lon - lon) * area_data->koeff.lon;
-//  qreal y = (area_data->geo_bounds.max_lat - lat) * area_data->koeff.lat;
-  return QPointF(lon, lat);
 }
 
 //void getGridStep(AREA_DATA* area_data)

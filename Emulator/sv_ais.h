@@ -94,7 +94,7 @@ private:
   QMutex _mutex;
   
 public slots:
-  void new_location(const geo::LOCATION& location);
+  void newGeoPosition(const geo::GEOPOSITION &geops);
   
 };
 

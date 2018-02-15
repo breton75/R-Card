@@ -331,8 +331,8 @@ SvMapObjectDirection::SvMapObjectDirection(QWidget* parent, qreal lon, qreal lat
 /** ***************** VESSEL ***********************/
 /** ************************************************/
 
-SvMapObjectVessel::SvMapObjectVessel(QWidget* parent, vsl::SvVessel* vessel):
-  SvMapObjectVesselAbstract(parent, vessel)
+SvMapObjectVessel::SvMapObjectVessel(QWidget* parent):
+  SvMapObjectVesselAbstract(parent/*, vessel*/)
 {
   path()->moveTo(_points[0]);
   path()->lineTo(_points[1]);
@@ -354,8 +354,8 @@ SvMapObjectVessel::SvMapObjectVessel(QWidget* parent, vsl::SvVessel* vessel):
 
 
 
-SvMapObjectSelfVessel::SvMapObjectSelfVessel(QWidget* parent, vsl::SvVessel* vessel):
-  SvMapObjectVesselAbstract(parent, vessel)
+SvMapObjectSelfVessel::SvMapObjectSelfVessel(QWidget* parent/*, vsl::SvVessel* vessel*/):
+  SvMapObjectVesselAbstract(parent/*, vessel*/)
 {
   path()->moveTo(_points[0]);
   path()->lineTo(_points[1]);

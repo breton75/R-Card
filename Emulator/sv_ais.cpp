@@ -31,7 +31,7 @@ void ais::SvAIS::stop()
   
 }
 
-void ais::SvAIS::new_location(const geo::LOCATION& location);
+void ais::SvAIS::newGeoPosition(const geo::GEOPOSITION& geops)
 {
   
 }

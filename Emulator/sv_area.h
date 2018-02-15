@@ -205,6 +205,8 @@ public slots:
   void mousePressed(QMouseEvent * event);
   void mouseReleased(QMouseEvent * event);
   void mouseMoved(QMouseEvent * event);
+ 
+  
   
 private slots:
   void buttonPressed();
@@ -232,6 +234,8 @@ class area::SvAreaScene: public QGraphicsScene
     void addMapObject(SvMapObject* object){ addItem(object); _mapObjects.append(object); }
     void removeMapObject(SvMapObject* object) { removeItem(object); _mapObjects.removeOne(object); }
   
+    void setMapObjectPos(SvMapObject* mapObject, const geo::GEOPOSITION& geopos);
+    
   private:
     area::AREA_DATA *_area_data;
     QList<SvMapObject*> _mapObjects;

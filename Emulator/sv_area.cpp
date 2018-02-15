@@ -170,6 +170,7 @@ area::SvArea::~SvArea()
   deleteLater();
 }
 
+
 void area::SvArea::trackAirplane(qreal lon, qreal lat, int angle)
 {
   /**
@@ -614,6 +615,7 @@ void area::SvArea::setScale(qreal scale)
   scene->rbsq->setPos(_area_data.area_curr_size.width() - cs - 2, _area_data.area_curr_size.height() - cs - 2);
 
   view->resize(_area_data.area_curr_size.width(), _area_data.area_curr_size.height());
+  
   /**
   // пересчитываем координаты всех объектов 
   foreach (SvMapObject* item, scene->mapObjects()) {
@@ -675,6 +677,13 @@ area::SvAreaScene::SvAreaScene(AREA_DATA *area_data)
   lbsq = addRect(0, 0, cs, cs, QPen(QColor(0, 0, 0, 100)), QBrush(QColor(0, 0, 0, 100))); //(_area_data->area_curr_size.width() - cs - 4, _area_data->area_curr_size.height() - cs - 4, cs, cs);
       
 //  resizeScene();
+}
+
+void area::SvAreaScene::setMapObjectPos(SvMapObject* mapObject, const geo::GEOPOSITION& geopos)
+{
+  QPointF new_pos = geo2point(_area_data, geopos.longtitude, geopos.latitude);
+  mapObject->setPos(new_pos);
+  mapObject->setRotation(geopos.course);
 }
 
 /** ****** AREA VIEW ******* **/

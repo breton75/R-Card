@@ -31,20 +31,34 @@ namespace geo {
 
 //  class POSITION;
   
-  struct LOCATION {
-    LOCATION() { }
-    LOCATION(qreal latitude, qreal longtitude, quint32 course) { this->latitude = latitude; this->longtitude = longtitude; this->course = course; }
+  class GEOPOSITION {
+  public:
+    
+    GEOPOSITION() { }
+    
+    GEOPOSITION(qreal latitude, qreal longtitude, quint32 course) { 
+      
+      this->latitude = latitude; this->longtitude = longtitude; 
+      this->course = course; this->utc = QDateTime::currentDateTime();
+    }
+    
     qreal latitude;
     qreal longtitude; 
     quint32 course;
-    geo::LOCATION& operator =(const geo::LOCATION& other) { latitude = other.latitude; longtitude = other.longtitude; other.course = course; }
+    QDateTime utc;
+    
+    geo::GEOPOSITION& operator =(const geo::GEOPOSITION& other)
+    { 
+      latitude = other.latitude; longtitude = other.longtitude; 
+      course = other.course; utc = other.utc;
+    }
+    
   };
   
   struct POSITION {
     geo::COORD coord;
     qreal course;
 //    qreal angular_speed;
-    QDateTime utc;
     
     QString navstat;
     
@@ -58,7 +72,7 @@ namespace geo {
   qreal lat1_lat2_distance(qreal min_lat, qreal max_lat, qreal lon);
   
   quint32 get_rnd_course();
-  geo::COORD get_rnd_position(BOUNDS *bounds);
+  geo::GEOPOSITION get_rnd_position(BOUNDS *bounds);
 }
 
 

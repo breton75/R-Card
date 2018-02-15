@@ -54,6 +54,8 @@ public:
   
   int vesselId() { return _vessel_id; }
   
+  geo::GEOPOSITION currentGeoPosition() const { return _current_geo_position; }
+  
   void stop();
 
   
@@ -68,8 +70,8 @@ private:
   gps::GPSParams _gps_params;
   geo::BOUNDS* _bounds = nullptr;
   
-  geo::COORD _current_coordinates;
-  quint32 _current_course;
+  geo::GEOPOSITION _current_geo_position;
+//  quint32 _current_course;
   quint32 _current_speed;
   
   // параметры, необходимые для расчетов
@@ -86,8 +88,7 @@ private:
 //  void new_course(qreal course);
   
 signals:
-  void new_location(const geo::LOCATION& location);
-  void new_course(const qreal course);
+  void newGeoPosition(const geo::GEOPOSITION& geopos);
   
 };
 

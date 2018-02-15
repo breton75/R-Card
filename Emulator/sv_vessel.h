@@ -48,15 +48,15 @@ public:
   gps::SvGPS* gps() { return _gps; }
   ais::SvAIS* ais() { return _ais; }
   
-  geo::COORD coordinates() const { return _coord; }
-  void setCoordinates(const geo::COORD& coord) { _coord = coord; }
+  geo::GEOPOSITION currentGeoPosition() const { return _current_geo_position; }
+  void setGeoPosition(const geo::GEOPOSITION& current_geo_position) { _current_geo_position = current_geo_position; }
   
-  qreal distanceTo(geo::COORD& coord) { 
-    return geo::geo1_geo2_distance(_coord.longtitude, coord.longtitude, _coord.latitude, coord.latitude); }
+  qreal distanceTo(geo::GEOPOSITION& geopos) { 
+    return geo::geo1_geo2_distance(_current_geo_position.longtitude, geopos.longtitude, _current_geo_position.latitude, geopos.latitude); }
   
 private:
   bool _self;
-  geo::COORD _coord;
+  geo::GEOPOSITION _current_geo_position;
   
   gps::SvGPS* _gps = nullptr;
   ais::SvAIS* _ais = nullptr;
@@ -64,8 +64,11 @@ private:
   
   SvMapObjectVesselAbstract* _map_object = nullptr;
   
+signals:
+  void updateMapObjectPos(SvMapObject* mapObject, const geo::GEOPOSITION& geopos);
+  
 public slots:
-  void new_location(const geo::LOCATION& location);
+  void newGeoPosition(const geo::GEOPOSITION& geopos);
   
   
 };
