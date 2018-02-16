@@ -8,28 +8,28 @@
 #include <random>
 #include <qmath.h>
 
-//#include "sv_idevice.h"
+#include "sv_idevice.h"
 #include "geo.h"
 
 namespace gps {
 
-  struct GPSParams {
+  struct gpsInitParams {
   
     quint32 gps_timeout;
     
-    geo::COORD coordinates;
+    geo::GEOPOSITION geoposition;
     
-    quint32 course;
+//    quint32 course;
     quint32 course_change_segment;
     quint32 course_change_ratio;
     
-    quint32 speed;
+//    quint32 speed;
     quint32 speed_change_segment;
     quint32 speed_change_ratio;
     
     bool init_random_coordinates;
     bool init_random_course;
-//    bool init_random_speed;
+    bool init_random_speed;
     
   };
   
@@ -39,18 +39,54 @@ namespace gps {
   };
 
   class SvGPS;
-//  class SvGPSThread;
+  class SvGPSEmitter;
   
 }
 
-class gps::SvGPS: public QThread
+class gps::SvGPS : public idev::SvIDevice
+{
+  Q_OBJECT
+  
+public:
+  SvGPS(int vessel_id, gps::gpsInitParams &params, geo::BOUNDS* bounds);
+  ~SvGPS(); 
+  
+  int vesselId() { return _vessel_id; }
+  
+  gps::SvGPSEmitter* emitter() { return _gps_emitter; }
+  
+  idev::SvSimulatedDeviceTypes type() const { return idev::sdtGPS; }
+    
+  bool open();
+  void close();
+  
+  bool start(quint32 msecs = 0);
+  void stop();
+  
+private:
+//  geo::GEOPOSITION _current_geo_position;
+  
+  gps::SvGPSEmitter* _gps_emitter = nullptr;
+  
+  int _vessel_id = -1;
+  gps::gpsInitParams _gps_params;
+  geo::BOUNDS* _bounds = nullptr;
+  
+  QMutex _mutex;
+  
+//public slots:
+//  void newGeoPosition(const geo::GEOPOSITION &geops);
+  
+};
+
+class gps::SvGPSEmitter: public QThread
 {
   Q_OBJECT
   
 public:
   
-  SvGPS(int vessel_id, GPSParams &params, geo::BOUNDS* bounds);
-  ~SvGPS(); 
+  SvGPSEmitter(int vessel_id, gps::gpsInitParams &params, geo::BOUNDS* bounds);
+  ~SvGPSEmitter(); 
   
   int vesselId() { return _vessel_id; }
   
@@ -67,7 +103,7 @@ private:
   bool _started = false;
   bool _finished = false;
   
-  gps::GPSParams _gps_params;
+  gps::gpsInitParams _gps_params;
   geo::BOUNDS* _bounds = nullptr;
   
   geo::GEOPOSITION _current_geo_position;
@@ -80,9 +116,7 @@ private:
   qreal _lat_1m_angular_length;   // градусов в 1ом метре вдоль долготы
   
   gps::LonLatOffset lonlatOffset();
-  
-  void norm_course();
-  
+
 //public slots:
 //  void new_coordinates(geo::COORD coord);
 //  void new_course(qreal course);

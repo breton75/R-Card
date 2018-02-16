@@ -12,7 +12,8 @@
 #include "sv_idevice.h"
 
 namespace ais {
-  struct StaticData {                     // Информация о судне. Данные передаются каждые 6 минут
+
+  struct aisStaticData {                     // Информация о судне. Данные передаются каждые 6 минут
     
     quint32 id;                           // id судна в БД
     QString mmsi;                         // Номер MMSI
@@ -25,9 +26,9 @@ namespace ais {
       
   };
   
-  struct DynamicData {                    // Динамическая информация
+  struct aisDynamicData {                    // Динамическая информация
       
-    geo::POSITION position;               // Местоположение (широта и долгота)
+    geo::GEOPOSITION geoposition;         // Местоположение (широта и долгота)
                                           // Время (UTC)
                                           // Возраст информации (как давно обновлялась)
                                           // Курс истинный (относительно грунта), курсовой угол
@@ -39,7 +40,7 @@ namespace ais {
   
   };
   
-  struct VoyageData {                     // Рейсовая информация
+  struct aisVoyageData {                     // Рейсовая информация
   
     QString destination;                  // Пункт назначения
                                           // Время прибытия (ЕТА)
@@ -50,7 +51,7 @@ namespace ais {
   };
   
   class SvAIS;
-  class SvAISTransmitter;
+  class SvAISEmitter;
   
 }
 
@@ -64,15 +65,15 @@ public:
   
   int vesselId() { return _vessel_id; }
   
-  void setStaticData(const ais::StaticData& sdata) { _static_data = sdata; }
-  void setVoyageData(const ais::VoyageData& vdata) { _voyage_data = vdata; }
-  void setDynamicData(const ais::DynamicData& ddata) { _dynamic_data = ddata; }
-  void setPosition(const geo::POSITION& position) { _dynamic_data.position = position; }
+  void setStaticData(const ais::aisStaticData& sdata) { _static_data = sdata; }
+  void setVoyageData(const ais::aisVoyageData& vdata) { _voyage_data = vdata; }
+  void setDynamicData(const ais::aisDynamicData& ddata) { _dynamic_data = ddata; }
+  void setGeoPosition(const geo::GEOPOSITION& geopos) { _dynamic_data.geoposition = geopos; }
   void setNavStatus(const QString& status) { _dynamic_data.navstat = status; }
 
-  ais::StaticData *StaticData() { return &_static_data; }
-  ais::VoyageData *VoyageData() { return &_voyage_data; }
-  ais::DynamicData *DynamicData() { return &_dynamic_data; }
+  ais::aisStaticData *aisStaticData() { return &_static_data; }
+  ais::aisVoyageData *aisVoyageData() { return &_voyage_data; }
+  ais::aisDynamicData *aisDynamicData() { return &_dynamic_data; }
   
   idev::SvSimulatedDeviceTypes type() const { return idev::sdtAIS; }
     
@@ -83,28 +84,33 @@ public:
   void stop();
   
 private:
-  ais::SvAISTransmitter* _ais_transmitter = nullptr;
+//  geo::GEOPOSITION _current_geo_position;
   
-  ais::StaticData _static_data;
-  ais::VoyageData _voyage_data;
-  ais::DynamicData _dynamic_data;
+  ais::SvAISEmitter* _ais_emitter = nullptr;
+  
+  ais::aisStaticData _static_data;
+  ais::aisVoyageData _voyage_data;
+  ais::aisDynamicData _dynamic_data;
   
   int _vessel_id = -1;
   
   QMutex _mutex;
   
+signals:
+  void updateVessel();
+  
 public slots:
-  void newGeoPosition(const geo::GEOPOSITION &geops);
+  void newSelfGeoPosition(const geo::GEOPOSITION &geopos);
   
 };
 
-class ais::SvAISTransmitter : public QThread
+class ais::SvAISEmitter : public QThread
 {
   Q_OBJECT
   
 public:
-  SvAISTransmitter(ais::StaticData *sdata, ais::VoyageData *vdata, ais::DynamicData *ddata, QMutex *mutex);
-  ~SvAISTransmitter();
+  SvAISEmitter(ais::aisStaticData *sdata, ais::aisVoyageData *vdata, ais::aisDynamicData *ddata, QMutex *mutex);
+  ~SvAISEmitter();
   
   void stop();
   
@@ -116,16 +122,16 @@ private:
   bool _started = false;
   bool _finished = false;
   
-  ais::StaticData *_static_data = nullptr;
-  ais::VoyageData *_voyage_data = nullptr;
-  ais::DynamicData *_dynamic_data = nullptr;
+  ais::aisStaticData *_static_data = nullptr;
+  ais::aisVoyageData *_voyage_data = nullptr;
+  ais::aisDynamicData *_dynamic_data = nullptr;
   
   QMutex *_mutex = nullptr;
   
 signals:
-  void ais_static_data(ais::StaticData *data);
-  void ais_voyage_data(ais::VoyageData *data);
-  void ais_dynamic_data(ais::DynamicData *data);
+  void ais_static_data(ais::aisStaticData *data);
+  void ais_voyage_data(ais::aisVoyageData *data);
+  void ais_dynamic_data(ais::aisDynamicData *data);
   
 };
 

@@ -15,6 +15,7 @@ namespace idev {
 
   enum SvSimulatedDeviceTypes {
     sdtUndefined = -1,
+    sdtGPS,
     sdtAIS,
     sdtLAG,
     sdtNavtek,

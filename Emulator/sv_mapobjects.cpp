@@ -339,12 +339,14 @@ SvMapObjectVessel::SvMapObjectVessel(QWidget* parent):
   path()->lineTo(_points[2]);
   path()->lineTo(_points[3]);
   path()->lineTo(_points[4]);
-  path()->lineTo(_points[0]);
+  path()->lineTo(_points[5]);
+  path()->lineTo(_points[6]);
+  path()->lineTo(_points[1]);
 
   path()->setFillRule(Qt::OddEvenFill);
   
   setBrush(QBrush(QColor(0x14c546)));
-  setPen(QPen(Qt::black));
+  setPen(QPen(Qt::yellow));
   
   editAction = new QAction(QIcon(":/Icons/Pen.ico"), QString("Редактировать"), 0);
   removeAction = new QAction(QIcon(":/Icons/Cancel.ico"), QString("Удалить"), 0);
@@ -362,12 +364,14 @@ SvMapObjectSelfVessel::SvMapObjectSelfVessel(QWidget* parent/*, vsl::SvVessel* v
   path()->lineTo(_points[2]);
   path()->lineTo(_points[3]);
   path()->lineTo(_points[4]);
-  path()->lineTo(_points[0]);
+  path()->lineTo(_points[5]);
+  path()->lineTo(_points[6]);
+  path()->lineTo(_points[1]);
 
   path()->setFillRule(Qt::OddEvenFill);
   
-  setBrush(QBrush(QColor(0x216fb8)));
-  setPen(QPen(Qt::black));
+  setBrush(QBrush(QColor("tomato"))); // QColor(0x14c546))); //0x216fb8))); 0xff552b
+  setPen(Qt::black, Qt::SolidLine, 1);
   
   editAction = new QAction(QIcon(":/Icons/Pen.ico"), QString("Редактировать"), 0);
   removeAction = new QAction(QIcon(":/Icons/Cancel.ico"), QString("Удалить"), 0);

@@ -20,10 +20,12 @@
                           "       ais.dynamic_longtitude AS dynamic_longtitude, " CR \
                           "       ais.dynamic_status_id AS dynamic_status_id, " CR \
                           "       ais.dynamic_utc AS dynamic_utc, " CR \
-                          "       gps.init_course AS init_course, " CR \
+                          "       gps.timeout AS gps_timeout, " CR \
+                          "       gps.init_random_coordinates AS init_random_coordinates, " CR \
+                          "       gps.init_random_course AS init_random_course, " CR \
+                          "       gps.init_random_speed AS init_random_speed," CR \
                           "       gps.init_course_change_ratio AS init_course_change_ratio, " CR \
                           "       gps.init_course_change_segment AS init_course_change_segment, " CR \
-                          "       gps.init_speed AS init_speed, " CR \
                           "       gps.init_speed_change_ratio AS init_speed_change_ratio, " CR \
                           "       gps.init_speed_change_segment AS init_speed_change_segment, " CR \
                           "       vessel_types.type_name AS static_vessel_type_name, " CR \

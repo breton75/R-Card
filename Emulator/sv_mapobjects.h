@@ -332,13 +332,15 @@ private:
 
 class SvMapObjectVessel : public SvMapObjectVesselAbstract
 {
-  const QPointF _points[5] =
+  const QPointF _points[7] =
   {
-    QPointF(-5.0, 0.0),   // 0 
-    QPointF(-3.0, -3.0),  // 1
-    QPointF(5.0, -2.0),   // 2
-    QPointF(5.0, 2.0),    // 3
-    QPointF(-3.0, 3.0)    // 4
+    QPointF(0.0, 0.0),    // 0 
+    QPointF(0.0, -10.0),  // 1
+    QPointF(-5.0, -3.0),  // 2
+    QPointF(-5.0, 10.0),  // 3
+    QPointF(0.0, 6.0),    // 4
+    QPointF(5.0, 10.0),   // 5
+    QPointF(5.0, -3.0)    // 6
   } ;
   
   public:
@@ -355,13 +357,15 @@ class SvMapObjectVessel : public SvMapObjectVesselAbstract
 
 class SvMapObjectSelfVessel : public SvMapObjectVesselAbstract
 {
-  const QPointF _points[5] =
+  const QPointF _points[7] =
   {
-    QPointF(-5.0, 0.0),   // 0 
-    QPointF(-3.0, -3.0),  // 1
-    QPointF(5.0, -2.0),   // 2
-    QPointF(5.0, 2.0),    // 3
-    QPointF(-3.0, 3.0)    // 4
+    QPointF(0.0, 0.0),    // 0 
+    QPointF(0.0, -10.0),  // 1
+    QPointF(-5.0, -3.0),  // 2
+    QPointF(-5.0, 10.0),  // 3
+    QPointF(0.0, 6.0),    // 4
+    QPointF(5.0, 10.0),   // 5
+    QPointF(5.0, -3.0)    // 6
   } ;
   
   public:

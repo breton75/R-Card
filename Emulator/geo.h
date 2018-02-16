@@ -36,21 +36,24 @@ namespace geo {
     
     GEOPOSITION() { }
     
-    GEOPOSITION(qreal latitude, qreal longtitude, quint32 course) { 
+    GEOPOSITION(qreal latitude, qreal longtitude, quint32 course, qreal speed) { 
       
       this->latitude = latitude; this->longtitude = longtitude; 
-      this->course = course; this->utc = QDateTime::currentDateTime();
+      this->course = course; this->speed = speed; this->utc = QDateTime::currentDateTime();
     }
     
-    qreal latitude;
-    qreal longtitude; 
+    qreal latitude = 0.0;
+    qreal longtitude = 0.0; 
     quint32 course;
+    qreal speed;
     QDateTime utc;
+    
+    bool isValidCoordinates() { return ((longtitude != 0) && (latitude != 0)); }
     
     geo::GEOPOSITION& operator =(const geo::GEOPOSITION& other)
     { 
       latitude = other.latitude; longtitude = other.longtitude; 
-      course = other.course; utc = other.utc;
+      course = other.course; speed = other.speed; utc = other.utc;
     }
     
   };
@@ -65,6 +68,7 @@ namespace geo {
   };
   
   // расстояние между двумя координатами 
+  qreal geo2geo_distance(geo::GEOPOSITION& gp1, geo::GEOPOSITION& gp2); 
   qreal geo1_geo2_distance(qreal lon1, qreal lat1, qreal lon2, qreal lat2);
    
   // расстояние в километрах между двумя широтами/долготами 
@@ -72,6 +76,7 @@ namespace geo {
   qreal lat1_lat2_distance(qreal min_lat, qreal max_lat, qreal lon);
   
   quint32 get_rnd_course();
+  quint32 get_rnd_speed();
   geo::GEOPOSITION get_rnd_position(BOUNDS *bounds);
 }
 

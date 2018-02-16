@@ -2,24 +2,62 @@
 
 gps::SvGPS* SELF_GPS;
 
-gps::SvGPS::SvGPS(int vessel_id, gps::GPSParams& params, geo::BOUNDS *bounds)
+gps::SvGPS::SvGPS(int vessel_id, gpsInitParams &params, geo::BOUNDS* bounds)
 {
   _vessel_id = vessel_id;
   _gps_params = params;
+  _bounds = bounds;
+}
+
+gps::SvGPS::~SvGPS()
+{
+  if(_gps_emitter)
+    delete _gps_emitter;
   
+  deleteLater();
+}
+  
+bool gps::SvGPS::open()
+{
+  _isOpened = true;
+}
+void gps::SvGPS::close()
+{
+  _isOpened = false;
+}
+
+bool gps::SvGPS::start(quint32 msecs)
+{
+  if(_gps_emitter) {
+    delete _gps_emitter;
+    _gps_emitter = nullptr;
+  }
+  
+  _gps_emitter = new gps::SvGPSEmitter(_vessel_id, _gps_params, _bounds);
+  connect(_gps_emitter, &gps::SvGPSEmitter::finished, _gps_emitter, &gps::SvGPSEmitter::deleteLater);
+  _gps_emitter->start();
+                 
+  
+}
+
+void gps::SvGPS::stop()
+{
+  if(!_gps_emitter) return;
+  
+  delete _gps_emitter;
+  _gps_emitter = nullptr;
+  
+}
+
+
+/** ******  EMITTER  ****** **/
+gps::SvGPSEmitter::SvGPSEmitter(int vessel_id, gps::gpsInitParams& params, geo::BOUNDS *bounds)
+{
+  _vessel_id = vessel_id;
+  _gps_params = params;
   _bounds = bounds;
   
-  // начальные координаты. если переданные координаты равны 0, то получаем случайные координаты
-  _current_geo_position.longtitude = (_gps_params.init_random_coordinates || _gps_params.coordinates.longtitude == 0) ? 
-                                      geo::get_rnd_position(_bounds).longtitude : 
-                                      _gps_params.coordinates.longtitude; 
-  
-  _current_geo_position.latitude = (_gps_params.init_random_coordinates || _gps_params.coordinates.latitude == 0) ? 
-                                    geo::get_rnd_position(_bounds).latitude : 
-                                    _gps_params.coordinates.latitude;
-  // начальные курс и скорость
-  _current_geo_position.course = _gps_params.init_random_course ? geo::get_rnd_course() : _gps_params.course;
-  _current_speed = _gps_params.speed;
+  _current_geo_position = _gps_params.geoposition;
   
   // длина пути в метрах, за один отсчет таймера 
   _one_tick_length = qreal(_current_speed * 1000) / 3600 / (1000 / _gps_params.gps_timeout);
@@ -33,19 +71,19 @@ gps::SvGPS::SvGPS(int vessel_id, gps::GPSParams& params, geo::BOUNDS *bounds)
    
 }
 
-gps::SvGPS::~SvGPS()
+gps::SvGPSEmitter::~SvGPSEmitter()
 {
   stop();
   deleteLater();  
 }
 
-void gps::SvGPS::stop()
+void gps::SvGPSEmitter::stop()
 {
   _started = false;
   while(!_finished) QApplication::processEvents();
 }
 
-void gps::SvGPS::run()
+void gps::SvGPSEmitter::run()
 {
   
   qreal course_segment_counter = 0.0;
@@ -71,6 +109,7 @@ void gps::SvGPS::run()
       
       _current_geo_position.course += a * b;
       
+      // нормируем курс, чтобы он вписывался в диапазон 0 - 360 градусов
       _current_geo_position.course = _current_geo_position.course > 0 ? _current_geo_position.course % 360 : 360 - qAbs(_current_geo_position.course % 360);
 
       course_segment_counter = -_gps_params.course_change_segment;
@@ -99,7 +138,7 @@ void gps::SvGPS::run()
   
 }
 
-gps::LonLatOffset gps::SvGPS::lonlatOffset()
+gps::LonLatOffset gps::SvGPSEmitter::lonlatOffset()
 {
   qreal a, b;
   gps::LonLatOffset result;
@@ -160,14 +199,6 @@ gps::LonLatOffset gps::SvGPS::lonlatOffset()
   
   return result;
 }
-
-void gps::SvGPS::norm_course()
-{
-  /**
-  _data.angle = _data.angle > 0 ? _data.angle % 360 : 360 - qAbs(_data.angle % 360); //   * (qAbs(int(_data.angle / 360)) + 1) + _data.angle;
-  **/
-//  _data.angle = _data.angle % 360; // != 0 ? _data.angle % 360 : 0; //_data.angle;
-}   
 
 //int gps::SvGPSThread::quarter()
 //{

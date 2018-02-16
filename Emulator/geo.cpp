@@ -24,6 +24,10 @@ qreal LON1DL[90] =
  111.6, 111.6, 111.6, 111.6, 111.6, 111.6, 111.6, 111.6, 111.7, 111.7, 
  111.7, 111.7, 111.7, 111.7, 111.7, 111.7, 111.7, 111.7, 111.7, 111.7  };
 
+qreal geo::geo2geo_distance(geo::GEOPOSITION& gp1, geo::GEOPOSITION& gp2)
+{
+  return geo::geo1_geo2_distance(gp1.longtitude, gp1.latitude, gp2.longtitude, gp2.latitude);
+}
 
 qreal geo::geo1_geo2_distance(qreal lon1, qreal lat1, qreal lon2, qreal lat2)
 {
@@ -48,11 +52,20 @@ qreal geo::geo1_geo2_distance(qreal lon1, qreal lat1, qreal lon2, qreal lat2)
 
 quint32 geo::get_rnd_course()
 {
-  /* начальный угол поворота */
   QTime t(0,0,0);
   qsrand(t.secsTo(QTime::currentTime()));
 
   quint32 result = qrand() % 360;
+  
+  return result;
+}
+
+quint32 geo::get_rnd_speed()
+{
+  QTime t(0,0,0);
+  qsrand(t.secsTo(QTime::currentTime()));
+
+  quint32 result = qrand() % 20; // максимальная скорость 20 узлов
   
   return result;
 }

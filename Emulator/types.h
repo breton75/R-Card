@@ -4,18 +4,4 @@
 #include <QObject>
 
 
-namespace ais {
-
-}
-
-
-namespace lag {
-
-}
-
-
-namespace ntk {
-
-}
-
 #endif // TYPES_H

@@ -10,13 +10,6 @@ vsl::SvVessel::SvVessel(QObject *parent, quint32 id, bool self) :
    
   this->id = id;
   _self = self;
-  
-//   _init_params = params;
-//   _static_data = sdata;
-//   _voyage_data = vdata;
-   
-//   _dynamic_data.position.setCoordinates(_init_params.);
-   
 
    
    
@@ -28,10 +21,9 @@ vsl::SvVessel::~SvVessel()
   
 }
 
-void vsl::SvVessel::newGeoPosition(const geo::GEOPOSITION& geopos)
+void vsl::SvVessel::updateVessel()
 {
-  _current_geo_position = geopos;
-  emit updateMapObjectPos(_map_object, geopos);
+  emit updateMapObjectPos(_map_object, _ais->aisDynamicData()->geoposition);
 }
 
 void vsl::SvVessel::start()

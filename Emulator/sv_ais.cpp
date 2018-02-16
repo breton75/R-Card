@@ -31,32 +31,34 @@ void ais::SvAIS::stop()
   
 }
 
-void ais::SvAIS::newGeoPosition(const geo::GEOPOSITION& geops)
+void ais::SvAIS::newSelfGeoPosition(const geo::GEOPOSITION& geopos)
 {
+  _dynamic_data.geoposition = geopos;
   
+  emit updateVessel(); 
 }
 
 
 
 
-/** ***   TRANSMITTER  ****** **/
-ais::SvAISTransmitter::SvAISTransmitter(ais::StaticData *sdata, ais::VoyageData *vdata, ais::DynamicData *ddata, QMutex *mutex)
+/** ******  EMITTER  ****** **/
+ais::SvAISEmitter::SvAISEmitter(aisStaticData *sdata, aisVoyageData *vdata, aisDynamicData *ddata, QMutex *mutex)
 {
   
 }
   
-ais::SvAISTransmitter::~SvAISTransmitter()
+ais::SvAISEmitter::~SvAISEmitter()
 { 
   stop();
   deleteLater();
 }
 
-void ais::SvAISTransmitter::stop()
+void ais::SvAISEmitter::stop()
 {
   
 }
 
-void ais::SvAISTransmitter::run()
+void ais::SvAISEmitter::run()
 {
   
 }

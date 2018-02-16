@@ -36,10 +36,10 @@ public slots:
  
 //  gps::GPSParams fillVesselInitParams(QSqlQuery* q) const;
 //  vsl:: setVesselData(QSqlQuery* q);
-  gps::GPSParams getGPSData(QSqlQuery* q);
-  ais::StaticData getAISStaticData(QSqlQuery* q);
-  ais::VoyageData getAISVoyageData(QSqlQuery* q);
-  ais::DynamicData getAISDynamicData(QSqlQuery* q);
+  gps::gpsInitParams getGPSInitParams(QSqlQuery* q);
+  ais::aisStaticData getAISStaticData(QSqlQuery* q);
+  ais::aisVoyageData getAISVoyageData(QSqlQuery* q);
+  ais::aisDynamicData getAISDynamicData(QSqlQuery* q);
   
 //  QString fillVesselNavStatus(QSqlQuery* q) const;
   

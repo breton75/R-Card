@@ -11,6 +11,8 @@ MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow)
 {
+  qRegisterMetaType<geo::GEOPOSITION>("geo::GEOPOSITION");
+  
   ui->setupUi(this);
   
   AppParams::WindowParams p;
@@ -71,11 +73,11 @@ MainWindow::MainWindow(QWidget *parent) :
 // читаем информацию из БД  
   int vessel_id = q->value("id").toUInt();
   
-  gps::GPSParams gps_params = getGPSData(q);
+  gps::gpsInitParams gps_params = getGPSInitParams(q);
   
-  ais::StaticData sdata = getAISStaticData(q);
-  ais::VoyageData vdata = getAISVoyageData(q);
-  ais::DynamicData ddata = getAISDynamicData(q);
+  ais::aisStaticData sdata = getAISStaticData(q); 
+  ais::aisVoyageData vdata = getAISVoyageData(q);
+  ais::aisDynamicData ddata = getAISDynamicData(q);
   
   q->finish();
  
@@ -84,15 +86,30 @@ MainWindow::MainWindow(QWidget *parent) :
   SELF_AIS->setStaticData(sdata);
   SELF_AIS->setVoyageData(vdata);
   SELF_AIS->setDynamicData(ddata);
-
+  SELF_AIS->open();
+  
+  
   // создаем устройство LAG
   
   
+  
+  // определяем начальную геопозицию
+  
+  // начальные координаты
+  if(gps_params.init_random_coordinates || 
+     (!gps_params.init_random_coordinates && !ddata.geoposition.isValidCoordinates()))
+    
+    gps_params.geoposition = geo::get_rnd_position(_area->bounds());
+  
+  else gps_params.geoposition = ddata.geoposition; 
+  
+  // начальный курс и скорость 
+  if(gps_params.init_random_course) gps_params.geoposition.course = geo::get_rnd_course();
+  if(gps_params.init_random_speed) gps_params.geoposition.speed = geo::get_rnd_speed();
+  
   // создаем устройство GPS
   SELF_GPS = new gps::SvGPS(vessel_id, gps_params, _area->bounds());
-//  connect(SELF_GPS, &QThread::finished, SELF_GPS, &gps::SvGPS::deleteLater);
-  connect(SELF_GPS, SIGNAL(newGeoPosition(geo::GEOPOSITION)), SELF_AIS, SLOT(newGeoPosition(geo::GEOPOSITION)));
-  
+  SELF_GPS->open();
  
   
   // создаем объект собственного судна
@@ -102,15 +119,21 @@ MainWindow::MainWindow(QWidget *parent) :
 //  SELF_VESSEL->mountLAG(SELF_LAG);
   SELF_VESSEL->mountGPS(SELF_GPS);
   
-  SELF_VESSEL->assignMapObject(new SvMapObjectSelfVessel(_area/*, SELF_VESSEL*/));
+  SELF_VESSEL->assignMapObject(new SvMapObjectSelfVessel(_area));
   _area->scene->addMapObject(SELF_VESSEL->mapObject());
   SELF_VESSEL->mapObject()->setVisible(true);
   SELF_VESSEL->mapObject()->setZValue(1);
-  connect(SELF_GPS, SIGNAL(newGeoPosition(const geo::GEOPOSITION&)), SELF_VESSEL, SLOT(newGeoPosition(const geo::GEOPOSITION&)));
+  
+  // подключаем gps к АИС
+  connect(SELF_GPS->emitter(), SIGNAL(newGeoPosition(geo::GEOPOSITION&)), SELF_AIS, SLOT(newSelfGeoPosition(geo::GEOPOSITION&)));
+  
+  connect(SELF_AIS, &ais::SvAIS::updateVessel, SELF_VESSEL, &vsl::SvVessel::updateVessel);
   
   connect(SELF_VESSEL, &vsl::SvVessel::updateMapObjectPos, _area->scene, area::SvAreaScene::setMapObjectPos);
   
-  SELF_VESSEL->newGeoPosition(SELF_GPS->currentGeoPosition());
+//  SELF_GPS->start();
+  
+//  SELF_VESSEL->newGeoPosition(SELF_GPS->currentGeoPosition());
   
   
   /** ------ читаем список судов --------- **/
@@ -159,22 +182,24 @@ MainWindow::~MainWindow()
   delete ui;
 }
 
-gps::GPSParams MainWindow::getGPSData(QSqlQuery* q)
+gps::gpsInitParams MainWindow::getGPSInitParams(QSqlQuery* q)
 {
-  gps::GPSParams result;
-  result.course = q->value("init_course").isNull() ? geo::get_rnd_course() : q->value("init_course").toUInt();
-  result.course_change_ratio = q->value("init_course_change_ratio").isNull() ? 45 : q->value("init_course_change_ratio").toUInt();
-  result.course_change_segment = q->value("init_course_change_segment").isNull() ? 1 : q->value("init_course_change_segment").toUInt();
-  result.speed = q->value("init_speed").isNull() ? geo::get_rnd_course() : q->value("init_speed").toUInt();
-  result.speed_change_ratio = q->value("init_speed_change_ratio").isNull() ? 10 : q->value("init_speed_change_ratio").toUInt();
-  result.speed_change_segment = q->value("init_speed_change_segment").isNull() ? 1 : q->value("init_speed_change_segment").toUInt();
+  gps::gpsInitParams result;
+  result.gps_timeout = q->value("gps_timeout").toUInt();
+  result.init_random_coordinates = q->value("init_random_coordinates").toBool();
+  result.init_random_course = q->value("init_random_course").toBool();
+  result.init_random_speed = q->value("init_random_speed").toBool();
+  result.course_change_ratio = q->value("init_course_change_ratio").toUInt();
+  result.course_change_segment = q->value("init_course_change_segment").toUInt();
+  result.speed_change_ratio = q->value("init_speed_change_ratio").toUInt();
+  result.speed_change_segment = q->value("init_speed_change_segment").toUInt();
   
   return result;
 }
 
-ais::StaticData  MainWindow::getAISStaticData(QSqlQuery* q)
+ais::aisStaticData  MainWindow::getAISStaticData(QSqlQuery* q)
 {
-  ais::StaticData result;
+  ais::aisStaticData result;
   result.id = q->value("id").toUInt();
   result.mmsi = q->value("static_mmsi").toString();
   result.imo = q->value("static_imo").toString();
@@ -186,9 +211,9 @@ ais::StaticData  MainWindow::getAISStaticData(QSqlQuery* q)
   return result;
 }
 
-ais::VoyageData MainWindow::getAISVoyageData(QSqlQuery* q)
+ais::aisVoyageData MainWindow::getAISVoyageData(QSqlQuery* q)
 {
-  ais::VoyageData result;
+  ais::aisVoyageData result;
   result.cargo = q->value("voyage_cargo_type_name").toString();
   result.destination = q->value("voyage_destination").toString();
   result.draft = q->value("voyage_draft").toUInt();
@@ -197,12 +222,12 @@ ais::VoyageData MainWindow::getAISVoyageData(QSqlQuery* q)
   return result;
 }
 
-ais::DynamicData MainWindow::getAISDynamicData(QSqlQuery* q)
+ais::aisDynamicData MainWindow::getAISDynamicData(QSqlQuery* q)
 {
-  ais::DynamicData result;
-  result.position.coord.latitude = q->value("dynamic_latitude").toUInt();
-  result.position.coord.longtitude = q->value("dynamic_longtitude").toUInt();
-  result.position.course = q->value("dynamic_course").toUInt();
+  ais::aisDynamicData result;
+  result.geoposition.latitude = q->value("dynamic_latitude").toUInt();
+  result.geoposition.longtitude = q->value("dynamic_longtitude").toUInt();
+  result.geoposition.course = q->value("dynamic_course").toUInt();
   result.navstat = q->value("dynamic_status_name").toString();
   
   return result;
@@ -236,12 +261,12 @@ void MainWindow::on_bnCycle_clicked()
   ui->tabWidget->setEnabled(false);
   QApplication::processEvents();
   
-  SELF_GPS->start();
-  emit newState(true);
+//  SELF_GPS->start();
+//  emit newState(true);
   
-//  if(!SELF_GPS)
-//  {
-//    SELF_GPS->start();
+  if(SELF_GPS) {
+    
+    SELF_GPS->start();
     
 //    _serial = new QSerialPort(_available_devices.at(ui->cbDevices->currentIndex()));
     
@@ -263,11 +288,14 @@ void MainWindow::on_bnCycle_clicked()
 //    connect(_tdc100thr, SIGNAL(newData(QByteArray&)), this, SLOT(new_data(QByteArray&)));
 //    _tdc100thr->start();
     
-//    emit newState(true);    
+    emit newState(true);    
 
-//  }
-//  else
-//  {
+  }
+  else
+  {
+    QMessageBox::critical(this, "Ошибка", "Критическая ошибка. Сообщите разработчику данную информацию:\n(on_bnCycle_clicked SELF_GPS = NULL).", QMessageBox::Ok);
+    emit newState(false);
+  }
 //    SELF_GPS->stop();
     
 //    _tdc100thr->stop();
