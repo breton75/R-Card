@@ -16,6 +16,7 @@
 #include "sv_gps.h"
 #include "sv_ais.h"
 #include "sv_mapobjects.h"
+#include "sv_vesseleditor.h"
 
 #include "sql_defs.h"
 
@@ -30,6 +31,8 @@ class MainWindow : public QMainWindow
 public:
   explicit MainWindow(QWidget *parent = 0);
   ~MainWindow();
+  
+  bool init();
   
 public slots:
 //  void on_bnStart_clicked();

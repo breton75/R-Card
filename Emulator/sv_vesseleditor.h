@@ -6,8 +6,9 @@
 #include <QMessageBox>
 
 #include "../../svlib/sv_sqlite.h"
+#include "sql_defs.h"
 
-#define SQL_SELECT_BEACON "select plan.id, plan.uid, plan.lon, plan.lat, plan.date_time, plan.description from plan where id=%1"
+//#define SQL_SELECT_BEACON "select plan.id, plan.uid, plan.lon, plan.lat, plan.date_time, plan.description from plan where id=%1"
 
 namespace Ui {
 class SvVesselEditorDialog;
@@ -19,6 +20,7 @@ class SvVesselEditor : public QDialog
   
 public:
   enum ShowMode { smNew = 0, smEdit = 1 };
+  enum ResultCode { rcSqlError = -1, rcNoError };
                   
   explicit SvVesselEditor(QWidget *parent, int vesselId = -1);
 
@@ -26,36 +28,45 @@ public:
   
   int showMode;
   
-  int     t_id;
-  QString t_uid = "";
-  int t_model_id = -1; // модель может быть не выбрана
-//  QString t_modelName = "";
-//  QString t_className = "";
-//  QString t_brandName = "";
-  float   t_lon = 0;
-  float   t_lat = 0;
-  QDateTime t_date_time;
-  QString t_description = "";
+  QString last_error() { return _last_error; }
   
-   
-private slots:
-//  void on_DEVMODELSLIST_UI_closed();
-//  void on_DEVMODEL_UI_closed();
-//  void on_ZONELIST_UI_closed();
-//  void on_ZONE_UI_closed();
+  int     t_id = -1;
+  bool    t_self = false;
+  QString t_static_callsign = "";
+  QString t_static_imo = "";
+  QString t_static_mmsi = "";
+  quint32 t_static_type_id;
+  QString t_static_vessel_type_name = "";
+  quint32 t_static_length = 1;
+  quint32 t_static_width = 1;
   
-//  void on_bnSelectZone_clicked();
-//  void on_bnNewZone_clicked();
-//  void on_NEW_ZONE_UI_closed();
-//  void on_bnSelectPosition_clicked();
+  QString t_voyage_destination = "";
+  quint32 t_voyage_draft = 1;
+  quint32 t_voyage_cargo_type_id = 0;
+  QString t_voyage_cargo_type_name = "";
+  quint32 t_voyage_team = 1;
+  
+  quint32 t_gps_timeout = 1000;
+  bool    t_init_random_coordinates = false;
+  bool    t_init_random_course = false;
+  bool    t_init_random_speed = false;
+  quint32 t_init_course_change_ratio = 45;
+  quint32 t_init_course_change_segment = 10;
+  quint32 t_init_speed_change_ratio = 10;
+  quint32 t_init_speed_change_segment = 10;
+  
   
 public slots:
   void accept() Q_DECL_OVERRIDE;
-//  void slotNewModel();
-//  void slotSelectModel();
   
 private:
   Ui::SvVesselEditorDialog *ui;
+  
+  QString _last_error = "";
+  
+  void loadVesselTypes();
+  void loadCargoTypes();
+  void loadInitRandoms();
   
 };
 

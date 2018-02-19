@@ -6,6 +6,7 @@ extern vsl::SvVessel* SELF_VESSEL;
 extern ais::SvAIS* SELF_AIS;
 extern gps::SvGPS* SELF_GPS;
 extern QMap<int, vsl::SvVessel*> VESSELS;
+extern SvVesselEditor* VESSELEDITOR_UI;
 
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
@@ -21,14 +22,77 @@ MainWindow::MainWindow(QWidget *parent) :
   move(p.position);
   setWindowState(p.state);
   
-  QString map_file_name = AppParams::readParam(this, "General", "xml", "").toString();
-  QString db_file_name = AppParams::readParam(this, "General", "db", "").toString();
   
   /* параметры окна графики */
   AppParams::WindowParams gw = AppParams::readWindowParams(this, "AREA WINDOW");
   ui->dockWidget->resize(gw.size);
   ui->dockWidget->move(gw.position);
 //  ui->dockWidget->setWindowState(gw.state);
+  
+}
+
+bool MainWindow::init()
+{
+  QString map_file_name = AppParams::readParam(this, "General", "xml", "").toString();
+  QString db_file_name = AppParams::readParam(this, "General", "db", "").toString();
+  
+  /** ---------- открываем БД ----------- **/
+  SQLITE = new SvSQLITE(this, db_file_name);
+  QSqlError err = SQLITE->connectToDB();
+  
+  if(err.type() != QSqlError::NoError) {
+    qDebug() << err.databaseText();
+    return false;
+  }
+  
+  QSqlQuery* q = new QSqlQuery(SQLITE->db);
+  
+  /*! необходима проверка, что в таблице vessels существует запись с флагом sef == true !*/
+  /** ------ читаем информацию о собственном судне --------- **/
+SV:
+  if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELECT_VESSEL_WHERE_SELF).arg("true"), q).type()) {
+    
+    QMessageBox::critical(this, "Ошибка", q->lastError().databaseText(), QMessageBox::Ok);
+    q->finish();
+    return false;
+  }
+  
+  if(!q->next()) {
+    QMessageBox::warning(this, "", "В БД нет сведений о собственном судне", QMessageBox::Ok);
+    q->finish();
+    
+    VESSELEDITOR_UI = new SvVesselEditor(this);
+    if(QDialog::Accepted == VESSELEDITOR_UI->exec()) {
+      
+      goto SV;    
+            
+    }
+    else {
+      
+      qDebug() << VESSELEDITOR_UI->last_error();
+      delete VESSELEDITOR_UI;
+//      deleteLater();
+//      delete ui;
+//      deleteLater();
+//      qApp->quit();
+      return false;
+    }
+      
+    delete VESSELEDITOR_UI;
+    
+  }
+  
+// читаем информацию из БД  
+  int vessel_id = q->value("id").toUInt();
+  
+  gps::gpsInitParams gps_params = getGPSInitParams(q);
+  
+  ais::aisStaticData sdata = getAISStaticData(q); 
+  ais::aisVoyageData vdata = getAISVoyageData(q);
+  ais::aisDynamicData ddata = getAISDynamicData(q);
+  
+  q->finish();
+ 
   
   
   /** -------- создаем область отображения -------- **/
@@ -44,44 +108,9 @@ MainWindow::MainWindow(QWidget *parent) :
   _area->setUp("area_1");
   
   
-  /** ---------- открываем БД ----------- **/
-  SQLITE = new SvSQLITE(this, db_file_name);
-  QSqlError err = SQLITE->connectToDB();
+  /** --------- создаем устройства ----------- **/
   
-  if(err.type() != QSqlError::NoError) {
-    qDebug() << err.databaseText();
-    return;
-  }
-  
-  QSqlQuery* q = new QSqlQuery(SQLITE->db);
-  
-  /*! необходима проверка, что в таблице vessels существует запись с флагом sef == true !*/
-  /** ------ читаем информацию о собственном судне --------- **/
-  if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELECT_VESSELS).arg("true"), q).type()) {
-    
-    QMessageBox::critical(this, "Ошибка", q->lastError().databaseText(), QMessageBox::Ok);
-    q->finish();
-    return;
-  }
-  
-  if(!q->next()) {
-    QMessageBox::critical(this, "Ошибка", "В БД нет сведений о собственном судне", QMessageBox::Ok);
-    q->finish();
-    return;    
-  }
-  
-// читаем информацию из БД  
-  int vessel_id = q->value("id").toUInt();
-  
-  gps::gpsInitParams gps_params = getGPSInitParams(q);
-  
-  ais::aisStaticData sdata = getAISStaticData(q); 
-  ais::aisVoyageData vdata = getAISVoyageData(q);
-  ais::aisDynamicData ddata = getAISDynamicData(q);
-  
-  q->finish();
- 
-  // создаем устройство АИС
+  // АИС
   SELF_AIS = new ais::SvAIS(vessel_id);
   SELF_AIS->setStaticData(sdata);
   SELF_AIS->setVoyageData(vdata);
@@ -89,12 +118,11 @@ MainWindow::MainWindow(QWidget *parent) :
   SELF_AIS->open();
   
   
-  // создаем устройство LAG
+  // LAG
   
   
   
-  // определяем начальную геопозицию
-  
+  // GPS
   // начальные координаты
   if(gps_params.init_random_coordinates || 
      (!gps_params.init_random_coordinates && !ddata.geoposition.isValidCoordinates()))
@@ -107,7 +135,6 @@ MainWindow::MainWindow(QWidget *parent) :
   if(gps_params.init_random_course) gps_params.geoposition.course = geo::get_rnd_course();
   if(gps_params.init_random_speed) gps_params.geoposition.speed = geo::get_rnd_speed();
   
-  // создаем устройство GPS
   SELF_GPS = new gps::SvGPS(vessel_id, gps_params, _area->bounds());
   SELF_GPS->open();
  
@@ -172,6 +199,7 @@ MainWindow::MainWindow(QWidget *parent) :
   
   connect(this, SIGNAL(newState(bool)), this, SLOT(stateChanged(bool)));
   
+  return true;
 }
 
 MainWindow::~MainWindow()
