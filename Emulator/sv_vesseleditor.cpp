@@ -4,7 +4,7 @@
 SvVesselEditor *VESSELEDITOR_UI;
 extern SvSQLITE *SQLITE;
 
-SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId) :
+SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId, bool self) :
   QDialog(parent),
   ui(new Ui::SvVesselEditorDialog)
 {
@@ -15,6 +15,8 @@ SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId) :
   loadCargoTypes();
   loadVesselTypes();
   loadInitRandoms();
+  
+  t_self = self;
   
   if(showMode == smEdit) {
     
@@ -40,7 +42,7 @@ SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId) :
       t_static_width = q->value("static_width").toUInt();
                                  
       t_voyage_destination = q->value("voyage_destination").toString();
-      t_voyage_draft = q->value("voyage_draft").toUInt();
+      t_voyage_draft = q->value("voyage_draft").toReal();
       t_voyage_cargo_type_id = q->value("voyage_cargo_type_id").toUInt();
       t_voyage_cargo_type_name = q->value("voyage_cargo_type_name").toString();
       t_voyage_team = q->value("voyage_team").toUInt();
@@ -73,7 +75,7 @@ SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId) :
   ui->spinWidth->setValue(t_static_width);
   
   ui->editDestination->setText(t_voyage_destination);
-  ui->spinDraft->setValue(t_voyage_draft);
+  ui->dspinDraft->setValue(t_voyage_draft);
       
   ui->cbCargoType->setCurrentIndex(ui->cbCargoType->findData(t_voyage_cargo_type_id));
   
@@ -176,7 +178,7 @@ void SvVesselEditor::accept()
   t_static_width = ui->spinWidth->value();
   
   t_voyage_destination = ui->editDestination->text();
-  t_voyage_draft = ui->spinDraft->value();
+  t_voyage_draft = ui->dspinDraft->value();
       
   t_voyage_cargo_type_id = ui->cbCargoType->currentData().toUInt();
   
@@ -200,36 +202,75 @@ void SvVesselEditor::accept()
     
     case smNew: {
       
-      QSqlError sql = SQLITE->execSQL(SQL_INSERT_NEW_VESSEL);
-      
-      if(QSqlError::NoError != sql.type()) {
+      try {
         
-        setResult(rcSqlError);
-        _last_error = sql.databaseText();
-        QMessageBox::critical(this, "Ошибка", QString("Ошибка при добавлении записи:\n%1").arg(_last_error), QMessageBox::Ok);
-        break;
-      }
-      
-      QSqlQuery* q = new QSqlQuery(SQLITE->db);
-      sql = SQLITE->execSQL(QString("select id from plan order by id desc limit 1"), q);
-      
-      if(QSqlError::NoError != sql.type()) {
-        
-        _last_error = sql.databaseText();
-        q->finish();
-        setResult(rcSqlError);
-        
-        QMessageBox::critical(this, "Ошибка", QString("Ошибка при добавлении записи:\n%1").arg(_last_error), QMessageBox::Ok);
-        break;
-      }
+        if(!SQLITE->transaction()) _exception.raise(SQLITE->db.lastError().databaseText());
 
-      q->first();
-//      t_id = q->value("id").toInt();
-      q->finish();
-      delete q;
+          QSqlError sql = SQLITE->execSQL(QString(SQL_INSERT_NEW_VESSEL).arg(t_self));
+          if(QSqlError::NoError != sql.type()) _exception.raise(sql.databaseText());
+         
+          sql = SQLITE->execSQL(QString(SQL_INSERT_NEW_AIS)
+                                .arg(t_static_mmsi)
+                                .arg(t_static_imo)
+                                .arg(t_static_type_id)
+                                .arg(t_static_callsign)
+                                .arg(t_static_length)
+                                .arg(t_static_width)
+                                .arg(t_voyage_destination)
+                                .arg(t_voyage_draft)
+                                .arg(t_voyage_cargo_type_id)
+                                .arg(t_voyage_team));
+                
+          if(QSqlError::NoError != sql.type()) _exception.raise(sql.databaseText());
+          
+          sql = SQLITE->execSQL(QString(SQL_INSERT_NEW_GPS)
+                                .arg(t_gps_timeout)
+                                .arg(t_init_random_coordinates)
+                                .arg(t_init_random_course)
+                                .arg(t_init_random_speed)
+                                .arg(t_init_course_change_ratio)
+                                .arg(t_init_speed_change_ratio)
+                                .arg(t_init_course_change_segment)
+                                .arg(t_init_speed_change_segment));
+                
+          if(QSqlError::NoError != sql.type()) _exception.raise(sql.databaseText());
+          
+          if(!SQLITE->commit()) _exception.raise(SQLITE->db.lastError().databaseText());
+          
+      }
+      catch(SvException &e) {
+          
+        SQLITE->rollback();
+        setResult(rcSqlError);
+        _last_error = e.err;
+        qDebug() << _last_error;
+//        QMessageBox::critical(this, "Ошибка", QString("Ошибка при добавлении записи:\n%1").arg(_last_error), QMessageBox::Ok);
+      }
+        
+      break;
+        
+        
+      
+//      QSqlQuery* q = new QSqlQuery(SQLITE->db);
+//      sql = SQLITE->execSQL(QString("select id from plan order by id desc limit 1"), q);
+      
+//      if(QSqlError::NoError != sql.type()) {
+        
+//        _last_error = sql.databaseText();
+//        q->finish();
+//        setResult(rcSqlError);
+        
+//        QMessageBox::critical(this, "Ошибка", QString("Ошибка при добавлении записи:\n%1").arg(_last_error), QMessageBox::Ok);
+//        break;
+//      }
+
+//      q->first();
+////      t_id = q->value("id").toInt();
+//      q->finish();
+//      delete q;
 
 //      result = true;
-      break;
+//      break;
       
     }
 

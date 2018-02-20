@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QDateTime>
 #include <QMessageBox>
+#include <QException>
 
 #include "../../svlib/sv_sqlite.h"
 #include "sql_defs.h"
@@ -14,6 +15,16 @@ namespace Ui {
 class SvVesselEditorDialog;
 }
 
+class SvException: public QException
+{
+public:
+    void raise(QString error) { err = error; throw *this; }
+    SvException *clone() const { return new SvException(*this); }
+
+    QString err;
+
+};
+
 class SvVesselEditor : public QDialog
 {
   Q_OBJECT
@@ -22,7 +33,7 @@ public:
   enum ShowMode { smNew = 0, smEdit = 1 };
   enum ResultCode { rcSqlError = -1, rcNoError };
                   
-  explicit SvVesselEditor(QWidget *parent, int vesselId = -1);
+  explicit SvVesselEditor(QWidget *parent, int vesselId = -1, bool self = false);
 
   ~SvVesselEditor();
   
@@ -41,7 +52,7 @@ public:
   quint32 t_static_width = 1;
   
   QString t_voyage_destination = "";
-  quint32 t_voyage_draft = 1;
+  qreal   t_voyage_draft = 1.0;
   quint32 t_voyage_cargo_type_id = 0;
   QString t_voyage_cargo_type_name = "";
   quint32 t_voyage_team = 1;
@@ -63,6 +74,7 @@ private:
   Ui::SvVesselEditorDialog *ui;
   
   QString _last_error = "";
+  SvException _exception;
   
   void loadVesselTypes();
   void loadCargoTypes();

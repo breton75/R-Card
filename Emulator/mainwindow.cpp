@@ -48,9 +48,10 @@ bool MainWindow::init()
   QSqlQuery* q = new QSqlQuery(SQLITE->db);
   
   /*! необходима проверка, что в таблице vessels существует запись с флагом sef == true !*/
-  /** ------ читаем информацию о собственном судне --------- **/
 SV:
-  if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELECT_VESSEL_WHERE_SELF).arg("true"), q).type()) {
+
+  /** ------ читаем информацию о собственном судне --------- **/
+  if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELECT_VESSEL_WHERE_SELF).arg(true), q).type()) {
     
     QMessageBox::critical(this, "Ошибка", q->lastError().databaseText(), QMessageBox::Ok);
     q->finish();
@@ -61,7 +62,7 @@ SV:
     QMessageBox::warning(this, "", "В БД нет сведений о собственном судне", QMessageBox::Ok);
     q->finish();
     
-    VESSELEDITOR_UI = new SvVesselEditor(this);
+    VESSELEDITOR_UI = new SvVesselEditor(this, -1, true);
     if(QDialog::Accepted == VESSELEDITOR_UI->exec()) {
       
       goto SV;    
@@ -69,27 +70,26 @@ SV:
     }
     else {
       
-      qDebug() << VESSELEDITOR_UI->last_error();
+      if(VESSELEDITOR_UI->result() != SvVesselEditor::rcNoError)
+        QMessageBox::critical(this, "Ошибка", QString("Ошибка при добавлении записи:\n%1").arg(VESSELEDITOR_UI->last_error()), QMessageBox::Ok);
+      
       delete VESSELEDITOR_UI;
-//      deleteLater();
-//      delete ui;
-//      deleteLater();
-//      qApp->quit();
       return false;
+      
     }
       
     delete VESSELEDITOR_UI;
     
   }
   
-// читаем информацию из БД  
+  /** ------ читаем информацию для инциализации из БД ------ **/
   int vessel_id = q->value("id").toUInt();
   
   gps::gpsInitParams gps_params = getGPSInitParams(q);
   
-  ais::aisStaticData sdata = getAISStaticData(q); 
-  ais::aisVoyageData vdata = getAISVoyageData(q);
-  ais::aisDynamicData ddata = getAISDynamicData(q);
+  ais::aisStaticData SData = getAISStaticData(q); 
+  ais::aisVoyageData VData = getAISVoyageData(q);
+  ais::aisDynamicData DData = getAISDynamicData(q);
   
   q->finish();
  
@@ -107,39 +107,59 @@ SV:
 
   _area->setUp("area_1");
   
+  /** --------- определяем начальную геопозицию ----------- **/
+  // начальные координаты
+  if(gps_params.init_random_coordinates || 
+     (!gps_params.init_random_coordinates && !DData.geoposition.isValidCoordinates())) {
+    
+    geo::COORDINATES coord = geo::get_rnd_coordinates(_area->bounds());
+    
+    gps_params.geoposition.latitude = coord.latitude;
+    gps_params.geoposition.longtitude = coord.longtitude;
+    DData.geoposition.latitude = coord.latitude;
+    DData.geoposition.longtitude = coord.longtitude;
+  }
+  else {
+    gps_params.geoposition.latitude = DData.geoposition.latitude; 
+    gps_params.geoposition.longtitude = DData.geoposition.longtitude; 
+  }
+  
+  // начальный курс
+  if(gps_params.init_random_course ||
+    (!gps_params.init_random_course && !DData.geoposition.isValidCourse())) {
+    gps_params.geoposition.course = geo::get_rnd_course();
+    DData.geoposition.course = gps_params.geoposition.course;
+  }
+  else gps_params.geoposition.course = DData.geoposition.course;
+  
+  // начальная скорость 
+//  qDebug() << DData.geoposition.speed;
+  if(gps_params.init_random_speed ||
+    (!gps_params.init_random_speed && !DData.geoposition.isValidSpeed())) {
+    
+    gps_params.geoposition.speed = geo::get_rnd_speed();
+    DData.geoposition.speed = gps_params.geoposition.speed;
+  }
+  else gps_params.geoposition.speed = DData.geoposition.speed;
   
   /** --------- создаем устройства ----------- **/
+  // GPS
+  SELF_GPS = new gps::SvGPS(vessel_id, gps_params, _area->bounds());
+  SELF_GPS->open();
+ 
   
   // АИС
   SELF_AIS = new ais::SvAIS(vessel_id);
-  SELF_AIS->setStaticData(sdata);
-  SELF_AIS->setVoyageData(vdata);
-  SELF_AIS->setDynamicData(ddata);
+  SELF_AIS->setStaticData(SData);
+  SELF_AIS->setVoyageData(VData);
+  SELF_AIS->setDynamicData(DData);
   SELF_AIS->open();
   
   
   // LAG
   
   
-  
-  // GPS
-  // начальные координаты
-  if(gps_params.init_random_coordinates || 
-     (!gps_params.init_random_coordinates && !ddata.geoposition.isValidCoordinates()))
-    
-    gps_params.geoposition = geo::get_rnd_position(_area->bounds());
-  
-  else gps_params.geoposition = ddata.geoposition; 
-  
-  // начальный курс и скорость 
-  if(gps_params.init_random_course) gps_params.geoposition.course = geo::get_rnd_course();
-  if(gps_params.init_random_speed) gps_params.geoposition.speed = geo::get_rnd_speed();
-  
-  SELF_GPS = new gps::SvGPS(vessel_id, gps_params, _area->bounds());
-  SELF_GPS->open();
- 
-  
-  // создаем объект собственного судна
+  /** --------- создаем объект собственного судна -------------- **/
   SELF_VESSEL = new vsl::SvVessel(this, vessel_id, true) ;
   
   SELF_VESSEL->mountAIS(SELF_AIS);
@@ -152,15 +172,13 @@ SV:
   SELF_VESSEL->mapObject()->setZValue(1);
   
   // подключаем gps к АИС
-  connect(SELF_GPS->emitter(), SIGNAL(newGeoPosition(geo::GEOPOSITION&)), SELF_AIS, SLOT(newSelfGeoPosition(geo::GEOPOSITION&)));
+  connect(SELF_GPS, SIGNAL(newGeoPosition(const geo::GEOPOSITION&)), SELF_AIS, SLOT(newSelfGeoPosition(const geo::GEOPOSITION&)));
   
   connect(SELF_AIS, &ais::SvAIS::updateVessel, SELF_VESSEL, &vsl::SvVessel::updateVessel);
   
   connect(SELF_VESSEL, &vsl::SvVessel::updateMapObjectPos, _area->scene, area::SvAreaScene::setMapObjectPos);
   
-//  SELF_GPS->start();
-  
-//  SELF_VESSEL->newGeoPosition(SELF_GPS->currentGeoPosition());
+  SELF_VESSEL->updateVessel();
   
   
   /** ------ читаем список судов --------- **/
@@ -232,8 +250,8 @@ ais::aisStaticData  MainWindow::getAISStaticData(QSqlQuery* q)
   result.mmsi = q->value("static_mmsi").toString();
   result.imo = q->value("static_imo").toString();
   result.callsign = q->value("static_callsign").toString();
-  result.length = q->value("static_length").isNull() ? 20 : q->value("length").toUInt();
-  result.width = q->value("static_width").isNull() ? 20 : q->value("width").toUInt();
+  result.length = q->value("static_length").isNull() ? 20 : q->value("static_length").toUInt();
+  result.width = q->value("static_width").isNull() ? 20 : q->value("static_width").toUInt();
   result.type = q->value("static_vessel_type_name").toString();
   
   return result;
@@ -244,7 +262,7 @@ ais::aisVoyageData MainWindow::getAISVoyageData(QSqlQuery* q)
   ais::aisVoyageData result;
   result.cargo = q->value("voyage_cargo_type_name").toString();
   result.destination = q->value("voyage_destination").toString();
-  result.draft = q->value("voyage_draft").toUInt();
+  result.draft = q->value("voyage_draft").toReal();
   result.team = q->value("voyage_team").toUInt();
   
   return result;
@@ -253,9 +271,10 @@ ais::aisVoyageData MainWindow::getAISVoyageData(QSqlQuery* q)
 ais::aisDynamicData MainWindow::getAISDynamicData(QSqlQuery* q)
 {
   ais::aisDynamicData result;
-  result.geoposition.latitude = q->value("dynamic_latitude").toUInt();
-  result.geoposition.longtitude = q->value("dynamic_longtitude").toUInt();
-  result.geoposition.course = q->value("dynamic_course").toUInt();
+  result.geoposition.latitude = q->value("dynamic_latitude").isNull() ? -1.0 : q->value("dynamic_latitude").toReal();
+  result.geoposition.longtitude = q->value("dynamic_longtitude").isNull() ? -1.0 : q->value("dynamic_longtitude").toReal();
+  result.geoposition.course = q->value("dynamic_course").isNull() ? -1 : q->value("dynamic_course").toInt();
+  result.geoposition.speed = q->value("dynamic_speed").isNull() ? -1 : q->value("dynamic_speed").toInt();
   result.navstat = q->value("dynamic_status_name").toString();
   
   return result;

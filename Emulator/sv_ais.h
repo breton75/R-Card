@@ -100,7 +100,7 @@ signals:
   void updateVessel();
   
 public slots:
-  void newSelfGeoPosition(const geo::GEOPOSITION &geopos);
+  void newSelfGeoPosition(const geo::GEOPOSITION& geopos);
   
 };
 

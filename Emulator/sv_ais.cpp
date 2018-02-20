@@ -34,7 +34,7 @@ void ais::SvAIS::stop()
 void ais::SvAIS::newSelfGeoPosition(const geo::GEOPOSITION& geopos)
 {
   _dynamic_data.geoposition = geopos;
-  
+//  qDebug() << "ais::newgepos" << _dynamic_data.geoposition.latitude << _dynamic_data.geoposition.longtitude << _dynamic_data.geoposition.course << _dynamic_data.geoposition.speed;
   emit updateVessel(); 
 }
 

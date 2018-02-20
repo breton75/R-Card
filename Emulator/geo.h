@@ -21,12 +21,12 @@ namespace geo {
     qreal max_lon;
   };
   
-  struct COORD {
-    COORD() { }
-    COORD(qreal latitude, qreal longtitude) { this->latitude = latitude; this->longtitude = longtitude; }
+  struct COORDINATES {
+    COORDINATES() { }
+    COORDINATES(qreal latitude, qreal longtitude) { this->latitude = latitude; this->longtitude = longtitude; }
     qreal latitude;
     qreal longtitude; 
-    geo::COORD& operator =(const geo::COORD& other) { latitude = other.latitude; longtitude = other.longtitude; }
+    geo::COORDINATES& operator =(const geo::COORDINATES& other) { latitude = other.latitude; longtitude = other.longtitude; }
   };
 
 //  class POSITION;
@@ -44,11 +44,14 @@ namespace geo {
     
     qreal latitude = 0.0;
     qreal longtitude = 0.0; 
-    quint32 course;
-    qreal speed;
+    int course;
+    int speed;
     QDateTime utc;
     
-    bool isValidCoordinates() { return ((longtitude != 0) && (latitude != 0)); }
+    bool isValid() { return ((longtitude != -1.0) && (latitude != -1.0) && (course != -1) && (speed != -1)); }
+    bool isValidCoordinates() { return ((longtitude != -1.0) && (latitude != -1.0)); }
+    bool isValidCourse() { return course != -1; }
+    bool isValidSpeed() { return speed != -1; }
     
     geo::GEOPOSITION& operator =(const geo::GEOPOSITION& other)
     { 
@@ -59,7 +62,7 @@ namespace geo {
   };
   
   struct POSITION {
-    geo::COORD coord;
+    geo::COORDINATES coord;
     qreal course;
 //    qreal angular_speed;
     
@@ -75,9 +78,11 @@ namespace geo {
   qreal lon1_lon2_distance(qreal min_lon, qreal max_lon, qreal lat);
   qreal lat1_lat2_distance(qreal min_lat, qreal max_lat, qreal lon);
   
-  quint32 get_rnd_course();
-  quint32 get_rnd_speed();
-  geo::GEOPOSITION get_rnd_position(BOUNDS *bounds);
+  int get_rnd_course();
+  int get_rnd_speed();
+  geo::COORDINATES get_rnd_coordinates(BOUNDS *bounds);
+  
+  geo::GEOPOSITION get_rnd_position(geo::BOUNDS* bounds);
 }
 
 

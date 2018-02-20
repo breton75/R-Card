@@ -35,6 +35,7 @@ bool gps::SvGPS::start(quint32 msecs)
   
   _gps_emitter = new gps::SvGPSEmitter(_vessel_id, _gps_params, _bounds);
   connect(_gps_emitter, &gps::SvGPSEmitter::finished, _gps_emitter, &gps::SvGPSEmitter::deleteLater);
+  connect(_gps_emitter, SIGNAL(newGeoPosition(const geo::GEOPOSITION&)), this, SIGNAL(newGeoPosition(const geo::GEOPOSITION&)));
   _gps_emitter->start();
                  
   
@@ -58,9 +59,9 @@ gps::SvGPSEmitter::SvGPSEmitter(int vessel_id, gps::gpsInitParams& params, geo::
   _bounds = bounds;
   
   _current_geo_position = _gps_params.geoposition;
-  
-  // длина пути в метрах, за один отсчет таймера 
-  _one_tick_length = qreal(_current_speed * 1000) / 3600 / (1000 / _gps_params.gps_timeout);
+
+  // длина пути в метрах, за один отсчет таймера // скорость в узлах. 1 узел = 1852 метра в час
+  _one_tick_length = qreal(_current_geo_position.speed * 1000) / 3600 / (1000.0 / qreal(_gps_params.gps_timeout));
   
   // определяем, сколько градусов в 1ом метре вдоль долготы
   _lon_1m_angular_length = (_bounds->max_lat - _bounds->min_lat) / geo::lat1_lat2_distance(_bounds->min_lat, _bounds->max_lat, _current_geo_position.longtitude) / 1000;
@@ -200,15 +201,4 @@ gps::LonLatOffset gps::SvGPSEmitter::lonlatOffset()
   return result;
 }
 
-//int gps::SvGPSThread::quarter()
-//{
-//  switch (_current_course % 90) {
-//    case 0:
-//      return int(_current_course);
-//      break;
-      
-//    default:
-//      return int(_current_course / 90) + 1;
-//      break;
-//  }
-//}
+

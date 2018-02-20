@@ -53,7 +53,7 @@ public:
   
   int vesselId() { return _vessel_id; }
   
-  gps::SvGPSEmitter* emitter() { return _gps_emitter; }
+//  gps::SvGPSEmitter* emitter() { return _gps_emitter; }
   
   idev::SvSimulatedDeviceTypes type() const { return idev::sdtGPS; }
     
@@ -74,8 +74,9 @@ private:
   
   QMutex _mutex;
   
-//public slots:
-//  void newGeoPosition(const geo::GEOPOSITION &geops);
+  
+signals:
+  void newGeoPosition(const geo::GEOPOSITION& geopos);
   
 };
 
@@ -108,7 +109,7 @@ private:
   
   geo::GEOPOSITION _current_geo_position;
 //  quint32 _current_course;
-  quint32 _current_speed;
+//  quint32 _current_speed;
   
   // параметры, необходимые для расчетов
   qreal _one_tick_length;         // длина пути в метрах, за один отсчет

@@ -50,39 +50,53 @@ qreal geo::geo1_geo2_distance(qreal lon1, qreal lat1, qreal lon2, qreal lat2)
   
 }
 
-quint32 geo::get_rnd_course()
+int geo::get_rnd_course()
 {
-  QTime t(0,0,0);
-  qsrand(t.secsTo(QTime::currentTime()));
+  QTime t = QTime::currentTime();
+  qsrand(t.msecsSinceStartOfDay()); // secsTo(QTime::currentTime()));
 
-  quint32 result = qrand() % 360;
-  
-  return result;
+  return qrand() % 360;
 }
 
-quint32 geo::get_rnd_speed()
+int geo::get_rnd_speed()
 {
-  QTime t(0,0,0);
-  qsrand(t.secsTo(QTime::currentTime()));
-
-  quint32 result = qrand() % 20; // максимальная скорость 20 узлов
+  QTime t = QTime::currentTime();
+  qsrand(t.msecsSinceStartOfDay()); // .secsTo(QTime::currentTime()));
   
-  return result;
+  return qrand() % 50; // максимальная скорость 50 узлов
 }
 
-geo::GEOPOSITION geo::get_rnd_position(geo::BOUNDS* bounds)
+geo::COORDINATES geo::get_rnd_coordinates(geo::BOUNDS* bounds)
 {
-  geo::GEOPOSITION result;
-  QTime t(0,0,0);
+  geo::COORDINATES result;
+  
   qreal lat_diff = bounds->max_lat - bounds->min_lat;
   qreal lon_diff = bounds->max_lon - bounds->min_lon;
   
-  qsrand(t.secsTo(QTime::currentTime()));
+  QTime t = QTime::currentTime();
+  qsrand(t.msecsSinceStartOfDay()); // secsTo(QTime::currentTime()));
+  qreal r1 = qreal(qrand() % 100) / 100.0;
+
+  result.latitude = bounds->min_lat + r1 * lat_diff;
   
-  result.latitude = bounds->min_lat + (qreal(qrand()) / qreal(RAND_MAX)) * lat_diff;
+//  qsrand(t.msecsSinceStartOfDay()); // .secsTo(QTime::currentTime()));
+  qreal r2 = qreal(qrand() % 100) / 100.0;
   
-  qsrand(t.secsTo(QTime::currentTime()));
-  result.longtitude = bounds->min_lon + (qreal(qrand()) / qreal(RAND_MAX)) * lon_diff;
+  result.longtitude = bounds->min_lon + r2 * lon_diff;
+  
+  return result;
+  
+}
+geo::GEOPOSITION geo::get_rnd_position(geo::BOUNDS* bounds)
+{
+  geo::GEOPOSITION result;
+  
+  geo::COORDINATES coord = get_rnd_coordinates(bounds);
+  
+  result.latitude = coord.latitude;
+  result.longtitude = coord.longtitude;
+  result.course = get_rnd_course();
+  result.speed = get_rnd_speed();
   
   return result;
   
