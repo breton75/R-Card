@@ -109,7 +109,7 @@ qreal geo::lon1_lon2_distance(qreal min_lon, qreal max_lon, qreal lat)
   qreal l1 = LAT1DL[parallel];
   qreal l2 = parallel > 89 ? l1 : LAT1DL[parallel + 1];
 
-  qreal lat1dl = l1 - ((l1 - l2) * (lat - parallel));
+  qDebug() << parallel << l1 << l2 << lat1dl;
   
   /* в километрах !!! */
   return (max_lon - min_lon) * lat1dl;

@@ -78,6 +78,9 @@ namespace area {
     QSize area_curr_size;
     QString area_name;
     
+    qreal lon_1m_angular_length; // сколько градусов в 1ом метре вдоль долготы
+    qreal lat_1m_angular_length; // сколько градусов в 1ом метре вдоль широты
+    
     QMap<quint64, QPair<qreal, qreal>> NODES;
     QMap<quint64, QList<QPair<qreal, qreal>>> WAYS;
   //  QMap<quint64, COORD> NODES;

@@ -23,6 +23,7 @@ vsl::SvVessel::~SvVessel()
 
 void vsl::SvVessel::updateVessel()
 {
+  _map_object->setGeoPosition(_ais->aisDynamicData()->geoposition);
   emit updateMapObjectPos(_map_object, _ais->aisDynamicData()->geoposition);
   
 }

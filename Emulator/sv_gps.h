@@ -33,10 +33,10 @@ namespace gps {
     
   };
   
-  struct LonLatOffset {
-    qreal dlon = 0.0;
-    qreal dlat = 0.0;
-  };
+//  struct LonLatOffset {
+//    qreal dlon = 0.0;
+//    qreal dlat = 0.0;
+//  };
 
   class SvGPS;
   class SvGPSEmitter;
@@ -116,7 +116,7 @@ private:
   qreal _lon_1m_angular_length;   // градусов в 1ом метре вдоль широты
   qreal _lat_1m_angular_length;   // градусов в 1ом метре вдоль долготы
   
-  gps::LonLatOffset lonlatOffset();
+  geo::COORDINATES lonlatOffset();
 
 //public slots:
 //  void new_coordinates(geo::COORD coord);

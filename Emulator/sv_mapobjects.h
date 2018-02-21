@@ -52,14 +52,9 @@ class SvMapObject : public QGraphicsItem
     
     virtual int type() const { return -1; }
 
-//    geo::COORD coordinates() const { return _coord; }
+    geo::GEOPOSITION geoPosition() { return _geo_position; }
+    void setGeoPosition(const geo::GEOPOSITION& geopos) { _geo_position = geopos; }
     
-    //    qreal angle() const { return _angle; }
-    //    void setAngle(const qreal angle) { _angle = angle; setRotation(_angle); }  
-//    qreal lon() const { return _lon; }
-//    qreal lat() const { return _lat; }
-    
-//    void setGeo(const qreal lon, const qreal lat) { _lon = lon; _lat = lat; }
     
     QPainterPath* path() const { return _path; }
     
@@ -108,8 +103,7 @@ class SvMapObject : public QGraphicsItem
     virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent *) Q_DECL_OVERRIDE;
   
   private:
-//    qreal _course = 0.0;
-//    geo::COORD _coord;
+    geo::GEOPOSITION _geo_position;
     
     bool _isEditable = false;
     QPainterPath* _path = nullptr;

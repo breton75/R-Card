@@ -8,8 +8,10 @@ inline QPointF point2geo(const area::AREA_DATA *area_data, qreal x, qreal y);
 
 QPointF geo2point(const area::AREA_DATA* area_data, qreal lon, qreal lat)
 {
+//  qDebug() << "geo2point" << area_data->geo_bounds.max_lat << lat;
   qreal x = area_data->area_curr_size.width() - (area_data->geo_bounds.max_lon - lon) * area_data->koeff.lon;
   qreal y = (area_data->geo_bounds.max_lat - lat) * area_data->koeff.lat;
+//  qDebug() << x << y;
   return QPointF(x, y);
 }
 
@@ -114,17 +116,19 @@ void area::SvArea::setUp(QString areaName)
   qreal lat_lon = (_area_data.geo_bounds.max_lat - _area_data.geo_bounds.min_lat) / (_area_data.geo_bounds.max_lon - _area_data.geo_bounds.min_lon);
   
   /* если ширина карты больше высоты, то задаем ширину, а высоту подгоняем */
-  if(lon_lat > 1)
-  {
-    _area_data.area_base_size.setWidth(_area_data.area_base_size.width() - 250);
-    _area_data.area_base_size.setHeight(_area_data.area_base_size.width() * lat_lon);
+  if(lon_lat > 1) {
+    
+    _area_data.area_base_size.setWidth(scr->availableSize().width() - 250);
+    _area_data.area_base_size.setHeight(scr->availableSize().width() * lat_lon);
     
     _area_data.area_curr_size.setWidth(_area_data.area_base_size.width());
     _area_data.area_curr_size.setHeight(_area_data.area_base_size.width() * lat_lon);
   }
-  else /* иначе, если высота карты больше ширины, то задаем высоту, а ширину подгоняем */
-  {
-    _area_data.area_base_size.setHeight(_area_data.area_base_size.height() - 150);
+  else {/* иначе, если высота карты больше ширины, то задаем высоту, а ширину подгоняем */
+
+    _area_data.area_base_size.setHeight(scr->availableSize().height() - 150);
+    _area_data.area_base_size.setWidth(scr->availableSize().height() * lon_lat);
+    
     _area_data.area_curr_size.setHeight(_area_data.area_base_size.height());
     _area_data.area_curr_size.setWidth(_area_data.area_base_size.height() * lon_lat);
   }
@@ -598,9 +602,10 @@ void area::SvArea::setScale(qreal scale)
   _area_data.area_curr_size.setWidth(_area_data.area_base_size.width() * _area_data.scale);
   _area_data.area_curr_size.setHeight(_area_data.area_base_size.height() * _area_data.scale);
   
-  _area_data.koeff.lon = _area_data.area_curr_size.width()  / (_area_data.geo_bounds.max_lon - _area_data.geo_bounds.min_lon);
-  _area_data.koeff.lat = _area_data.area_curr_size.height() / (_area_data.geo_bounds.max_lat - _area_data.geo_bounds.min_lat);
-  
+//  qDebug() << _area_data.area_curr_size.width() << _area_data.area_curr_size.height();
+  _area_data.koeff.lon = qreal(_area_data.area_curr_size.width())  / (_area_data.geo_bounds.max_lon - _area_data.geo_bounds.min_lon);
+  _area_data.koeff.lat = qreal(_area_data.area_curr_size.height()) / (_area_data.geo_bounds.max_lat - _area_data.geo_bounds.min_lat) / 3.0;
+//  qDebug() << _area_data.area_curr_size.height() << _area_data.area_curr_size.width() << _area_data.koeff.lon << _area_data.koeff.lat;
   /* подбираем шаг сетки */
   updateGridStep();
   
@@ -616,22 +621,22 @@ void area::SvArea::setScale(qreal scale)
 
   view->resize(_area_data.area_curr_size.width(), _area_data.area_curr_size.height());
   
-  /**
+  
   // пересчитываем координаты всех объектов 
   foreach (SvMapObject* item, scene->mapObjects()) {
-    const QPointF p = geo2point(&_area_data, item->lon(), item->lat());
+    const QPointF p = geo2point(&_area_data, item->geoPosition().longtitude, item->geoPosition().latitude);
     item->setPos(p);
   }
-  **/
+  
 }
 
 void area::SvArea::centerAirplane()
 {
-  /* центруем экран на самолетик */
-  QPointF airplane_pos;
+  /* центруем экран на свое судно */
+  QPointF self_pos;
   foreach (SvMapObject* item, scene->mapObjects()) {
-    if(item->type() == motAirplane) {
-      airplane_pos = item->pos();
+    if(item->type() == motSelfVessel) {
+      self_pos = item->pos();
       break;
     }
   }
@@ -640,7 +645,7 @@ void area::SvArea::centerAirplane()
   qreal xc = this->parentWidget()->width() / 2;
   qreal yc = this->parentWidget()->height() / 2;
   
-  view->move(xc - airplane_pos.x(), yc - airplane_pos.y());
+  view->move(xc - self_pos.x(), yc - self_pos.y());
 }
 
 void area::SvArea::updateGridStep()
@@ -734,28 +739,28 @@ area::SvAreaView::SvAreaView(QWidget *parent, AREA_DATA *area_data) :
 
 void area::SvAreaView::drawBackground(QPainter *painter, const QRectF &r)
 {
-  painter->setPen(_pen_coastLine);
+//  painter->setPen(_pen_coastLine);
   
-  foreach(quint64 way, _area_data->WAYS.keys())
-  {
-    QList<QPair<qreal, qreal>> nodes = _area_data->WAYS.value(way);
+//  foreach(quint64 way, _area_data->WAYS.keys())
+//  {
+//    QList<QPair<qreal, qreal>> nodes = _area_data->WAYS.value(way);
     
-    QPainterPath path;
+//    QPainterPath path;
     
-    /* пересчитываем географические в экранные координаты */
-    QPointF p0 = geo2point(_area_data, nodes.value(0).first, nodes.value(0).second);
-    path.moveTo(p0);
+//    /* пересчитываем географические в экранные координаты */
+//    QPointF p0 = geo2point(_area_data, nodes.value(0).first, nodes.value(0).second);
+//    path.moveTo(p0);
     
-    for(int i = 1; i < nodes.count(); i++) {
+//    for(int i = 1; i < nodes.count(); i++) {
       
-      QPointF p1 = geo2point(_area_data, nodes.value(i).first, nodes.value(i).second);
-      path.lineTo(p1);
+//      QPointF p1 = geo2point(_area_data, nodes.value(i).first, nodes.value(i).second);
+//      path.lineTo(p1);
 
-    }
+//    }
     
-    painter->drawPath(path);
+//    painter->drawPath(path);
 
-  }
+//  }
   
   painter->setPen(_penBorder);
   painter->setBrush(QBrush());
@@ -765,8 +770,9 @@ void area::SvAreaView::drawBackground(QPainter *painter, const QRectF &r)
   int i = 0;
   int mjr = _area_data->gridCellStep * 5;
   int counter = 0;
-  while(i < _area_data->area_curr_size.width())
-  {
+//  qreal gcs = _area_data->l
+  while(i < _area_data->area_curr_size.width()) {
+    
     painter->setPen((i % mjr == 0) ? _penMajorLine : _penMinorLine);
     painter->drawLine(i, 2, i, _area_data->area_curr_size.height() - 2);
     
