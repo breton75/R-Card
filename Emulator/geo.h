@@ -9,8 +9,6 @@
 #include <qmath.h>
 #include <QMetaType>
 
-#define MINOR_LINE_INTERVAL 10
-#define MAJOR_LINE_INTERVAL 50
 
 namespace geo {
 

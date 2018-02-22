@@ -12,6 +12,7 @@
 #include <QtXml>
 #include <QMessageBox>
 #include <QPair>
+#include "math.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -41,6 +42,12 @@
 #define RULER_SIZE 40
 #define BORDER_WIDTH 10
 #define SCALE_FACTOR 1.2
+
+#define MINOR_LINE_INTERVAL 10
+#define MAJOR_LINE_INTERVAL 50
+
+#define MINOR_VGRID_DISTANCE 50
+#define MAJOR_VGRID_DISTANCE 500
 
 namespace area {
 

@@ -119,10 +119,35 @@ void area::SvArea::setUp(QString areaName)
   if(lon_lat > 1) {
     
     _area_data.area_base_size.setWidth(scr->availableSize().width() - 250);
-    _area_data.area_base_size.setHeight(scr->availableSize().width() * lat_lon);
     
+    qreal ll = geo::lon1_lon2_distance(_area_data.geo_bounds.min_lon, _area_data.geo_bounds.max_lon, (_area_data.geo_bounds.max_lat + _area_data.geo_bounds.min_lat) / 2);
+    qreal dw = _area_data.area_base_size.width() / (ll * 1000);
+    
+    /* высоту карты определяем исходя из расчетов для проекции меркатора используя формулу (29) отсюда
+     * http://kadastrua.ru/kartografiya/344-ravnougolnaya-tsilindricheskaya-proektsiya.html 
+     * для более точных вычислений можно использовать формулу (30). для вычисления U использовать формулу (22) отсюда
+     * http://kadastrua.ru/kartografiya/343-kartograficheskie-proektsii-obzornykh-kart.html  */
+    qreal mod=0.4343;
+    qreal R = 6356863;  // радиус земли в метрах
+    
+    /* т.к. формула позволяет вычислить длину меридиана от  широты 0 до X, то вычисляем два значения и находим разницу */
+    qreal tan1 = qTan(qDegreesToRadians(45 + _area_data.geo_bounds.max_lat / 2.0));
+    qreal tan2 = qTan(qDegreesToRadians(45 + _area_data.geo_bounds.min_lat / 2.0));
+    
+    qreal D1 = /*(1.0 / mod) * */ R * qLn(tan1)/3.0;
+    qreal D2 = /*(1.0 / mod) * */ R * qLn(tan2)/3.0;
+    
+    qreal h = D1 - D2; // расстояние в метрах, между минимальной и максимальной широтами
+    
+    
+    qDebug() << ll << tan1 << D1 << D2 << h << dw;
+    
+    _area_data.area_base_size.setHeight(h * dw);
+    
+    /**
     _area_data.area_curr_size.setWidth(_area_data.area_base_size.width());
     _area_data.area_curr_size.setHeight(_area_data.area_base_size.width() * lat_lon);
+    **/
   }
   else {/* иначе, если высота карты больше ширины, то задаем высоту, а ширину подгоняем */
 
@@ -650,10 +675,15 @@ void area::SvArea::centerAirplane()
 
 void area::SvArea::updateGridStep()
 {
-  /* считаем в метрах */
-//  qreal area_meters = 1000 * lon1_lon2_distance(_area_data.geo_bounds.min_lon, _area_data.geo_bounds.max_lon, area_data->geo_bounds.max_lat);
+  /* ширина области в метрах */
+  qreal area_width_meters = 1000 * geo::lon1_lon2_distance(_area_data.geo_bounds.min_lon, _area_data.geo_bounds.max_lon, (_area_data.geo_bounds.min_lat + _area_data.geo_bounds.max_lat) / 2.0);
+
+  int line_count = area_width_meters / (MINOR_VGRID_DISTANCE * _area_data.scale);
+  _area_data.gridCellStep = quint64(trunc(_area_data.area_curr_size.width() / line_count));
+    
+  /**
   qreal area_meters = 1000 * geo::lat1_lat2_distance(_area_data.geo_bounds.min_lat, _area_data.geo_bounds.max_lat, _area_data.geo_bounds.max_lon);
-  
+
   int line_count = _area_data.area_curr_size.width() / MINOR_LINE_INTERVAL;
   _area_data.gridCellDistance = quint64(trunc(area_meters / line_count));
   
@@ -661,7 +691,7 @@ void area::SvArea::updateGridStep()
     _area_data.gridCellDistance++;
   
   _area_data.gridCellStep = _area_data.gridCellDistance * _area_data.area_curr_size.width() / area_meters;
-  
+  **/
 }
 
 /** ****** AREA SCENE ****** **/
@@ -781,6 +811,7 @@ void area::SvAreaView::drawBackground(QPainter *painter, const QRectF &r)
   }
 
   /* горизонтальные линии */
+  /**
   i = 0;
   while(i < _area_data->area_curr_size.height())
   {
@@ -789,7 +820,7 @@ void area::SvAreaView::drawBackground(QPainter *painter, const QRectF &r)
     
     i += _area_data->gridCellStep;
     counter++;
-  }
+  } **/
 
   /* рисуем шкалу масштаба */
 //  painter->setPen(Qt::NoPen);
