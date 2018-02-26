@@ -46,8 +46,8 @@
 #define MINOR_LINE_INTERVAL 10
 #define MAJOR_LINE_INTERVAL 50
 
-#define MINOR_VGRID_DISTANCE 50
-#define MAJOR_VGRID_DISTANCE 500
+#define MINOR_VGRID_DISTANCE 500
+#define MAJOR_VGRID_DISTANCE 5000
 
 namespace area {
 
@@ -76,17 +76,23 @@ namespace area {
   
   class AreaButton;
   
+  struct KOEFF {
+    qreal lat;
+    qreal lon;
+  };
+  
   struct AREA_DATA
   {
     geo::BOUNDS geo_bounds;
     qreal scale;
     KOEFF koeff;
+    qreal koeff2;
     QSize area_base_size;
     QSize area_curr_size;
     QString area_name;
     
-    qreal lon_1m_angular_length; // сколько градусов в 1ом метре вдоль долготы
-    qreal lat_1m_angular_length; // сколько градусов в 1ом метре вдоль широты
+    qreal lon_angles_in_1m; // сколько градусов в 1ом метре вдоль долготы
+    qreal lat_angles_in_1m; // сколько градусов в 1ом метре вдоль широты
     
     QMap<quint64, QPair<qreal, qreal>> NODES;
     QMap<quint64, QList<QPair<qreal, qreal>>> WAYS;

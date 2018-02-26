@@ -359,14 +359,17 @@ SvMapObjectVessel::SvMapObjectVessel(QWidget* parent):
 SvMapObjectSelfVessel::SvMapObjectSelfVessel(QWidget* parent/*, vsl::SvVessel* vessel*/):
   SvMapObjectVesselAbstract(parent/*, vessel*/)
 {
-  path()->moveTo(_points[0]);
-  path()->lineTo(_points[1]);
-  path()->lineTo(_points[2]);
-  path()->lineTo(_points[3]);
-  path()->lineTo(_points[4]);
-  path()->lineTo(_points[5]);
-  path()->lineTo(_points[6]);
-  path()->lineTo(_points[1]);
+  path()->moveTo(0, 0); 
+  path()->addEllipse(0.0, 0.0, 10, 10);
+  
+//  path()->moveTo(_points[0]);
+//  path()->lineTo(_points[1]);
+//  path()->lineTo(_points[2]);
+//  path()->lineTo(_points[3]);
+//  path()->lineTo(_points[4]);
+//  path()->lineTo(_points[5]);
+//  path()->lineTo(_points[6]);
+//  path()->lineTo(_points[1]);
 
   path()->setFillRule(Qt::OddEvenFill);
   

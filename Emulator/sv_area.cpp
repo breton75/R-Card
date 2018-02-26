@@ -9,8 +9,8 @@ inline QPointF point2geo(const area::AREA_DATA *area_data, qreal x, qreal y);
 QPointF geo2point(const area::AREA_DATA* area_data, qreal lon, qreal lat)
 {
 //  qDebug() << "geo2point" << area_data->geo_bounds.max_lat << lat;
-  qreal x = area_data->area_curr_size.width() - (area_data->geo_bounds.max_lon - lon) * area_data->koeff.lon;
-  qreal y = (area_data->geo_bounds.max_lat - lat) * area_data->koeff.lat;
+  qreal x = area_data->area_curr_size.width() - (area_data->geo_bounds.max_lon - lon) * area_data->koeff.lon/** area_data->koeff2*/;
+  qreal y = (area_data->geo_bounds.max_lat - lat) * area_data->koeff.lat /** area_data->koeff2*/;
 //  qDebug() << x << y;
   return QPointF(x, y);
 }
@@ -115,47 +115,96 @@ void area::SvArea::setUp(QString areaName)
   qreal lon_lat = (_area_data.geo_bounds.max_lon - _area_data.geo_bounds.min_lon) / (_area_data.geo_bounds.max_lat - _area_data.geo_bounds.min_lat);
   qreal lat_lon = (_area_data.geo_bounds.max_lat - _area_data.geo_bounds.min_lat) / (_area_data.geo_bounds.max_lon - _area_data.geo_bounds.min_lon);
   
+  qreal lon2lon = geo::lon1_lon2_distance(_area_data.geo_bounds.min_lon, _area_data.geo_bounds.max_lon, (_area_data.geo_bounds.max_lat + _area_data.geo_bounds.min_lat) / 2);
+  qreal lat2lat = geo::lat1_lat2_distance(_area_data.geo_bounds.min_lat, _area_data.geo_bounds.max_lat, (_area_data.geo_bounds.max_lon + _area_data.geo_bounds.min_lon) / 2);
+  
+  _area_data.koeff2 = 1.8; //lon2lon / lat2lat > 1 ? lon2lon / lat2lat: lat2lat / lon2lon ;
+  
   /* если ширина карты больше высоты, то задаем ширину, а высоту подгоняем */
-  if(lon_lat > 1) {
+  if(_area_data.koeff2 > 1) {
     
-    _area_data.area_base_size.setWidth(scr->availableSize().width() - 250);
+    qDebug() << lon2lon << lat2lat << _area_data.koeff2;
+    _area_data.area_base_size.setWidth(scr->availableSize().width() - 350);
+    _area_data.area_base_size.setHeight(_area_data.area_base_size.width() * (1.0 / _area_data.koeff2));  
     
-    qreal ll = geo::lon1_lon2_distance(_area_data.geo_bounds.min_lon, _area_data.geo_bounds.max_lon, (_area_data.geo_bounds.max_lat + _area_data.geo_bounds.min_lat) / 2);
-    qreal dw = _area_data.area_base_size.width() / (ll * 1000);
+//    qreal k = qreal(_area_data.area_base_size.width()) / 256.0;
     
-    /* высоту карты определяем исходя из расчетов для проекции меркатора используя формулу (29) отсюда
-     * http://kadastrua.ru/kartografiya/344-ravnougolnaya-tsilindricheskaya-proektsiya.html 
-     * для более точных вычислений можно использовать формулу (30). для вычисления U использовать формулу (22) отсюда
-     * http://kadastrua.ru/kartografiya/343-kartograficheskie-proektsii-obzornykh-kart.html  */
-    qreal mod=0.4343;
-    qreal R = 6356863;  // радиус земли в метрах
+//    qreal lon2lon = geo::lon1_lon2_distance(_area_data.geo_bounds.min_lon, _area_data.geo_bounds.max_lon, (_area_data.geo_bounds.max_lat + _area_data.geo_bounds.min_lat) / 2);
+//    qreal lat2lat = geo::lon1_lon2_distance(_area_data.geo_bounds.min_lat, _area_data.geo_bounds.max_lat, (_area_data.geo_bounds.max_lon + _area_data.geo_bounds.min_lon) / 2);
     
-    /* т.к. формула позволяет вычислить длину меридиана от  широты 0 до X, то вычисляем два значения и находим разницу */
-    qreal tan1 = qTan(qDegreesToRadians(45 + _area_data.geo_bounds.max_lat / 2.0));
-    qreal tan2 = qTan(qDegreesToRadians(45 + _area_data.geo_bounds.min_lat / 2.0));
+//    /* высоту карты определяем исходя из расчетов для проекции меркатора используя формулу (29) отсюда
+//     * http://kadastrua.ru/kartografiya/344-ravnougolnaya-tsilindricheskaya-proektsiya.html 
+//     * для более точных вычислений можно использовать формулу (30). для вычисления U использовать формулу (22) отсюда
+//     * http://kadastrua.ru/kartografiya/343-kartograficheskie-proektsii-obzornykh-kart.html  */
+//    qreal mod=0.4343;
+//    qreal R = 6356863;  // радиус земли в метрах
     
-    qreal D1 = /*(1.0 / mod) * */ R * qLn(tan1)/3.0;
-    qreal D2 = /*(1.0 / mod) * */ R * qLn(tan2)/3.0;
+//    qreal x1 = _area_data.area_base_size.width() / M_PI * (qDegreesToRadians(_area_data.geo_bounds.min_lon) + M_PI);
+//    qreal x2 = _area_data.area_base_size.width() / M_PI * (qDegreesToRadians(_area_data.geo_bounds.max_lon) + M_PI);
     
-    qreal h = D1 - D2; // расстояние в метрах, между минимальной и максимальной широтами
+//    qreal w = qAbs(x1 - x2);
+//    qreal dw = _area_data.area_base_size.width() / w;
+    
+//    /* т.к. формула позволяет вычислить длину меридиана от  широты 0 до X, то вычисляем два значения и находим разницу */
+//    qreal tan1 = qTan(M_PI / 4 + qDegreesToRadians(_area_data.geo_bounds.max_lat) / 2.0);
+//    qreal tan2 = qTan(M_PI / 4 + qDegreesToRadians(_area_data.geo_bounds.min_lat) / 2.0);
+    
+//    qreal y1 = /*(1.0 / mod) * R **/ _area_data.area_base_size.width() / M_PI * (M_PI - qLn(tan1)); ///3.0;
+//    qreal y2 = /*(1.0 / mod) * R **/ _area_data.area_base_size.width() / M_PI * (M_PI - qLn(tan2)); ///3.0;
+    
+//    qreal h = qAbs(y1 - y2); // расстояние в метрах, между минимальной и максимальной широтами
     
     
-    qDebug() << ll << tan1 << D1 << D2 << h << dw;
+//    qDebug() << "lon2lon(km): " << lon2lon << "lat2lat(km):" << lat2lat 
+//             << "x1:" << x1 << "x2:" << x2 << "y1:" << y1 << "y2:" << y2 
+//             << "w:" << w << "h:" << h 
+//             << "base_size.width:" << _area_data.area_base_size.width() << "dw:" << dw;
     
-    _area_data.area_base_size.setHeight(h * dw);
+//    _area_data.area_base_size.setHeight(h * dw);
     
-    /**
+//    _area_data.koeff2 = w/h; 
+    
+    
     _area_data.area_curr_size.setWidth(_area_data.area_base_size.width());
-    _area_data.area_curr_size.setHeight(_area_data.area_base_size.width() * lat_lon);
-    **/
+    _area_data.area_curr_size.setHeight(_area_data.area_base_size.width() * (1.0 / _area_data.koeff2));
+    
   }
   else {/* иначе, если высота карты больше ширины, то задаем высоту, а ширину подгоняем */
 
-    _area_data.area_base_size.setHeight(scr->availableSize().height() - 150);
+//    _area_data.area_base_size.setHeight(scr->availableSize().height() - 150);
+    
+//    qreal x1 = _area_data.area_base_size.height() / M_PI * (qDegreesToRadians(_area_data.geo_bounds.min_lon) + M_PI);
+//    qreal x2 = _area_data.area_base_size.height() / M_PI * (qDegreesToRadians(_area_data.geo_bounds.max_lon) + M_PI);
+    
+//    qreal w = qAbs(x1 - x2);
+//    qreal dw = _area_data.area_base_size.width() / w;
+    
+//    /* т.к. формула позволяет вычислить длину меридиана от  широты 0 до X, то вычисляем два значения и находим разницу */
+//    qreal tan1 = qTan(M_PI / 4 + qDegreesToRadians(_area_data.geo_bounds.max_lat) / 2.0);
+//    qreal tan2 = qTan(M_PI / 4 + qDegreesToRadians(_area_data.geo_bounds.min_lat) / 2.0);
+    
+//    qreal y1 = /*(1.0 / mod) * R **/ _area_data.area_base_size.height() / M_PI * (M_PI - qLn(tan1)); ///3.0;
+//    qreal y2 = /*(1.0 / mod) * R **/ _area_data.area_base_size.height() / M_PI * (M_PI - qLn(tan2)); ///3.0;
+    
+//    qreal h = qAbs(y1 - y2); // расстояние в метрах, между минимальной и максимальной широтами
+    
+    
+////    qDebug() << "lon2lon(km): " << lon2lon << "lat2lat(km):" << lat2lat 
+////             << "x1:" << x1 << "x2:" << x2 << "y1:" << y1 << "y2:" << y2 
+////             << "w:" << w << "h:" << h 
+////             << "base_size.width:" << _area_data.area_base_size.width() << "dw:" << dw;
+    
+//    _area_data.area_base_size.setWidth(h * dw);
+    
+//    _area_data.koeff2 = w/h;
+    
+    
+    /**
     _area_data.area_base_size.setWidth(scr->availableSize().height() * lon_lat);
     
     _area_data.area_curr_size.setHeight(_area_data.area_base_size.height());
     _area_data.area_curr_size.setWidth(_area_data.area_base_size.height() * lon_lat);
+    **/
   }
   
   
@@ -629,7 +678,7 @@ void area::SvArea::setScale(qreal scale)
   
 //  qDebug() << _area_data.area_curr_size.width() << _area_data.area_curr_size.height();
   _area_data.koeff.lon = qreal(_area_data.area_curr_size.width())  / (_area_data.geo_bounds.max_lon - _area_data.geo_bounds.min_lon);
-  _area_data.koeff.lat = qreal(_area_data.area_curr_size.height()) / (_area_data.geo_bounds.max_lat - _area_data.geo_bounds.min_lat) / 3.0;
+  _area_data.koeff.lat = qreal(_area_data.area_curr_size.height()) / (_area_data.geo_bounds.max_lat - _area_data.geo_bounds.min_lat);
 //  qDebug() << _area_data.area_curr_size.height() << _area_data.area_curr_size.width() << _area_data.koeff.lon << _area_data.koeff.lat;
   /* подбираем шаг сетки */
   updateGridStep();
@@ -717,7 +766,7 @@ area::SvAreaScene::SvAreaScene(AREA_DATA *area_data)
 void area::SvAreaScene::setMapObjectPos(SvMapObject* mapObject, const geo::GEOPOSITION& geopos)
 {
   QPointF new_pos = geo2point(_area_data, geopos.longtitude, geopos.latitude);
-  mapObject->setPos(new_pos);
+  mapObject->setPos(new_pos.x() * _area_data->koeff2, new_pos.y());
   mapObject->setRotation(geopos.course);
 }
 
@@ -769,28 +818,28 @@ area::SvAreaView::SvAreaView(QWidget *parent, AREA_DATA *area_data) :
 
 void area::SvAreaView::drawBackground(QPainter *painter, const QRectF &r)
 {
-//  painter->setPen(_pen_coastLine);
+  painter->setPen(_pen_coastLine);
   
-//  foreach(quint64 way, _area_data->WAYS.keys())
-//  {
-//    QList<QPair<qreal, qreal>> nodes = _area_data->WAYS.value(way);
+  foreach(quint64 way, _area_data->WAYS.keys())
+  {
+    QList<QPair<qreal, qreal>> nodes = _area_data->WAYS.value(way);
     
-//    QPainterPath path;
+    QPainterPath path;
     
-//    /* пересчитываем географические в экранные координаты */
-//    QPointF p0 = geo2point(_area_data, nodes.value(0).first, nodes.value(0).second);
-//    path.moveTo(p0);
+    /* пересчитываем географические в экранные координаты */
+    QPointF p0 = geo2point(_area_data, nodes.value(0).first, nodes.value(0).second);
+    path.moveTo(p0);
     
-//    for(int i = 1; i < nodes.count(); i++) {
+    for(int i = 1; i < nodes.count(); i++) {
       
-//      QPointF p1 = geo2point(_area_data, nodes.value(i).first, nodes.value(i).second);
-//      path.lineTo(p1);
+      QPointF p1 = geo2point(_area_data, nodes.value(i).first, nodes.value(i).second);
+      path.lineTo(p1);
 
-//    }
+    }
     
-//    painter->drawPath(path);
+    painter->drawPath(path);
 
-//  }
+  }
   
   painter->setPen(_penBorder);
   painter->setBrush(QBrush());
@@ -811,16 +860,16 @@ void area::SvAreaView::drawBackground(QPainter *painter, const QRectF &r)
   }
 
   /* горизонтальные линии */
-  /**
+  
   i = 0;
   while(i < _area_data->area_curr_size.height())
   {
     painter->setPen((i % mjr == 0) ? _penMajorLine : _penMinorLine);
     painter->drawLine(2, i, _area_data->area_curr_size.width() - 2, i);
     
-    i += _area_data->gridCellStep;
+    i += (_area_data->gridCellStep * _area_data->koeff2);
     counter++;
-  } **/
+  }
 
   /* рисуем шкалу масштаба */
 //  painter->setPen(Qt::NoPen);

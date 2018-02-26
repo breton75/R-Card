@@ -78,7 +78,7 @@ namespace geo {
   
   int get_rnd_course();
   int get_rnd_speed();
-  geo::COORDINATES get_rnd_coordinates(BOUNDS *bounds);
+  geo::COORDINATES get_rnd_coordinates(geo::BOUNDS *bounds);
   
   geo::GEOPOSITION get_rnd_position(geo::BOUNDS* bounds);
 }
@@ -132,10 +132,6 @@ namespace geo {
 //};
 
 
-struct KOEFF {
-  qreal lat;
-  qreal lon;
-};
 
 
 
