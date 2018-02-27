@@ -50,6 +50,14 @@ qreal geo::geo1_geo2_distance(qreal lon1, qreal lat1, qreal lon2, qreal lat2)
   
 }
 
+qreal geo::meridian2parallel_km_in_1degree(qreal longtitude, qreal latitude)
+{
+  qreal lon_km_in_1degree = LON1DL[int(longtitude)];
+  qreal lat_km_in_1degree = LAT1DL[int(latitude)];
+  qDebug() << longtitude << lon_km_in_1degree << latitude << lat_km_in_1degree;
+  return lon_km_in_1degree / lat_km_in_1degree;
+}
+
 int geo::get_rnd_course()
 {
   QTime t = QTime::currentTime();
@@ -126,7 +134,7 @@ qreal geo::lat1_lat2_distance(qreal min_lat, qreal max_lat, qreal lon)
   qreal l2 = meridian > 89 ? l1 : LON1DL[meridian + 1];
 
   qreal lon1dl = l1 - ((l1 - l2) * (lon - meridian));
-  
+//  qDebug() << "meridian l1 l2 lon1dl" << meridian << l1 << l2 << lon1dl;
   /* в километрах !!! */
   return (max_lat - min_lat) * lon1dl;
 }

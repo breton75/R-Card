@@ -81,6 +81,8 @@ namespace geo {
   geo::COORDINATES get_rnd_coordinates(geo::BOUNDS *bounds);
   
   geo::GEOPOSITION get_rnd_position(geo::BOUNDS* bounds);
+  
+  qreal meridian2parallel_km_in_1degree(qreal longtitude, qreal latitude);
 }
 
 

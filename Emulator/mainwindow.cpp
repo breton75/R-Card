@@ -118,6 +118,7 @@ SV:
     gps_params.geoposition.longtitude = coord.longtitude;
     DData.geoposition.latitude = coord.latitude;
     DData.geoposition.longtitude = coord.longtitude;
+    qDebug() << "coord" << coord.longtitude << coord.latitude;
   }
   else {
     gps_params.geoposition.latitude = DData.geoposition.latitude; 

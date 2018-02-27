@@ -64,12 +64,14 @@ gps::SvGPSEmitter::SvGPSEmitter(int vessel_id, gps::gpsInitParams& params, geo::
   _one_tick_length = qreal(_current_geo_position.speed * 1000) / 3600.0 / (1000.0 / qreal(_gps_params.gps_timeout));
   
   // определяем, сколько градусов в 1ом метре вдоль долготы
-  qDebug() << "ll1:" << _bounds->max_lat - _bounds->min_lat <<  geo::lat1_lat2_distance(_bounds->min_lat, _bounds->max_lat, _current_geo_position.longtitude);
-  _lon_1m_angular_length = (_bounds->max_lat - _bounds->min_lat) / geo::lat1_lat2_distance(_bounds->min_lat, _bounds->max_lat, _current_geo_position.longtitude) / 1000.0;
+//  qDebug() << "gps";
+  qreal dst = geo::lat1_lat2_distance(_bounds->min_lat, _bounds->max_lat, (_bounds->max_lon + _bounds->min_lon) / 2.0); // _current_geo_position.longtitude);
+//  qDebug() << "ll1:" << _bounds->max_lat << _bounds->min_lat <<  dst;
+  _lon_1m_angular_length = (_bounds->max_lat - _bounds->min_lat) / dst / 1000.0;
   
   // определяем, сколько градусов в 1ом метре вдоль широты */
-  qDebug() << "ll2:" << _bounds->max_lon - _bounds->min_lon << geo::lon1_lon2_distance(_bounds->min_lon, _bounds->max_lon, _current_geo_position.latitude) << _current_geo_position.latitude;
-  _lat_1m_angular_length = (_bounds->max_lon - _bounds->min_lon) / geo::lon1_lon2_distance(_bounds->min_lon, _bounds->max_lon, _current_geo_position.latitude) / 1000.0;
+  _lat_1m_angular_length = (_bounds->max_lon - _bounds->min_lon) / geo::lon1_lon2_distance(_bounds->min_lon, _bounds->max_lon, (_bounds->min_lat + _bounds->max_lat) / 2.0) / 1000.0;
+  qDebug() << "ll2:" << _lon_1m_angular_length << _lat_1m_angular_length << _current_geo_position.longtitude;
   
    
 }
@@ -94,7 +96,7 @@ void gps::SvGPSEmitter::run()
   
   _started = true;
   _finished = false;
-  
+  qDebug() << "11llat llon:" << _current_geo_position.latitude << _current_geo_position.longtitude;
   while(_started) {
     
 //    qDebug() << " emitter:" << _current_geo_position.latitude;
@@ -131,10 +133,28 @@ void gps::SvGPSEmitter::run()
       
     }
     
-    geo::COORDINATES llo = lonlatOffset();
-    _current_geo_position.latitude += llo.latitude;
-    _current_geo_position.longtitude += llo.longtitude;
     
+    /** http://www.movable-type.co.uk/scripts/latlong.html **/
+    qreal dr = (_one_tick_length / 6372795.0);
+    qreal cr = qDegreesToRadians(qreal(_current_geo_position.course));
+    
+    qreal lat2 = asin(sin(qDegreesToRadians(_current_geo_position.latitude)) * cos(dr) + 
+                      cos(qDegreesToRadians(_current_geo_position.latitude)) * sin(dr) * cos(cr));
+    
+    qreal lon2 = atan2(sin(qDegreesToRadians(cr)) * sin(dr) * qCos(qDegreesToRadians(_current_geo_position.latitude)),
+                       cos(dr) - sin(_current_geo_position.latitude) * sin(lat2));
+    
+    // where cr is the bearing (clockwise from north), dr is the angular distance d/R; d being the distance travelled, R the earth’s radius
+    qDebug() << "lat2 lon2:" << qRadiansToDegrees(lat2) << lon2;
+    
+//    geo::COORDINATES llo = lonlatOffset();
+//    _current_geo_position.latitude += llo.latitude;
+//    _current_geo_position.longtitude += llo.longtitude;
+    
+    _current_geo_position.latitude = qRadiansToDegrees(lat2);
+    _current_geo_position.longtitude += qRadiansToDegrees(lon2);
+    
+    qDebug() << "llat llon:" << _current_geo_position.latitude << _current_geo_position.longtitude;
     
   }
   
@@ -199,7 +219,7 @@ geo::COORDINATES gps::SvGPSEmitter::lonlatOffset()
   }
 //  qDebug() << a << b << _one_tick_length << _lat_1m_angular_length << _lon_1m_angular_length;
   result.latitude = a * _one_tick_length * _lat_1m_angular_length;
-  result.longtitude = b * _one_tick_length * _lon_1m_angular_length;
+  result.longtitude = b * _one_tick_length * _lon_1m_angular_length * 1.9287;
   
   return result;
 }

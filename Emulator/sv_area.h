@@ -46,7 +46,7 @@
 #define MINOR_LINE_INTERVAL 10
 #define MAJOR_LINE_INTERVAL 50
 
-#define MINOR_VGRID_DISTANCE 500
+#define MINOR_VGRID_DISTANCE 200
 #define MAJOR_VGRID_DISTANCE 5000
 
 namespace area {
@@ -101,6 +101,9 @@ namespace area {
     
     qreal gridCellStep = MINOR_LINE_INTERVAL;
     quint64 gridCellDistance;
+    
+    qreal gridYstep;
+    qreal gridXstep;
     
   };
   
