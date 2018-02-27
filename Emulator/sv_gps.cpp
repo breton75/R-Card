@@ -135,17 +135,17 @@ void gps::SvGPSEmitter::run()
     
     
     /** http://www.movable-type.co.uk/scripts/latlong.html **/
-    qreal dr = (_one_tick_length / 6372795.0);
+    qreal dr = qDegreesToRadians(_one_tick_length / 6372795.0);
     qreal cr = qDegreesToRadians(qreal(_current_geo_position.course));
     
     qreal lat2 = asin(sin(qDegreesToRadians(_current_geo_position.latitude)) * cos(dr) + 
                       cos(qDegreesToRadians(_current_geo_position.latitude)) * sin(dr) * cos(cr));
     
-    qreal lon2 = atan2(sin(qDegreesToRadians(cr)) * sin(dr) * qCos(qDegreesToRadians(_current_geo_position.latitude)),
-                       cos(dr) - sin(_current_geo_position.latitude) * sin(lat2));
+    qreal lon2 = atan2(sin(cr) * sin(dr) * qCos(qDegreesToRadians(_current_geo_position.latitude)),
+                       cos(dr) - sin(qDegreesToRadians(_current_geo_position.latitude)) * sin(lat2));
     
     // where cr is the bearing (clockwise from north), dr is the angular distance d/R; d being the distance travelled, R the earth’s radius
-    qDebug() << "lat2 lon2:" << qRadiansToDegrees(lat2) << lon2;
+    qDebug() << "lat2 lon2:" << qRadiansToDegrees(lat2) << qRadiansToDegrees(lon2);
     
 //    geo::COORDINATES llo = lonlatOffset();
 //    _current_geo_position.latitude += llo.latitude;
