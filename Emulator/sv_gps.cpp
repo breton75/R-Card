@@ -62,16 +62,16 @@ gps::SvGPSEmitter::SvGPSEmitter(int vessel_id, gps::gpsInitParams& params, geo::
 
   // длина пути в метрах, за один отсчет таймера // скорость в узлах. 1 узел = 1852 метра в час
   _one_tick_length = qreal(_current_geo_position.speed * 1000) / 3600.0 / (1000.0 / qreal(_gps_params.gps_timeout));
-  
+//  _one_tick_length *= 1000;
   // определяем, сколько градусов в 1ом метре вдоль долготы
-//  qDebug() << "gps";
+  qDebug() << "gps" << _one_tick_length;
   qreal dst = geo::lat1_lat2_distance(_bounds->min_lat, _bounds->max_lat, (_bounds->max_lon + _bounds->min_lon) / 2.0); // _current_geo_position.longtitude);
 //  qDebug() << "ll1:" << _bounds->max_lat << _bounds->min_lat <<  dst;
   _lon_1m_angular_length = (_bounds->max_lat - _bounds->min_lat) / dst / 1000.0;
   
   // определяем, сколько градусов в 1ом метре вдоль широты */
   _lat_1m_angular_length = (_bounds->max_lon - _bounds->min_lon) / geo::lon1_lon2_distance(_bounds->min_lon, _bounds->max_lon, (_bounds->min_lat + _bounds->max_lat) / 2.0) / 1000.0;
-  qDebug() << "ll2:" << _lon_1m_angular_length << _lat_1m_angular_length << _current_geo_position.longtitude;
+//  qDebug() << "ll2:" << _lon_1m_angular_length << _lat_1m_angular_length << _current_geo_position.longtitude;
   
    
 }
@@ -96,7 +96,7 @@ void gps::SvGPSEmitter::run()
   
   _started = true;
   _finished = false;
-  qDebug() << "11llat llon:" << _current_geo_position.latitude << _current_geo_position.longtitude;
+//  qDebug() << "11llat llon:" << _current_geo_position.latitude << _current_geo_position.longtitude;
   while(_started) {
     
 //    qDebug() << " emitter:" << _current_geo_position.latitude;
@@ -134,25 +134,27 @@ void gps::SvGPSEmitter::run()
     }
     
     
-    /** http://www.movable-type.co.uk/scripts/latlong.html **/
-    qreal dr = qDegreesToRadians(_one_tick_length / 6372795.0);
-    qreal cr = qDegreesToRadians(qreal(_current_geo_position.course));
+//    /** http://www.movable-type.co.uk/scripts/latlong.html **/
+//    qreal dr = /*qDegreesToRadians*/(_one_tick_length / EARTH_RADIUS);
+//    qreal cr = qDegreesToRadians(qreal(_current_geo_position.course));
     
-    qreal lat2 = asin(sin(qDegreesToRadians(_current_geo_position.latitude)) * cos(dr) + 
-                      cos(qDegreesToRadians(_current_geo_position.latitude)) * sin(dr) * cos(cr));
+//    qreal lat2 = asin(sin(qDegreesToRadians(_current_geo_position.latitude)) * cos(dr) + 
+//                      cos(qDegreesToRadians(_current_geo_position.latitude)) * sin(dr) * cos(cr));
     
-    qreal lon2 = atan2(sin(cr) * sin(dr) * qCos(qDegreesToRadians(_current_geo_position.latitude)),
-                       cos(dr) - sin(qDegreesToRadians(_current_geo_position.latitude)) * sin(lat2));
+//    qreal lon2 = atan2(sin(cr) * sin(dr) * qCos(qDegreesToRadians(_current_geo_position.latitude)),
+//                       cos(dr) - sin(qDegreesToRadians(_current_geo_position.latitude)) * sin(lat2));
     
-    // where cr is the bearing (clockwise from north), dr is the angular distance d/R; d being the distance travelled, R the earth’s radius
-    qDebug() << "lat2 lon2:" << qRadiansToDegrees(lat2) << qRadiansToDegrees(lon2);
+//    // where cr is the bearing (clockwise from north), dr is the angular distance d/R; d being the distance travelled, R the earth’s radius
+////    qDebug() << "lat2 lon2:" << qRadiansToDegrees(lat2) << qRadiansToDegrees(lon2);
     
-//    geo::COORDINATES llo = lonlatOffset();
-//    _current_geo_position.latitude += llo.latitude;
-//    _current_geo_position.longtitude += llo.longtitude;
+////    geo::COORDINATES llo = lonlatOffset();
+////    _current_geo_position.latitude += llo.latitude;
+////    _current_geo_position.longtitude += llo.longtitude;
     
-    _current_geo_position.latitude = qRadiansToDegrees(lat2);
-    _current_geo_position.longtitude += qRadiansToDegrees(lon2);
+//    _current_geo_position.latitude = qRadiansToDegrees(lat2);
+//    _current_geo_position.longtitude += qRadiansToDegrees(lon2);
+    
+    _current_geo_position = geo::get_next_geoposition(_current_geo_position, _one_tick_length);
     
     qDebug() << "llat llon:" << _current_geo_position.latitude << _current_geo_position.longtitude;
     

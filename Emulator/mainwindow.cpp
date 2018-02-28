@@ -106,7 +106,6 @@ SV:
     QMessageBox::warning(this, tr("Ошибка в файле XML"), tr("Неверные границы области (bounds)"));
 
   _area->setUp("area_1");
-  
   /** --------- определяем начальную геопозицию ----------- **/
   // начальные координаты
   if(gps_params.init_random_coordinates || 
@@ -180,6 +179,7 @@ SV:
   connect(SELF_VESSEL, &vsl::SvVessel::updateMapObjectPos, _area->scene, area::SvAreaScene::setMapObjectPos);
   
   SELF_VESSEL->updateVessel();
+  
   
   
   /** ------ читаем список судов --------- **/

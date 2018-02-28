@@ -751,12 +751,27 @@ void area::SvArea::centerAirplane()
 
 void area::SvArea::updateGridStep()
 {
-  /* ширина области в метрах */
+  // находим расстояние до следующей линии на карте с учетом масштаба, шага сетки
+  // для горизонтальных линий направление 180 градусов
+  geo::GEOPOSITION pos = geo::GEOPOSITION(_area_data.geo_bounds.max_lat, _area_data.geo_bounds.min_lon, 180, 0);
+  pos = geo::get_next_geoposition(pos, MINOR_VGRID_DISTANCE / _area_data.scale);
+  
+  _area_data.gridYstep = geo2point(&_area_data, pos.longtitude, pos.latitude).y();
+  
+  // для вертикальных линий направление 90 градусов
+  pos = geo::GEOPOSITION(_area_data.geo_bounds.max_lat, _area_data.geo_bounds.min_lon, 90, 0);
+  pos = geo::get_next_geoposition(pos, MINOR_VGRID_DISTANCE / _area_data.scale);
+    
+  _area_data.gridXstep = geo2point(&_area_data, pos.longtitude, pos.latitude).x();
+    
+    
+  /**
+  // ширина области в метрах 
   qreal area_width_meters = 1000 * geo::lon1_lon2_distance(_area_data.geo_bounds.min_lon, _area_data.geo_bounds.max_lon, (_area_data.geo_bounds.min_lat + _area_data.geo_bounds.max_lat) / 2.0);
 
   int line_count = area_width_meters / (MINOR_VGRID_DISTANCE * _area_data.scale);
   _area_data.gridCellStep = quint64(trunc(_area_data.area_curr_size.width() / line_count));
-
+**/
     
   /**
   qreal area_meters = 1000 * geo::lat1_lat2_distance(_area_data.geo_bounds.min_lat, _area_data.geo_bounds.max_lat, _area_data.geo_bounds.max_lon);
@@ -846,28 +861,28 @@ area::SvAreaView::SvAreaView(QWidget *parent, AREA_DATA *area_data) :
 
 void area::SvAreaView::drawBackground(QPainter *painter, const QRectF &r)
 {
-//  painter->setPen(_pen_coastLine);
+  painter->setPen(_pen_coastLine);
   
-//  foreach(quint64 way, _area_data->WAYS.keys())
-//  {
-//    QList<QPair<qreal, qreal>> nodes = _area_data->WAYS.value(way);
+  foreach(quint64 way, _area_data->WAYS.keys())
+  {
+    QList<QPair<qreal, qreal>> nodes = _area_data->WAYS.value(way);
     
-//    QPainterPath path;
+    QPainterPath path;
     
-//    /* пересчитываем географические в экранные координаты */
-//    QPointF p0 = geo2point(_area_data, nodes.value(0).first, nodes.value(0).second);
-//    path.moveTo(p0);
+    /* пересчитываем географические в экранные координаты */
+    QPointF p0 = geo2point(_area_data, nodes.value(0).first, nodes.value(0).second);
+    path.moveTo(p0);
     
-//    for(int i = 1; i < nodes.count(); i++) {
+    for(int i = 1; i < nodes.count(); i++) {
       
-//      QPointF p1 = geo2point(_area_data, nodes.value(i).first, nodes.value(i).second);
-//      path.lineTo(p1);
+      QPointF p1 = geo2point(_area_data, nodes.value(i).first, nodes.value(i).second);
+      path.lineTo(p1);
 
-//    }
+    }
     
-//    painter->drawPath(path);
+    painter->drawPath(path);
 
-//  }
+  }
   
   painter->setPen(_penBorder);
   painter->setBrush(QBrush());
@@ -875,62 +890,32 @@ void area::SvAreaView::drawBackground(QPainter *painter, const QRectF &r)
   
   /* вертикальные линии */
   int i = 0;
-  qreal x = _area_data->geo_bounds.min_lon;
-  qreal dw = _area_data->lat_angles_in_1m * _area_data->gridXstep;
-  QPointF curpoint(0.0, 0.0); // geo2point(_area_data, _area_data->geo_bounds.min_lon, _area_data->geo_bounds.max_lat);
+  qreal x = 0; //_area_data->geo_bounds.min_lon;
   
-  while(x < _area_data->geo_bounds.max_lon) {
+  while(x < _area_data->area_curr_size.width()) { 
     
     painter->setPen((i % 5 == 0) ? _penMajorLine : _penMinorLine);
-    painter->drawLine(curpoint.x(), 0, curpoint.x(), _area_data->area_curr_size.height());
+    painter->drawLine(x, 0, x, _area_data->area_curr_size.height());
     
     i ++;
-    x += dw;
-    curpoint = geo2point(_area_data, x, _area_data->geo_bounds.max_lat);
+    x += _area_data->gridXstep;
  
   }
-  
-  /**
-  int mjr = _area_data->gridCellStep * 5;
-  int counter = 0;
-//  qreal gcs = _area_data->l
-  while(i < _area_data->area_curr_size.width()) {
-    
-    painter->setPen((i % mjr == 0) ? _penMajorLine : _penMinorLine);
-    painter->drawLine(i, 2, i, _area_data->area_curr_size.height() - 2);
-    
-    i += _area_data->gridCellStep;
-    counter++;
-  }**/
 
   /* горизонтальные линии */
-  
   i = 0;
-  qreal y = _area_data->geo_bounds.max_lat;
-  qreal dh = _area_data->lon_angles_in_1m * _area_data->gridYstep;
-  curpoint = geo2point(_area_data, _area_data->geo_bounds.min_lon, _area_data->geo_bounds.max_lat);
-//  qDebug() << i << curpoint.y() << _area_data->area_curr_size.height() << _area_data->lon_angles_in_1m;
+  qreal y = 0;
   
-  while(y > _area_data->geo_bounds.min_lat) ///*curpoint.y()*/ < _area_data->area_curr_size.height())
-  {
-    /**
-    painter->setPen((i % mjr == 0) ? _penMajorLine : _penMinorLine);
-    painter->drawLine(2, i, _area_data->area_curr_size.width() - 2, i);
-    
-    i += (_area_data->gridCellStep * _area_data->koeff2);
-    counter++; 
-    **/
+  while(y < _area_data->area_curr_size.height()) {
     
     painter->setPen((i % 5 == 0) ? _penMajorLine : _penMinorLine);
-    painter->drawLine(0, curpoint.y(), _area_data->area_curr_size.width(), curpoint.y());
+    painter->drawLine(0, y, _area_data->area_curr_size.width(), y);
     
     i ++;
-    y -= dh;
-    curpoint = geo2point(_area_data, _area_data->geo_bounds.min_lon, y);
-    
-//    qDebug() << _area_data->gridCellStep << curpoint.y();
+    y += _area_data->gridYstep;
     
   }
+
   /* рисуем шкалу масштаба */
 //  painter->setPen(Qt::NoPen);
   int font_size = 9;

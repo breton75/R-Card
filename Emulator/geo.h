@@ -9,6 +9,7 @@
 #include <qmath.h>
 #include <QMetaType>
 
+#define EARTH_RADIUS 6372795.0
 
 namespace geo {
 
@@ -75,6 +76,8 @@ namespace geo {
   // расстояние в километрах между двумя широтами/долготами 
   qreal lon1_lon2_distance(qreal min_lon, qreal max_lon, qreal lat);
   qreal lat1_lat2_distance(qreal min_lat, qreal max_lat, qreal lon);
+  
+  geo::GEOPOSITION get_next_geoposition(const geo::GEOPOSITION& geopos, qreal distance);
   
   int get_rnd_course();
   int get_rnd_speed();

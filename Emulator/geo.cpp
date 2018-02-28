@@ -26,7 +26,21 @@ qreal LON1DL[90] =
 
 qreal geo::geo2geo_distance(geo::GEOPOSITION& gp1, geo::GEOPOSITION& gp2)
 {
-  return geo::geo1_geo2_distance(gp1.longtitude, gp1.latitude, gp2.longtitude, gp2.latitude);
+  /** http://www.movable-type.co.uk/scripts/latlong.html  ->  Distance **/
+  qreal lat1 = qDegreesToRadians(gp1.latitude);
+  qreal lat2 = qDegreesToRadians(gp2.latitude);
+  qreal dlat = qDegreesToRadians(gp2.latitude - gp1.latitude);
+  qreal dlon = qDegreesToRadians(gp2.longtitude - gp1.longtitude);
+  
+  qreal a = sin(dlat / 2.0) * sin(dlat / 2.0) +
+          cos(lat1) * cos(lat2) *
+          sin(dlon / 2.0) * sin(dlon / 2.0);
+  
+  qreal c = 2.0 * atan2(sqrt(a), sqrt(1 - a));
+  qreal d = EARTH_RADIUS * c;
+//  qDebug() << "dist:" << d;
+  
+  return d;
 }
 
 qreal geo::geo1_geo2_distance(qreal lon1, qreal lat1, qreal lon2, qreal lat2)
@@ -54,7 +68,7 @@ qreal geo::meridian2parallel_km_in_1degree(qreal longtitude, qreal latitude)
 {
   qreal lon_km_in_1degree = LON1DL[int(longtitude)];
   qreal lat_km_in_1degree = LAT1DL[int(latitude)];
-  qDebug() << longtitude << lon_km_in_1degree << latitude << lat_km_in_1degree;
+//  qDebug() << longtitude << lon_km_in_1degree << latitude << lat_km_in_1degree;
   return lon_km_in_1degree / lat_km_in_1degree;
 }
 
@@ -95,6 +109,7 @@ geo::COORDINATES geo::get_rnd_coordinates(geo::BOUNDS* bounds)
   return result;
   
 }
+
 geo::GEOPOSITION geo::get_rnd_position(geo::BOUNDS* bounds)
 {
   geo::GEOPOSITION result;
@@ -110,33 +125,41 @@ geo::GEOPOSITION geo::get_rnd_position(geo::BOUNDS* bounds)
   
 }
 
+geo::GEOPOSITION geo::get_next_geoposition(const geo::GEOPOSITION& geopos, qreal distance)
+{
+  /** http://www.movable-type.co.uk/scripts/latlong.html **/
+  qreal dr = distance / EARTH_RADIUS;
+  qreal cr = qDegreesToRadians(qreal(geopos.course));
+  qreal lat1 = qDegreesToRadians(geopos.latitude);
+  
+  qreal lat2 = asin(sin(lat1) * cos(dr) + cos(lat1) * sin(dr) * cos(cr));
+  qreal lon2 = atan2(sin(cr) * sin(dr) * cos(lat1), cos(dr) - sin(lat1) * sin(lat2));
+
+  geo::GEOPOSITION new_geopos = geopos;  
+  new_geopos.latitude = qRadiansToDegrees(lat2);
+  new_geopos.longtitude += qRadiansToDegrees(lon2);
+  
+  return new_geopos;
+}
+
 qreal geo::lon1_lon2_distance(qreal min_lon, qreal max_lon, qreal lat)
 {
-  /* для северной широты ! */  
-  int parallel = int(trunc(lat));
-  qreal l1 = LAT1DL[parallel];
-  qreal l2 = parallel > 89 ? l1 : LAT1DL[parallel + 1];
-
-  qreal lat1dl = l1 - ((l1 - l2) * (lat - parallel));
+  geo::GEOPOSITION gp1(lat, min_lon, 0, 0);
+  geo::GEOPOSITION gp2(lat, max_lon, 0, 0);
   
-//  qDebug() << parallel << l1 << l2 << lat1dl;
+  qreal gp1gp2_dist = geo::geo2geo_distance(gp1, gp2);
   
-  /* в километрах !!! */
-  return (max_lon - min_lon) * lat1dl;
-  
+  return gp1gp2_dist;
 }
 
 qreal geo::lat1_lat2_distance(qreal min_lat, qreal max_lat, qreal lon)
 {
-  /* для восточной долготы! */  
-  int meridian = int(trunc(lon));
-  qreal l1 = LON1DL[meridian];
-  qreal l2 = meridian > 89 ? l1 : LON1DL[meridian + 1];
-
-  qreal lon1dl = l1 - ((l1 - l2) * (lon - meridian));
-//  qDebug() << "meridian l1 l2 lon1dl" << meridian << l1 << l2 << lon1dl;
-  /* в километрах !!! */
-  return (max_lat - min_lat) * lon1dl;
+  geo::GEOPOSITION gp1(min_lat, lon, 0, 0);
+  geo::GEOPOSITION gp2(max_lat, lon, 0, 0);
+  
+  qreal gp1gp2_dist = geo::geo2geo_distance(gp1, gp2);
+  
+  return gp1gp2_dist;
 }
 
 //void getGridStep(AREA_DATA* area_data)
