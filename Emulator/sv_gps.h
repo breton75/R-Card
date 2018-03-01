@@ -27,16 +27,13 @@ namespace gps {
     quint32 speed_change_segment;
     quint32 speed_change_ratio;
     
+    quint32 multiplier;
+    
     bool init_random_coordinates;
     bool init_random_course;
     bool init_random_speed;
     
   };
-  
-//  struct LonLatOffset {
-//    qreal dlon = 0.0;
-//    qreal dlat = 0.0;
-//  };
 
   class SvGPS;
   class SvGPSEmitter;
@@ -60,7 +57,7 @@ public:
   bool open();
   void close();
   
-  bool start(quint32 msecs = 0);
+  bool start(quint32 multiplier = 1);
   void stop();
   
 private:
@@ -86,7 +83,7 @@ class gps::SvGPSEmitter: public QThread
   
 public:
   
-  SvGPSEmitter(int vessel_id, gps::gpsInitParams &params, geo::BOUNDS* bounds);
+  SvGPSEmitter(int vessel_id, gps::gpsInitParams &params, geo::BOUNDS* bounds, quint32 multiplier);
   ~SvGPSEmitter(); 
   
   int vesselId() { return _vessel_id; }
@@ -106,22 +103,14 @@ private:
   
   gps::gpsInitParams _gps_params;
   geo::BOUNDS* _bounds = nullptr;
-  
   geo::GEOPOSITION _current_geo_position;
-//  quint32 _current_course;
-//  quint32 _current_speed;
   
   // параметры, необходимые для расчетов
   qreal _one_tick_length;         // длина пути в метрах, за один отсчет
-  qreal _lon_1m_angular_length;   // градусов в 1ом метре вдоль широты
-  qreal _lat_1m_angular_length;   // градусов в 1ом метре вдоль долготы
+  quint32 _multiplier;
   
-  geo::COORDINATES lonlatOffset();
+  qreal normalize_course(quint32 course);
 
-//public slots:
-//  void new_coordinates(geo::COORD coord);
-//  void new_course(qreal course);
-  
 signals:
   void newGeoPosition(const geo::GEOPOSITION& geopos);
   

@@ -22,7 +22,7 @@ namespace geo {
   
   struct COORDINATES {
     COORDINATES() { }
-    COORDINATES(qreal latitude, qreal longtitude) { this->latitude = latitude; this->longtitude = longtitude; }
+    COORDINATES(qreal longtitude, qreal latitude) { this->latitude = latitude; this->longtitude = longtitude; }
     qreal latitude;
     qreal longtitude; 
     geo::COORDINATES& operator =(const geo::COORDINATES& other) { latitude = other.latitude; longtitude = other.longtitude; }
@@ -35,7 +35,7 @@ namespace geo {
     
     GEOPOSITION() { }
     
-    GEOPOSITION(qreal latitude, qreal longtitude, quint32 course, qreal speed) { 
+    GEOPOSITION(qreal longtitude, qreal latitude, quint32 course, qreal speed) { 
       
       this->latitude = latitude; this->longtitude = longtitude; 
       this->course = course; this->speed = speed; this->utc = QDateTime::currentDateTime();
@@ -74,10 +74,12 @@ namespace geo {
   qreal geo1_geo2_distance(qreal lon1, qreal lat1, qreal lon2, qreal lat2);
    
   // расстояние в километрах между двумя широтами/долготами 
-  qreal lon1_lon2_distance(qreal min_lon, qreal max_lon, qreal lat);
-  qreal lat1_lat2_distance(qreal min_lat, qreal max_lat, qreal lon);
+  qreal lon2lon_distance(qreal min_lon, qreal max_lon, qreal lat);
+  qreal lat2lat_distance(qreal min_lat, qreal max_lat, qreal lon);
   
   geo::GEOPOSITION get_next_geoposition(const geo::GEOPOSITION& geopos, qreal distance);
+  
+  bool geoposition_within_bounds(const geo::GEOPOSITION& geopos, geo::BOUNDS* bounds);
   
   int get_rnd_course();
   int get_rnd_speed();

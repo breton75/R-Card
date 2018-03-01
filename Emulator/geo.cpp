@@ -72,6 +72,14 @@ qreal geo::meridian2parallel_km_in_1degree(qreal longtitude, qreal latitude)
   return lon_km_in_1degree / lat_km_in_1degree;
 }
 
+bool geo::geoposition_within_bounds(const geo::GEOPOSITION& geopos, geo::BOUNDS* bounds)
+{
+  return ((geopos.longtitude >= bounds->min_lon) &&
+          (geopos.longtitude <= bounds->max_lon) &&
+          (geopos.latitude >= bounds->min_lat) &&
+          (geopos.latitude <= bounds->max_lat));
+}
+
 int geo::get_rnd_course()
 {
   QTime t = QTime::currentTime();
@@ -142,20 +150,20 @@ geo::GEOPOSITION geo::get_next_geoposition(const geo::GEOPOSITION& geopos, qreal
   return new_geopos;
 }
 
-qreal geo::lon1_lon2_distance(qreal min_lon, qreal max_lon, qreal lat)
+qreal geo::lon2lon_distance(qreal min_lon, qreal max_lon, qreal lat)
 {
-  geo::GEOPOSITION gp1(lat, min_lon, 0, 0);
-  geo::GEOPOSITION gp2(lat, max_lon, 0, 0);
+  geo::GEOPOSITION gp1(min_lon, lat, 0, 0);
+  geo::GEOPOSITION gp2(max_lon, lat, 0, 0);
   
   qreal gp1gp2_dist = geo::geo2geo_distance(gp1, gp2);
   
   return gp1gp2_dist;
 }
 
-qreal geo::lat1_lat2_distance(qreal min_lat, qreal max_lat, qreal lon)
+qreal geo::lat2lat_distance(qreal min_lat, qreal max_lat, qreal lon)
 {
-  geo::GEOPOSITION gp1(min_lat, lon, 0, 0);
-  geo::GEOPOSITION gp2(max_lat, lon, 0, 0);
+  geo::GEOPOSITION gp1(lon, min_lat, 0, 0);
+  geo::GEOPOSITION gp2(lon, max_lat, 0, 0);
   
   qreal gp1gp2_dist = geo::geo2geo_distance(gp1, gp2);
   

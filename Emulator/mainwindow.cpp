@@ -314,7 +314,7 @@ void MainWindow::on_bnCycle_clicked()
   
   if(SELF_GPS) {
     
-    SELF_GPS->start();
+    SELF_GPS->start(ui->spinEmulationMultiplier->value());
     
 //    _serial = new QSerialPort(_available_devices.at(ui->cbDevices->currentIndex()));
     
