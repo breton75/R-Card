@@ -44,7 +44,7 @@ namespace geo {
     qreal latitude = 0.0;
     qreal longtitude = 0.0; 
     int course;
-    int speed;
+    qreal speed;
     QDateTime utc;
     
     bool isValid() { return ((longtitude != -1.0) && (latitude != -1.0) && (course != -1) && (speed != -1)); }
@@ -82,7 +82,7 @@ namespace geo {
   bool geoposition_within_bounds(const geo::GEOPOSITION& geopos, geo::BOUNDS* bounds);
   
   int get_rnd_course();
-  int get_rnd_speed();
+  qreal get_rnd_speed();
   geo::COORDINATES get_rnd_coordinates(geo::BOUNDS *bounds);
   
   geo::GEOPOSITION get_rnd_position(geo::BOUNDS* bounds);

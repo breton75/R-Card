@@ -91,14 +91,42 @@ area::SvArea::SvArea(QWidget *parent) :
     connect(button, SIGNAL(pressed()), this, SLOT(buttonPressed()));
   }
  
+  
+  
   /* виджет карты */
   widgetMap = new QWidget(this);
   widgetMap->setObjectName(QStringLiteral("widgetMap"));
   widgetMap->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
   widgetMap->setStyleSheet(QStringLiteral("background-color: rgb(255, 250, 255);"));
+
+  /* нижняя панель с информацией */
+  frameBottom = new QFrame(this);
+  frameBottom->setObjectName(QStringLiteral("frameBottom"));
+  frameBottom->setFrameShape(QFrame::NoFrame);
+//  frameBottom->setFrameShadow(QFrame::Sunken);
+  frameBottom->setGeometry(0, 0, 0, 10);
+  frameBottom->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+  
+  vlayFrameBottom = new QVBoxLayout(frameBottom);
+  vlayFrameBottom->setSpacing(6);
+  vlayFrameBottom->setContentsMargins(11, 11, 11, 11);
+  vlayFrameBottom->setObjectName(QStringLiteral("vlayFrameBottom"));
+  vlayFrameBottom->setContentsMargins(2, 2, 2, 2);
+  
+  lblCurrentInfo = new QLabel("");
+  vlayFrameBottom->addWidget(lblCurrentInfo);
+  
+  vlayCenter = new QVBoxLayout(this);
+  vlayCenter->setSpacing(6);
+  vlayCenter->setContentsMargins(11, 11, 11, 11);
+  vlayCenter->setObjectName(QStringLiteral("vlayCenter"));
+  vlayCenter->setContentsMargins(2, 2, 2, 2);
+  
+  vlayCenter->addWidget(widgetMap);
+  vlayCenter->addWidget(frameBottom);
  
   hlayMain->addWidget(frameLeft);
-  hlayMain->addWidget(widgetMap);
+  hlayMain->addLayout(vlayCenter);
   hlayMain->addWidget(frameRight);
 }
 
@@ -685,6 +713,12 @@ void area::SvAreaScene::setMapObjectPos(SvMapObject* mapObject, const geo::GEOPO
   QPointF new_pos = geo2point(_area_data, geopos.longtitude, geopos.latitude);
   mapObject->setPos(new_pos.x() + BORDER_WIDTH, new_pos.y() + BORDER_WIDTH);
   mapObject->setRotation(geopos.course);
+  
+  if(!(mapObject->isSelected() && mapObject->selection()))
+    return;
+  
+  mapObject->selection()->setPos(new_pos.x() + BORDER_WIDTH, new_pos.y() + BORDER_WIDTH);  
+  
 }
 
 /** ****** AREA VIEW ******* **/

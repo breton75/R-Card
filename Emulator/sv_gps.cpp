@@ -62,7 +62,7 @@ gps::SvGPSEmitter::SvGPSEmitter(int vessel_id, gps::gpsInitParams& params, geo::
   _current_geo_position = _gps_params.geoposition;
 
   // длина пути в метрах, за один отсчет таймера // скорость в узлах. 1 узел = 1852 метра в час
-  _one_tick_length = qreal(_current_geo_position.speed * 1000) / 3600.0 / (1000.0 / qreal(_gps_params.gps_timeout)) * _multiplier;
+  _one_tick_length = _current_geo_position.speed * 1000.0 / 3600.0 / (1000.0 / qreal(_gps_params.gps_timeout)) * _multiplier;
 
 }
 

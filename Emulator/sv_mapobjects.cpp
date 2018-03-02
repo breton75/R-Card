@@ -49,10 +49,11 @@ void SvMapObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
 //  _pen.setColor(penColor);  
 //  _pen.setWidth(w);
 
-  if(option->state & QStyle::State_Selected)
-    painter->setBrush(QBrush(_selectionColor.dark()/*, _brush.style()*/));
+/*  if(option->state & QStyle::State_Selected)
+    painter->setBrush(QBrush(_selectionColor.dark(), _brush.style()));
   
-  else if(option->state & QStyle::State_MouseOver)
+  else */
+  if(option->state & QStyle::State_MouseOver)
     painter->setBrush(QBrush(_selectionColor.light()/*, _brush.style()*/));
   
   else
@@ -61,7 +62,8 @@ void SvMapObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
   painter->setPen(_pen);
   
   painter->drawPath(*_path);
-      
+  
+
 }
 
 QRectF SvMapObject::boundingRect() const
@@ -249,7 +251,7 @@ void SvMapObjectRadius::setup(SvMapObjectAirplane* airplane, SvMapObjectBeaconPl
 //    return;
 //  }
   
-  _pathCircle = QPainterPath();
+  _pathCircle = QPainterPath(); 
   _pathRadius = QPainterPath();
   _pathCourse = QPainterPath();
   _pathText = QPainterPath();
@@ -329,8 +331,8 @@ SvMapObjectDirection::SvMapObjectDirection(QWidget* parent, qreal lon, qreal lat
 /** ***************** VESSEL ***********************/
 /** ************************************************/
 
-SvMapObjectVessel::SvMapObjectVessel(QWidget* parent):
-  SvMapObjectVesselAbstract(parent/*, vessel*/)
+SvMapObjectVessel::SvMapObjectVessel(QWidget* parent, int id):
+  SvMapObjectVesselAbstract(parent, id)
 {
   path()->moveTo(_points[0]);
   path()->lineTo(_points[1]);
@@ -354,8 +356,8 @@ SvMapObjectVessel::SvMapObjectVessel(QWidget* parent):
 
 
 
-SvMapObjectSelfVessel::SvMapObjectSelfVessel(QWidget* parent/*, vsl::SvVessel* vessel*/):
-  SvMapObjectVesselAbstract(parent/*, vessel*/)
+SvMapObjectSelfVessel::SvMapObjectSelfVessel(QWidget* parent, int id):
+  SvMapObjectVesselAbstract(parent, id)
 {
 //  path()->moveTo(0, 0); 
 //  path()->addEllipse(0.0, 0.0, 10, 10);
@@ -376,5 +378,51 @@ SvMapObjectSelfVessel::SvMapObjectSelfVessel(QWidget* parent/*, vsl::SvVessel* v
   
   editAction = new QAction(QIcon(":/Icons/Pen.ico"), QString("Редактировать"), 0);
   removeAction = new QAction(QIcon(":/Icons/Cancel.ico"), QString("Удалить"), 0);
+  
+}
+
+
+
+/** ********************************************** **/
+/** ***************** SELECTION ****************** **/
+/** ********************************************** **/
+SvMapObjectSelection::SvMapObjectSelection(QWidget* parent, SvMapObject* mapobj): //, vsl::SvVessel* vessel):
+  SvMapObject(parent)
+{ 
+  _mapobj = mapobj;
+  
+  qreal sz = _mapobj->boundingRect().width() > _mapobj->boundingRect().height() ?
+               _mapobj->boundingRect().width() / 2 : _mapobj->boundingRect().height() / 2;
+  
+  path()->moveTo(-sz - 5, -sz);
+  path()->lineTo(-sz - 5, -sz - 5);
+  path()->lineTo(-sz, -sz - 5);
+  
+  path()->moveTo(sz + 5, -sz);
+  path()->lineTo(sz + 5, -sz - 5);
+  path()->lineTo(sz, -sz - 5);
+  
+  path()->moveTo(sz + 5, sz);
+  path()->lineTo(sz + 5, sz + 5);
+  path()->lineTo(sz, sz + 5);
+  
+  path()->moveTo(-sz, sz + 5);
+  path()->lineTo(-sz - 5, sz + 5);
+  path()->lineTo(-sz - 5, sz);
+  
+  
+//  path()->addText(-sz - 7, sz + 7, QFont("Arial"), QString("ш.%1\nд.%2\nк.%3/nс.%4")
+//                  .arg(mapobj->geoPosition().latitude)
+//                  .arg(mapobj->geoPosition().longtitude)
+//                  .arg(mapobj->geoPosition().course)
+//                  .arg(mapobj->geoPosition().speed));  
+      
+  path()->setFillRule(Qt::OddEvenFill);
+  
+  setBrush(QBrush(Qt::NoBrush));
+  
+  QPen pen(QColor("darkred"));
+  pen.setWidth(2);
+  setPen(pen);
   
 }

@@ -44,6 +44,8 @@ public slots:
   ais::aisVoyageData getAISVoyageData(QSqlQuery* q);
   ais::aisDynamicData getAISDynamicData(QSqlQuery* q);
   
+  void updateMapObjectInfo(SvMapObject* mapObject, const geo::GEOPOSITION& geopos);
+  
 //  QString fillVesselNavStatus(QSqlQuery* q) const;
   
   
@@ -61,6 +63,9 @@ private slots:
   
   
   void on_bnCycle_clicked();
+  
+//  void onFocusItemChanged(QGraphicsItem *newFocusItem, QGraphicsItem *oldFocusItem, Qt::FocusReason reason);
+  void selectionChanged();
   
 signals:
   newState(bool state);

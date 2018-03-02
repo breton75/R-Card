@@ -32,14 +32,16 @@ enum SvMapObjectTypes
   motZone,
   motBeaconPlanned,
   motBeaconActive,
-  motAirplane
-  
+  motAirplane,
+  motSelection
 };
 
 #define DEFAULT_SELECTION_COLOR 0xffef0b
 //namespace MapO {
 //QColor defaultSelectionColor = QColor(0xffef0b);
 //}
+
+class SvMapObjectSelection;
 
 class SvMapObject : public QGraphicsItem
 {
@@ -51,7 +53,10 @@ class SvMapObject : public QGraphicsItem
     ~SvMapObject();
     
     virtual int type() const { return -1; }
-
+    
+    virtual int id() { return _id; }
+    virtual void setId(int id) { _id = id; }
+  
     geo::GEOPOSITION geoPosition() { return _geo_position; }
     void setGeoPosition(const geo::GEOPOSITION& geopos) { _geo_position = geopos; }
     
@@ -89,7 +94,11 @@ class SvMapObject : public QGraphicsItem
     bool isEditable() const { return _isEditable; }
     void setEditable(const bool editable) { _isEditable = editable; }
 
- 
+    SvMapObjectSelection* selection() { return _selection; }
+    void setSelection(SvMapObjectSelection* selection) { _selection = selection; }
+    void deleteSelection() { if(_selection) delete _selection; _selection = nullptr; }
+    
+    
     virtual QRectF boundingRect() const Q_DECL_OVERRIDE;
     virtual QPainterPath shape() const Q_DECL_OVERRIDE;
     virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) Q_DECL_OVERRIDE;
@@ -105,6 +114,8 @@ class SvMapObject : public QGraphicsItem
   private:
     geo::GEOPOSITION _geo_position;
     
+    int _id = -1;
+    
     bool _isEditable = false;
     QPainterPath* _path = nullptr;
     
@@ -112,6 +123,8 @@ class SvMapObject : public QGraphicsItem
     QPen _pen = QPen();
     
     QColor _selectionColor = QColor(DEFAULT_SELECTION_COLOR);
+    
+    SvMapObjectSelection* _selection = nullptr;
   
 };
 
@@ -312,15 +325,17 @@ class SvMapObjectVesselAbstract : public SvMapObject
 {
   public:
     
-    explicit SvMapObjectVesselAbstract(QWidget* parent): //, vsl::SvVessel* vessel):
-      SvMapObject(parent) { /*_vessel = vessel;*/ }
+    explicit SvMapObjectVesselAbstract(QWidget* parent, int id):
+      SvMapObject(parent) { setId(id); }
+  
+//    int id() const { return _id; }
   
 //    vsl::SvVessel* vessel() { return _vessel; }
-    
 //    int vesselId() const { return _vessel->id; }
     
 private:
 //    vsl::SvVessel* _vessel = nullptr;
+//  int _id = -1;
     
 };
 
@@ -338,7 +353,7 @@ class SvMapObjectVessel : public SvMapObjectVesselAbstract
   } ;
   
   public:
-    explicit SvMapObjectVessel(QWidget* parent/*, vsl::SvVessel* vessel*/);
+    explicit SvMapObjectVessel(QWidget* parent, int id);
     
     int type() const { return motVessel; }
     
@@ -363,7 +378,7 @@ class SvMapObjectSelfVessel : public SvMapObjectVesselAbstract
   } ;
   
   public:
-    explicit SvMapObjectSelfVessel(QWidget* parent);
+    explicit SvMapObjectSelfVessel(QWidget* parent, int id);
     
     int type() const { return motSelfVessel; }
     
@@ -372,6 +387,30 @@ class SvMapObjectSelfVessel : public SvMapObjectVesselAbstract
 
 //    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
 //    virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
+};
+
+
+/** ********************************************** **/
+/** ***************** SELECTION ****************** **/
+/** ********************************************** **/
+
+class SvMapObjectSelection : public SvMapObject
+{
+  public:
+    
+    explicit SvMapObjectSelection(QWidget* parent, SvMapObject* mapobj);
+  
+//    void setup(SvMapObject* obj);
+    
+//    vsl::SvVessel* vessel() { return _vessel; }
+    
+//    int vesselId() const { return _vessel->id; }
+    
+private:
+//    vsl::SvVessel* _vessel = nullptr;
+  SvMapObject* _mapobj = nullptr;
+  
+  
 };
 
 #endif // MAPOBJECTS_H

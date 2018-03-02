@@ -172,7 +172,11 @@ public:
     QVBoxLayout* vlayFrameLeft;
     QFrame* frameRight;
     QVBoxLayout* vlayFrameRight;
+    QVBoxLayout* vlayCenter;
     QWidget* widgetMap;
+    QFrame* frameBottom;
+    QVBoxLayout* vlayFrameBottom;
+    QLabel* lblCurrentInfo;
     QList<area::AreaButton*> buttonsLeft;
     QList<area::AreaButton*> buttonsRight;
     
@@ -180,6 +184,8 @@ public:
 
     void updateGridStep();
     
+    QString labelInfo() { return _labelInfo; }
+    void setLabelInfo(const QString& lbl) { _labelInfo = lbl; lblCurrentInfo->setText(lbl); }
     
 private:
   area::AREA_DATA _area_data;  
@@ -210,6 +216,7 @@ private:
   
   quint32 _beaconToDropCount = 10;
   
+  QString _labelInfo = "";
   
 signals:
   void scaleChanged();

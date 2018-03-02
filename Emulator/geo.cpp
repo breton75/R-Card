@@ -88,12 +88,12 @@ int geo::get_rnd_course()
   return qrand() % 360;
 }
 
-int geo::get_rnd_speed()
+qreal geo::get_rnd_speed()
 {
   QTime t = QTime::currentTime();
   qsrand(t.msecsSinceStartOfDay()); // .secsTo(QTime::currentTime()));
   
-  return qrand() % 50; // максимальная скорость 50 узлов
+  return qreal(qrand() % 50); // максимальная скорость 50 узлов
 }
 
 geo::COORDINATES geo::get_rnd_coordinates(geo::BOUNDS* bounds)

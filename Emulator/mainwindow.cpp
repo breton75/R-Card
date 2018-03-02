@@ -2,7 +2,7 @@
 #include "ui_mainwindow.h"
 
 extern SvSQLITE *SQLITE;
-extern vsl::SvVessel* SELF_VESSEL;
+//extern vsl::SvVessel* SELF_VESSEL;
 extern ais::SvAIS* SELF_AIS;
 extern gps::SvGPS* SELF_GPS;
 extern QMap<int, vsl::SvVessel*> VESSELS;
@@ -117,7 +117,6 @@ SV:
     gps_params.geoposition.longtitude = coord.longtitude;
     DData.geoposition.latitude = coord.latitude;
     DData.geoposition.longtitude = coord.longtitude;
-    qDebug() << "coord" << coord.longtitude << coord.latitude;
   }
   else {
     gps_params.geoposition.latitude = DData.geoposition.latitude; 
@@ -133,7 +132,6 @@ SV:
   else gps_params.geoposition.course = DData.geoposition.course;
   
   // начальная скорость 
-//  qDebug() << DData.geoposition.speed;
   if(gps_params.init_random_speed ||
     (!gps_params.init_random_speed && !DData.geoposition.isValidSpeed())) {
     
@@ -160,26 +158,32 @@ SV:
   
   
   /** --------- создаем объект собственного судна -------------- **/
-  SELF_VESSEL = new vsl::SvVessel(this, vessel_id, true) ;
+  VESSELS.insert(vessel_id, new vsl::SvVessel(this, vessel_id, true));
+//  SELF_VESSEL =  ;
   
-  SELF_VESSEL->mountAIS(SELF_AIS);
+  VESSELS.value(vessel_id)->mountAIS(SELF_AIS);
 //  SELF_VESSEL->mountLAG(SELF_LAG);
-  SELF_VESSEL->mountGPS(SELF_GPS);
+  VESSELS.value(vessel_id)->mountGPS(SELF_GPS);
   
-  SELF_VESSEL->assignMapObject(new SvMapObjectSelfVessel(_area));
-  _area->scene->addMapObject(SELF_VESSEL->mapObject());
-  SELF_VESSEL->mapObject()->setVisible(true);
-  SELF_VESSEL->mapObject()->setZValue(1);
+  VESSELS.value(vessel_id)->assignMapObject(new SvMapObjectSelfVessel(_area, vessel_id));
+  _area->scene->addMapObject(VESSELS.value(vessel_id)->mapObject());
+  VESSELS.value(vessel_id)->mapObject()->setVisible(true);
+  VESSELS.value(vessel_id)->mapObject()->setZValue(1);
   
   // подключаем gps к АИС
   connect(SELF_GPS, SIGNAL(newGeoPosition(const geo::GEOPOSITION&)), SELF_AIS, SLOT(newSelfGeoPosition(const geo::GEOPOSITION&)));
   
-  connect(SELF_AIS, &ais::SvAIS::updateVessel, SELF_VESSEL, &vsl::SvVessel::updateVessel);
+  connect(SELF_AIS, &ais::SvAIS::updateVessel, VESSELS.value(vessel_id), &vsl::SvVessel::updateVessel);
   
-  connect(SELF_VESSEL, &vsl::SvVessel::updateMapObjectPos, _area->scene, area::SvAreaScene::setMapObjectPos);
+  connect(VESSELS.value(vessel_id), &vsl::SvVessel::updateMapObjectPos, _area->scene, area::SvAreaScene::setMapObjectPos);
+  connect(VESSELS.value(vessel_id), &vsl::SvVessel::updateMapObjectPos, this, &updateMapObjectInfo);
   
-  SELF_VESSEL->updateVessel();
   
+  VESSELS.value(vessel_id)->updateVessel();
+  
+//  connect(_area->scene, SIGNAL(focusItemChanged(QGraphicsItem*,QGraphicsItem*,Qt::FocusReason)), this, SLOT(onFocusItemChanged(QGraphicsItem*,QGraphicsItem*,Qt::FocusReason)));
+  
+  connect(_area->scene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
   
   
   /** ------ читаем список судов --------- **/
@@ -275,7 +279,7 @@ ais::aisDynamicData MainWindow::getAISDynamicData(QSqlQuery* q)
   result.geoposition.latitude = q->value("dynamic_latitude").isNull() ? -1.0 : q->value("dynamic_latitude").toReal();
   result.geoposition.longtitude = q->value("dynamic_longtitude").isNull() ? -1.0 : q->value("dynamic_longtitude").toReal();
   result.geoposition.course = q->value("dynamic_course").isNull() ? -1 : q->value("dynamic_course").toInt();
-  result.geoposition.speed = q->value("dynamic_speed").isNull() ? -1 : q->value("dynamic_speed").toInt();
+  result.geoposition.speed = q->value("dynamic_speed").isNull() ? -1 : q->value("dynamic_speed").toReal();
   result.navstat = q->value("dynamic_status_name").toString();
   
   return result;
@@ -360,4 +364,67 @@ void MainWindow::on_bnCycle_clicked()
 //    emit newState(false);
     
 //  }
+}
+
+//void MainWindow::onFocusItemChanged(QGraphicsItem *newFocusItem, QGraphicsItem *oldFocusItem, Qt::FocusReason reason)
+void MainWindow::selectionChanged()
+{
+  if(_area->scene->selectedItems().isEmpty()) {
+   
+    // ищем все выделения и удаляем их
+    foreach (SvMapObject* item, _area->scene->mapObjects()) {
+      
+      if(item->selection()) {  
+        _area->scene->removeItem(item->selection());
+        item->deleteSelection();
+      }
+    }
+    
+    _area->setLabelInfo("");
+    return;
+  }
+  
+  SvMapObject* mo = (SvMapObject*)(_area->scene->selectedItems().first());
+  
+  mo->setSelection(new SvMapObjectSelection(_area, mo));
+  _area->scene->addMapObject(mo->selection());
+  mo->selection()->setVisible(true);
+  _area->scene->setMapObjectPos(mo, mo->geoPosition());
+
+  updateMapObjectInfo(mo, mo->geoPosition());
+  
+}
+
+void MainWindow::updateMapObjectInfo(SvMapObject* mapObject, const geo::GEOPOSITION& geopos)
+{
+  if(!mapObject->isSelected())
+    return;
+  
+  switch (mapObject->type()) {
+    
+    case motSelfVessel:
+    case motVessel:
+      
+      if(VESSELS.find(mapObject->id()) != VESSELS.end()) {
+      
+        vsl::SvVessel* vsl = VESSELS.value(mapObject->id());
+        
+        _area->setLabelInfo(QString("Текущий объект: %1  шир.: %2  долг.: %3  курс: %4%5  скорость: %6 км/ч  статус: %7")
+                            .arg(vsl->ais()->aisStaticData()->callsign)
+                            .arg(geopos.latitude, 0, 'g', 4)
+                            .arg(geopos.longtitude, 0, 'g', 4)
+                            .arg(geopos.course)
+                            .arg(QChar(248))
+                            .arg(geopos.speed, 0, 'g', 2)
+                            .arg(vsl->ais()->aisDynamicData()->navstat)); 
+            
+        
+      }
+        
+      break;
+        
+      
+    default:
+      break;
+  }
 }
