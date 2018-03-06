@@ -2,10 +2,16 @@
 #include "ui_mainwindow.h"
 
 extern SvSQLITE *SQLITE;
-//extern vsl::SvVessel* SELF_VESSEL;
-extern ais::SvAIS* SELF_AIS;
-extern gps::SvGPS* SELF_GPS;
-extern QMap<int, vsl::SvVessel*> VESSELS;
+
+//vsl::SvVessel* SELF_VESSEL;
+
+QMap<int, ais::SvAIS*> AISs;
+QMap<int, gps::SvGPS*> GPSs;
+QMap<int, vsl::SvVessel*> VESSELs;
+
+//extern ais::SvAIS* SELF_AIS;
+//extern gps::SvGPS* SELF_GPS;
+//extern QMap<int, vsl::SvVessel*> VESSELS;
 extern SvVesselEditor* VESSELEDITOR_UI;
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -29,6 +35,8 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->dockWidget->move(gw.position);
 //  ui->dockWidget->setWindowState(gw.state);
   
+  ui->dspinAISRadius->setValue(AppParams::readParam(this, "GENERAL", "AISRadius", 2).toReal());
+  
 }
 
 bool MainWindow::init()
@@ -36,13 +44,31 @@ bool MainWindow::init()
   QString map_file_name = AppParams::readParam(this, "General", "xml", "").toString();
   QString db_file_name = AppParams::readParam(this, "General", "db", "").toString();
   
+  
+  /** -------- создаем область отображения -------- **/
+  _area = new area::SvArea(ui->dockWidget);
+  ui->vlayDock->addWidget(_area);
+  
+  if(_area->readBounds(map_file_name)) 
+    _area->readMap(map_file_name);
+  
+  else 
+    QMessageBox::warning(this, tr("Ошибка в файле XML"), tr("Неверные границы области (bounds)"));
+
+  _area->setUp("area_1");
+  
+  
   /** ---------- открываем БД ----------- **/
   SQLITE = new SvSQLITE(this, db_file_name);
   QSqlError err = SQLITE->connectToDB();
   
   if(err.type() != QSqlError::NoError) {
+    
     qDebug() << err.databaseText();
+    
+    delete _area;
     return false;
+    
   }
   
   QSqlQuery* q = new QSqlQuery(SQLITE->db);
@@ -51,7 +77,7 @@ bool MainWindow::init()
 SV:
 
   /** ------ читаем информацию о собственном судне --------- **/
-  if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELECT_VESSEL_WHERE_SELF).arg(true), q).type()) {
+  if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELECT_VESSELS_WHERE_SELF).arg(true), q).type()) {
     
     QMessageBox::critical(this, "Ошибка", q->lastError().databaseText(), QMessageBox::Ok);
     q->finish();
@@ -59,6 +85,7 @@ SV:
   }
   
   if(!q->next()) {
+    
     QMessageBox::warning(this, "", "В БД нет сведений о собственном судне", QMessageBox::Ok);
     q->finish();
     
@@ -74,6 +101,9 @@ SV:
         QMessageBox::critical(this, "Ошибка", QString("Ошибка при добавлении записи:\n%1").arg(VESSELEDITOR_UI->last_error()), QMessageBox::Ok);
       
       delete VESSELEDITOR_UI;
+      delete q;
+      delete _area;
+      
       return false;
       
     }
@@ -81,146 +111,47 @@ SV:
     delete VESSELEDITOR_UI;
     
   }
-  
-  /** ------ читаем информацию для инциализации из БД ------ **/
-  int vessel_id = q->value("id").toUInt();
-  
-  gps::gpsInitParams gps_params = getGPSInitParams(q);
-  
-  ais::aisStaticData SData = getAISStaticData(q); 
-  ais::aisVoyageData VData = getAISVoyageData(q);
-  ais::aisDynamicData DData = getAISDynamicData(q);
-  
-  q->finish();
- 
-  
-  
-  /** -------- создаем область отображения -------- **/
-  _area = new area::SvArea(ui->dockWidget);
-  ui->vlayDock->addWidget(_area);
-  
-  if(_area->readBounds(map_file_name)) 
-    _area->readMap(map_file_name);
-  
-  else 
-    QMessageBox::warning(this, tr("Ошибка в файле XML"), tr("Неверные границы области (bounds)"));
 
-  _area->setUp("area_1");
-  /** --------- определяем начальную геопозицию ----------- **/
-  // начальные координаты
-  if(gps_params.init_random_coordinates || 
-     (!gps_params.init_random_coordinates && !DData.geoposition.isValidCoordinates())) {
-    
-    geo::COORDINATES coord = geo::get_rnd_coordinates(_area->bounds());
-    
-    gps_params.geoposition.latitude = coord.latitude;
-    gps_params.geoposition.longtitude = coord.longtitude;
-    DData.geoposition.latitude = coord.latitude;
-    DData.geoposition.longtitude = coord.longtitude;
-  }
-  else {
-    gps_params.geoposition.latitude = DData.geoposition.latitude; 
-    gps_params.geoposition.longtitude = DData.geoposition.longtitude; 
-  }
   
-  // начальный курс
-  if(gps_params.init_random_course ||
-    (!gps_params.init_random_course && !DData.geoposition.isValidCourse())) {
-    gps_params.geoposition.course = geo::get_rnd_course();
-    DData.geoposition.course = gps_params.geoposition.course;
-  }
-  else gps_params.geoposition.course = DData.geoposition.course;
   
-  // начальная скорость 
-  if(gps_params.init_random_speed ||
-    (!gps_params.init_random_speed && !DData.geoposition.isValidSpeed())) {
-    
-    gps_params.geoposition.speed = geo::get_rnd_speed();
-    DData.geoposition.speed = gps_params.geoposition.speed;
-  }
-  else gps_params.geoposition.speed = DData.geoposition.speed;
   
-  /** --------- создаем устройства ----------- **/
-  // GPS
-  SELF_GPS = new gps::SvGPS(vessel_id, gps_params, _area->bounds());
-  SELF_GPS->open();
+  /** --------- создаем собственное судно ----------- **/
+  createSelfVessel(q);
+  q->finish();
+  
+//  _self_vessel = createSelfVessel(q); //self_vessel_id, self_gps_params, self_static_data, self_voyage_data, self_dynamic_data, true);
+//  _self_ais = _self_vessel->ais();
+  _self_vessel->updateVessel();
+
+  
  
-  
-  // АИС
-  SELF_AIS = new ais::SvAIS(vessel_id);
-  SELF_AIS->setStaticData(SData);
-  SELF_AIS->setVoyageData(VData);
-  SELF_AIS->setDynamicData(DData);
-  SELF_AIS->open();
-  
-  
-  // LAG
-  
-  
-  /** --------- создаем объект собственного судна -------------- **/
-  VESSELS.insert(vessel_id, new vsl::SvVessel(this, vessel_id, true));
-//  SELF_VESSEL =  ;
-  
-  VESSELS.value(vessel_id)->mountAIS(SELF_AIS);
-//  SELF_VESSEL->mountLAG(SELF_LAG);
-  VESSELS.value(vessel_id)->mountGPS(SELF_GPS);
-  
-  VESSELS.value(vessel_id)->assignMapObject(new SvMapObjectSelfVessel(_area, vessel_id));
-  _area->scene->addMapObject(VESSELS.value(vessel_id)->mapObject());
-  VESSELS.value(vessel_id)->mapObject()->setVisible(true);
-  VESSELS.value(vessel_id)->mapObject()->setZValue(1);
-  
-  // подключаем gps к АИС
-  connect(SELF_GPS, SIGNAL(newGeoPosition(const geo::GEOPOSITION&)), SELF_AIS, SLOT(newSelfGeoPosition(const geo::GEOPOSITION&)));
-  
-  connect(SELF_AIS, &ais::SvAIS::updateVessel, VESSELS.value(vessel_id), &vsl::SvVessel::updateVessel);
-  
-  connect(VESSELS.value(vessel_id), &vsl::SvVessel::updateMapObjectPos, _area->scene, area::SvAreaScene::setMapObjectPos);
-  connect(VESSELS.value(vessel_id), &vsl::SvVessel::updateMapObjectPos, this, &updateMapObjectInfo);
-  
-  
-  VESSELS.value(vessel_id)->updateVessel();
-  
-//  connect(_area->scene, SIGNAL(focusItemChanged(QGraphicsItem*,QGraphicsItem*,Qt::FocusReason)), this, SLOT(onFocusItemChanged(QGraphicsItem*,QGraphicsItem*,Qt::FocusReason)));
-  
-  connect(_area->scene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
-  
   
   /** ------ читаем список судов --------- **/
-  /**
-  if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELCT_VESSELS).arg("false"), q).type()) {
+  if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELECT_VESSELS_WHERE_SELF).arg(false), q).type()) {
     
     QMessageBox::critical(this, "Ошибка", q->lastError().databaseText(), QMessageBox::Ok);
     q->finish();
-    return;
+    
+    delete q;
+    delete _self_vessel;
+    delete _area;
+    
+    return false;
   }
   
+  /** --------- создаем суда ----------- **/
   while(q->next()) {
-    
-    // читаем информацию из БД  
-//      vsl::InitParams iprms = fillVesselInitParams(q) ;
-      vsl::VesselStaticData sdata = fillVesselStaticData(q);
-      vsl::VesselVoyageData vdata = fillVesselVoyageData(q);
-      geo::POSITION pos = fillVesselPosition(q);
-//      QString navstat = fillVesselNavStatus(q);
-    
-      q->finish();
-      
-      // создаем объект собственного судна
-      vsl::SvVessel* v = new vsl::SvVessel(this);
-//      v->setInitParams(iprms);
-      v->setStaticData(sdata);
-      v->setVoyageData(vdata);
-      v->setPosition(pos);
-//      v->setNavStatus(navstat);
-      
-      VESSELS.insert(sdata.id, v);
+    vsl::SvVessel* vessel = createOtherVessel(q);
+    vessel->updateVessel();
     
   }
   q->finish();
-  **/
+
   
-  connect(this, SIGNAL(newState(bool)), this, SLOT(stateChanged(bool)));
+  
+  connect(_area->scene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
+  
+  connect(this, SIGNAL(newState(States)), this, SLOT(stateChanged(States)));
   
   return true;
 }
@@ -230,10 +161,12 @@ MainWindow::~MainWindow()
   AppParams::saveWindowParams(this, this->size(), this->pos(), this->windowState());
   AppParams::saveWindowParams(ui->dockWidget, ui->dockWidget->size(), ui->dockWidget->pos(), ui->dockWidget->windowState(), "AREA WINDOW");
   
+  AppParams::saveParam(this, "GENERAL", "AISRadius", QVariant(ui->dspinAISRadius->value()));
+  
   delete ui;
 }
 
-gps::gpsInitParams MainWindow::getGPSInitParams(QSqlQuery* q)
+gps::gpsInitParams MainWindow::getGPSInitParams(QSqlQuery* q, ais::aisDynamicData& dynamic_data)
 {
   gps::gpsInitParams result;
   result.gps_timeout = q->value("gps_timeout").toUInt();
@@ -244,6 +177,45 @@ gps::gpsInitParams MainWindow::getGPSInitParams(QSqlQuery* q)
   result.course_change_segment = q->value("init_course_change_segment").toUInt();
   result.speed_change_ratio = q->value("init_speed_change_ratio").toUInt();
   result.speed_change_segment = q->value("init_speed_change_segment").toUInt();
+  
+  // начальные координаты
+  if(result.init_random_coordinates || 
+     (!result.init_random_coordinates && !dynamic_data.geoposition.isValidCoordinates())) {
+    
+    geo::COORDINATES coord = geo::get_rnd_coordinates(_area->bounds());
+    
+    result.geoposition.latitude = coord.latitude;
+    result.geoposition.longtitude = coord.longtitude;
+    dynamic_data.geoposition.latitude = coord.latitude;
+    dynamic_data.geoposition.longtitude = coord.longtitude;
+    
+  }
+  else {
+    
+    result.geoposition.latitude = dynamic_data.geoposition.latitude; 
+    result.geoposition.longtitude = dynamic_data.geoposition.longtitude; 
+    
+  }
+  
+  // начальный курс
+  if(result.init_random_course ||
+    (!result.init_random_course && !dynamic_data.geoposition.isValidCourse())) {
+    
+    result.geoposition.course = geo::get_rnd_course();
+    dynamic_data.geoposition.course = result.geoposition.course;
+    
+  }
+  else result.geoposition.course = dynamic_data.geoposition.course;
+  
+  // начальная скорость 
+  if(result.init_random_speed ||
+    (!result.init_random_speed && !dynamic_data.geoposition.isValidSpeed())) {
+    
+    result.geoposition.speed = geo::get_rnd_speed();
+    dynamic_data.geoposition.speed = result.geoposition.speed;
+    
+  }
+  else result.geoposition.speed = dynamic_data.geoposition.speed;
   
   return result;
 }
@@ -285,23 +257,41 @@ ais::aisDynamicData MainWindow::getAISDynamicData(QSqlQuery* q)
   return result;
 }
 
-void MainWindow::stateChanged(bool state)
+void MainWindow::stateChanged(States state)
 {
-  if(state) {
-    ui->bnCycle->setText("Стоп");
-    ui->bnCycle->setStyleSheet("background-color: tomato");
-   
-  }
-  else {
-   
-    ui->bnCycle->setText("Старт");
-    ui->bnCycle->setStyleSheet("");
+  switch (state) {
     
-//    on_bnSaveToFile_clicked(false);
+    case sRunned:
+    {
+      ui->tabWidget->setEnabled(false);
+      ui->bnCycle->setEnabled(true);
+      ui->bnCycle->setText("Стоп");
+      ui->bnCycle->setStyleSheet("background-color: tomato");
+      
+      break;
+    }
+      
+    case sStopped:
+    {
+      ui->tabWidget->setEnabled(true);
+      ui->bnCycle->setEnabled(true);
+      ui->bnCycle->setText("Старт");
+      ui->bnCycle->setStyleSheet("");
+      break;
+    }
+      
+    case sRunning:
+    case sStopping:
+    {
+      ui->bnCycle->setEnabled(false);
+      ui->tabWidget->setEnabled(false);
+    }
+      
+    default:
+      break;
   }
   
-  ui->tabWidget->setEnabled(!state);
-  ui->bnCycle->setEnabled(true);
+  _current_state = state;
   QApplication::processEvents();
   
 }
@@ -309,61 +299,42 @@ void MainWindow::stateChanged(bool state)
 void MainWindow::on_bnCycle_clicked()
 {
   
-  ui->bnCycle->setEnabled(false);
-  ui->tabWidget->setEnabled(false);
-  QApplication::processEvents();
-  
-//  SELF_GPS->start();
-//  emit newState(true);
-  
-  if(SELF_GPS) {
+  switch (_current_state) {
     
-    SELF_GPS->start(ui->spinEmulationMultiplier->value());
-    
-//    _serial = new QSerialPort(_available_devices.at(ui->cbDevices->currentIndex()));
-    
-//    if (!_serial)
-//    {
-//      log << svlog::Time << svlog::Critical << "Ошибка при создании устройства." 
-//          << _serial->errorString() << svlog::endl;;
-//      return;
-//    }
-    
-//    if(!_serial->open(QIODevice::ReadWrite)) {
-//      log << svlog::Time << svlog::Critical
-//          << QString("Не удалось открыть порт %1").arg(_available_devices.at(ui->cbDevices->currentIndex()).portName())
-//          << svlog::endl;
-//      return;
-//    }
-    
-//    _tdc100thr = new SvPullTDC1000(_serial, ui->spinTimer->value());
-//    connect(_tdc100thr, SIGNAL(newData(QByteArray&)), this, SLOT(new_data(QByteArray&)));
-//    _tdc100thr->start();
-    
-    emit newState(true);    
-
+    case sStopped:
+    {
+      emit newState(sRunning);
+      
+      emit startEmulation(ui->spinEmulationMultiplier->value());
+      
+//      foreach (gps::SvGPS* gps, GPSs.values()) {
+        
+//        gps->start(ui->spinEmulationMultiplier->value());
+//      }
+      
+      emit newState(sRunned);
+      break;
+    }
+      
+    case sRunned:
+    {
+      emit newState(sStopping);
+      
+      emit stopEmulation();
+      
+      foreach (gps::SvGPS* gps, GPSs.values()) {
+        gps->waitWhileRunned();
+//        gps->stop();
+      }
+      
+      emit newState(sStopped);
+      break;
+    }
+      
+    default:
+      break;
   }
-  else
-  {
-    QMessageBox::critical(this, "Ошибка", "Критическая ошибка. Сообщите разработчику данную информацию:\n(on_bnCycle_clicked SELF_GPS = NULL).", QMessageBox::Ok);
-    emit newState(false);
-  }
-//    SELF_GPS->stop();
-    
-//    _tdc100thr->stop();
-//    _tdc100thr->deleteLater();
-//    delete _tdc100thr;
-//    _tdc100thr = nullptr;      
-    
-//    if(_serial) {
-//      if(_serial->isOpen()) _serial->close();
-//      delete _serial;
-//      _serial = nullptr;
-//    }
-    
-//    emit newState(false);
-    
-//  }
+  
 }
 
 //void MainWindow::onFocusItemChanged(QGraphicsItem *newFocusItem, QGraphicsItem *oldFocusItem, Qt::FocusReason reason)
@@ -405,18 +376,18 @@ void MainWindow::updateMapObjectInfo(SvMapObject* mapObject, const geo::GEOPOSIT
     case motSelfVessel:
     case motVessel:
       
-      if(VESSELS.find(mapObject->id()) != VESSELS.end()) {
+      if(VESSELs.find(mapObject->id()) != VESSELs.end()) {
       
-        vsl::SvVessel* vsl = VESSELS.value(mapObject->id());
+        vsl::SvVessel* vsl = VESSELs.value(mapObject->id());
         
         _area->setLabelInfo(QString("Текущий объект: %1  шир.: %2  долг.: %3  курс: %4%5  скорость: %6 км/ч  статус: %7")
-                            .arg(vsl->ais()->aisStaticData()->callsign)
+                            .arg(vsl->ais()->getStaticData()->callsign)
                             .arg(geopos.latitude, 0, 'g', 4)
                             .arg(geopos.longtitude, 0, 'g', 4)
                             .arg(geopos.course)
                             .arg(QChar(248))
                             .arg(geopos.speed, 0, 'g', 2)
-                            .arg(vsl->ais()->aisDynamicData()->navstat)); 
+                            .arg(vsl->ais()->getDynamicData()->navstat)); 
             
         
       }
@@ -427,4 +398,200 @@ void MainWindow::updateMapObjectInfo(SvMapObject* mapObject, const geo::GEOPOSIT
     default:
       break;
   }
+}
+
+vsl::SvVessel *MainWindow::createSelfVessel(QSqlQuery* q)
+{  
+  /*! _area должна уже быть проинициализирована !! */
+  
+  // читаем информацию из БД  
+  int vessel_id = q->value("id").toUInt();
+  
+  ais::aisStaticData static_data = getAISStaticData(q); 
+  ais::aisVoyageData voyage_data = getAISVoyageData(q);
+  ais::aisDynamicData dynamic_data = getAISDynamicData(q);
+  gps::gpsInitParams gps_params = getGPSInitParams(q, dynamic_data);
+                     
+  
+  /** ----- создаем устройства ------ **/
+  // GPS
+  _self_gps = new gps::SvGPS(vessel_id, gps_params, _area->bounds());
+  GPSs.insert(vessel_id, _self_gps);
+  _self_gps->open();
+ 
+  
+  // АИС
+  _self_ais = new ais::SvSelfAIS(vessel_id, static_data, voyage_data, dynamic_data);
+  _self_ais->setReceiveRange(ui->dspinAISRadius->value()); /** надо переделать */
+  AISs.insert(vessel_id, _self_ais);
+  _self_ais->open();
+  
+  
+  // LAG
+  
+  
+  /** --------- создаем объект собственного судна -------------- **/
+  _self_vessel = new vsl::SvVessel(this, vessel_id);
+  VESSELs.insert(vessel_id, _self_vessel);
+  
+  _self_vessel->mountGPS(_self_gps);
+  _self_vessel->mountAIS(_self_ais);
+//  _self_vessel->mountLAG(SELF_LAG);
+  
+  _self_vessel->assignMapObject(new SvMapObjectSelfVessel(_area, vessel_id));
+     
+  _area->scene->addMapObject(_self_vessel->mapObject());
+  _self_vessel->mapObject()->setVisible(true);
+  _self_vessel->mapObject()->setZValue(1);
+  
+  // подключаем
+  connect(_self_gps, SIGNAL(newGPSData(const geo::GEOPOSITION&)), _self_ais, SLOT(newGPSData(const geo::GEOPOSITION&)));
+  
+  connect(_self_ais, &ais::SvSelfAIS::updateSelfVessel, _self_vessel, &vsl::SvVessel::updateVessel);
+  connect(_self_ais, &ais::SvSelfAIS::updateVesselById, this, &MainWindow::on_update_vessel_by_id);
+  connect(_self_vessel, &vsl::SvVessel::updateMapObjectPos, _area->scene, area::SvAreaScene::setMapObjectPos);
+  connect(_self_vessel, &vsl::SvVessel::updateMapObjectPos, this, &updateMapObjectInfo);
+  
+  connect(this, &MainWindow::startEmulation, _self_gps, &gps::SvGPS::start);
+  connect(this, &MainWindow::stopEmulation, _self_gps, &gps::SvGPS::stop);
+  
+//  connect(this, &MainWindow::startEmulation, _self_ais, &ais::SvAIS::start);
+//  connect(this, &MainWindow::stopEmulation, _self_ais, &ais::SvAIS::stop);
+  
+  
+  return _self_vessel;
+  
+}
+
+vsl::SvVessel *MainWindow::createOtherVessel(QSqlQuery* q)
+{  
+  /*! _area должна уже быть проинициализирована !! */
+  
+  // читаем информацию из БД  
+  int vessel_id = q->value("id").toUInt();
+  
+  ais::aisStaticData static_data = getAISStaticData(q); 
+  ais::aisVoyageData voyage_data = getAISVoyageData(q);
+  ais::aisDynamicData dynamic_data = getAISDynamicData(q);
+  gps::gpsInitParams gps_params = getGPSInitParams(q, dynamic_data);
+                     
+  
+  /** ----- создаем устройства ------ **/
+  // GPS
+  gps::SvGPS* newGPS = new gps::SvGPS(vessel_id, gps_params, _area->bounds());
+  GPSs.insert(vessel_id, newGPS);
+  newGPS->open();
+ 
+  
+  // АИС
+  ais::SvOtherAIS* newAIS;
+  newAIS = new ais::SvOtherAIS(vessel_id, static_data, voyage_data, dynamic_data);
+  AISs.insert(vessel_id, newAIS);
+  newAIS->open();
+  
+  
+  // LAG
+  
+  
+  /** --------- создаем объект судна -------------- **/
+  vsl::SvVessel* newVessel = new vsl::SvVessel(this, vessel_id);
+  VESSELs.insert(vessel_id, newVessel);
+
+  newVessel->mountGPS(newGPS);
+  newVessel->mountAIS(newAIS);
+//  newVessel->mountLAG(SELF_LAG);
+  
+  newVessel->assignMapObject(new SvMapObjectVessel(_area, vessel_id));
+    
+  _area->scene->addMapObject(newVessel->mapObject());
+  newVessel->mapObject()->setVisible(true);
+  newVessel->mapObject()->setZValue(1);
+  
+  // подключаем
+  connect(newGPS, SIGNAL(newGPSData(const geo::GEOPOSITION&)), newAIS, SLOT(newGPSData(const geo::GEOPOSITION&)));
+  
+  connect(newAIS, &ais::SvOtherAIS::broadcast_ais_data, _self_ais, &ais::SvSelfAIS::on_receive_ais_data);
+  
+  connect(newVessel, &vsl::SvVessel::updateMapObjectPos, _area->scene, area::SvAreaScene::setMapObjectPos);
+  connect(newVessel, &vsl::SvVessel::updateMapObjectPos, this, &updateMapObjectInfo);
+  
+  connect(this, &MainWindow::startEmulation, newGPS, &gps::SvGPS::start);
+  connect(this, &MainWindow::startEmulation, newAIS, &ais::SvOtherAIS::start);
+  
+  connect(this, &MainWindow::stopEmulation, newGPS, &gps::SvGPS::stop);
+  connect(this, &MainWindow::stopEmulation, newAIS, &ais::SvOtherAIS::stop);
+  
+  
+  return newVessel;
+  
+}
+
+void MainWindow::on_update_vessel_by_id(int id)
+{
+  foreach (vsl::SvVessel* vessel, VESSELs.values()) {
+    
+    if(vessel->id != id) continue;
+    
+    if(_self_ais->distanceTo(vessel->ais()) > _self_ais->receiveRange()) {
+      
+      vessel->mapObject()->setOutdated(true);
+    }
+    else {
+      
+      vessel->mapObject()->setOutdated(false);
+      vessel->updateVessel();
+      
+    }  
+    
+  }
+}
+
+void MainWindow::on_actionNewVessel_triggered()
+{
+  VESSELEDITOR_UI = new SvVesselEditor(this);
+  if(VESSELEDITOR_UI->exec() != QDialog::Accepted) {
+    
+    if(VESSELEDITOR_UI->result() != SvVesselEditor::rcNoError)
+      QMessageBox::critical(this, "Ошибка", QString("Ошибка при добавлении записи:\n%1").arg(VESSELEDITOR_UI->last_error()), QMessageBox::Ok);
+    
+    delete VESSELEDITOR_UI;
+    
+    return;
+  }
+  
+  delete VESSELEDITOR_UI;
+    
+  
+  /** ------ читаем информацию о судне --------- **/
+  QSqlQuery* q = new QSqlQuery(SQLITE->db);
+//  qDebug() << QString(SQL_SELECT_VESSEL_WHERE_ID).arg(vessel_id);
+  if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELECT_LAST_INSERTED_VESSEL), q).type()) {
+    
+    QMessageBox::critical(this, "Ошибка", q->lastError().databaseText(), QMessageBox::Ok);
+    q->finish();
+    delete q;
+    
+    return;
+    
+  }
+  else {
+  
+    if(!q->next()) {
+      
+      QMessageBox::critical(this, "Ошибка", "Неизвестная ошибка", QMessageBox::Ok);
+      q->finish();
+      delete q;
+      
+      return;
+    }
+      
+    /** --------- создаем судно ----------- **/
+    vsl::SvVessel* vessel = createOtherVessel(q);
+    q->finish();
+    vessel->updateVessel();
+    
+  }
+    
+  
+  
 }

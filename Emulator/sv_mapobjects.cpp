@@ -346,7 +346,7 @@ SvMapObjectVessel::SvMapObjectVessel(QWidget* parent, int id):
   path()->setFillRule(Qt::OddEvenFill);
   
   setBrush(QBrush(QColor(0x14c546)));
-  setPen(QPen(Qt::yellow));
+  setPen(QPen(Qt::blue));
   
   editAction = new QAction(QIcon(":/Icons/Pen.ico"), QString("Редактировать"), 0);
   removeAction = new QAction(QIcon(":/Icons/Cancel.ico"), QString("Удалить"), 0);

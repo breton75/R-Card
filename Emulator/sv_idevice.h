@@ -16,7 +16,8 @@ namespace idev {
   enum SvSimulatedDeviceTypes {
     sdtUndefined = -1,
     sdtGPS,
-    sdtAIS,
+    sdtSelfAIS,
+    sdtOtherAIS,
     sdtLAG,
     sdtNavtek,
     sdtVessel
@@ -43,11 +44,6 @@ public:
   
   virtual idev::SvSimulatedDeviceTypes type() const { return idev::sdtUndefined; }
   
-  virtual bool open() = 0;
-  virtual void close() = 0;
-  
-  virtual bool start(quint32 msecs) = 0;
-  virtual void stop() = 0;
   
 //  QMutex mutex;
   
@@ -66,6 +62,13 @@ protected:
   
   bool _isOpened;
   QString _last_error;
+  
+public slots:
+  virtual bool open() = 0;
+  virtual void close() = 0;
+  
+  virtual bool start(quint32 msecs) = 0;
+  virtual void stop() = 0;
   
     
 //signals:

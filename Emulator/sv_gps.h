@@ -54,11 +54,7 @@ public:
   
   idev::SvSimulatedDeviceTypes type() const { return idev::sdtGPS; }
     
-  bool open();
-  void close();
-  
-  bool start(quint32 multiplier = 1);
-  void stop();
+  bool waitWhileRunned() { while(_gps_emitter != nullptr) qApp->processEvents();  }
   
 private:
 //  geo::GEOPOSITION _current_geo_position;
@@ -71,9 +67,16 @@ private:
   
   QMutex _mutex;
   
+public slots:
+  bool open();
+  void close();
+  
+  bool start(quint32 multiplier = 1);
+  void stop();
+  
   
 signals:
-  void newGeoPosition(const geo::GEOPOSITION& geopos);
+  void newGPSData(const geo::GEOPOSITION& geopos);
   
 };
 
@@ -112,7 +115,7 @@ private:
   qreal normalize_course(quint32 course);
 
 signals:
-  void newGeoPosition(const geo::GEOPOSITION& geopos);
+  void newGPSData(const geo::GEOPOSITION& geopos);
   
 };
 

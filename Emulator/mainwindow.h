@@ -39,7 +39,7 @@ public slots:
  
 //  gps::GPSParams fillVesselInitParams(QSqlQuery* q) const;
 //  vsl:: setVesselData(QSqlQuery* q);
-  gps::gpsInitParams getGPSInitParams(QSqlQuery* q);
+  gps::gpsInitParams getGPSInitParams(QSqlQuery* q, ais::aisDynamicData &dynamic_data);
   ais::aisStaticData getAISStaticData(QSqlQuery* q);
   ais::aisVoyageData getAISVoyageData(QSqlQuery* q);
   ais::aisDynamicData getAISDynamicData(QSqlQuery* q);
@@ -50,25 +50,47 @@ public slots:
   
   
 private:
+  enum States {
+    sRunning,
+    sStopping,
+    sRunned,
+    sStopped
+  };
+
   Ui::MainWindow *ui;
   
   area::SvArea* _area;
   
+  gps::SvGPS* _self_gps = nullptr;
+  ais::SvSelfAIS* _self_ais = nullptr;
+  vsl::SvVessel* _self_vessel = nullptr;
+  
   SvMapObjectSelfVessel* _self_map_obj;
   QMap<int, SvMapObjectSelfVessel*> _vessels_map_obj;
   
+  States _current_state = sStopped;
+  
+public slots:
+  void on_update_vessel_by_id(int id);
+  
 private slots:
-  void stateChanged(bool state);
-//  void setVesselPosition();
-  
-  
+  void stateChanged(States state);
   void on_bnCycle_clicked();
   
-//  void onFocusItemChanged(QGraphicsItem *newFocusItem, QGraphicsItem *oldFocusItem, Qt::FocusReason reason);
   void selectionChanged();
   
+//  void initGeposition(gps::gpsInitParams& gpsParams, const ais::aisDynamicData& dynamicData);
+  
+  vsl::SvVessel* createSelfVessel(QSqlQuery* q);
+  vsl::SvVessel* createOtherVessel(QSqlQuery* q);
+  
+  void on_actionNewVessel_triggered();
+  
 signals:
-  newState(bool state);
+  void newState(States state);
+  
+  void startEmulation(quint32 multiplier);
+  void stopEmulation();
   
 };
 

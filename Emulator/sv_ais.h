@@ -6,12 +6,19 @@
 #include <QApplication>
 #include <QTime>
 #include <QMutex>
+#include <QTimer>
 
 #include "geo.h"
 #include "sv_gps.h"
 #include "sv_idevice.h"
 
 namespace ais {
+
+  enum AISDataTypes {
+    aisStatic,
+    aisVoyage,
+    aisDynamic
+  };
 
   struct aisStaticData {                     // Информация о судне. Данные передаются каждые 6 минут
     
@@ -51,7 +58,9 @@ namespace ais {
   };
   
   class SvAIS;
-  class SvAISEmitter;
+  class SvSelfAIS;
+  class SvOtherAIS;
+//  class SvAISEmitter;
   
 }
 
@@ -60,23 +69,79 @@ class ais::SvAIS : public idev::SvIDevice
   Q_OBJECT
   
 public:
-  SvAIS(int vessel_id);
-  ~SvAIS(); 
+//  SvAIS(int vessel_id, const ais::aisStaticData& sdata, const ais::aisVoyageData& vdata, const ais::aisDynamicData& ddata);
+//  ~SvAIS(); 
   
+  void setVesselId(int id) { _vessel_id = id; }
   int vesselId() { return _vessel_id; }
   
   void setStaticData(const ais::aisStaticData& sdata) { _static_data = sdata; }
   void setVoyageData(const ais::aisVoyageData& vdata) { _voyage_data = vdata; }
   void setDynamicData(const ais::aisDynamicData& ddata) { _dynamic_data = ddata; }
+  
   void setGeoPosition(const geo::GEOPOSITION& geopos) { _dynamic_data.geoposition = geopos; }
   void setNavStatus(const QString& status) { _dynamic_data.navstat = status; }
-
-  ais::aisStaticData *aisStaticData() { return &_static_data; }
-  ais::aisVoyageData *aisVoyageData() { return &_voyage_data; }
-  ais::aisDynamicData *aisDynamicData() { return &_dynamic_data; }
   
-  idev::SvSimulatedDeviceTypes type() const { return idev::sdtAIS; }
+  ais::aisStaticData  *getStaticData() { return &_static_data; }
+  ais::aisVoyageData  *getVoyageData() { return &_voyage_data; }
+  ais::aisDynamicData *getDynamicData() { return &_dynamic_data; }
+  
+//  idev::SvSimulatedDeviceTypes type();
     
+  virtual bool open() = 0;
+  virtual void close() = 0;
+  
+  virtual bool start(quint32 msecs) = 0;
+  virtual void stop() = 0;
+  
+  friend class ais::SvSelfAIS;
+  friend class ais::SvOtherAIS;
+  
+private:
+  ais::aisStaticData _static_data;
+  ais::aisVoyageData _voyage_data;
+  ais::aisDynamicData _dynamic_data;
+  
+  int _vessel_id = -1;
+  
+//public slots:
+//  void newGPSData(const geo::GEOPOSITION& geopos);
+  
+};
+
+
+class ais::SvSelfAIS : public ais::SvAIS
+{
+  Q_OBJECT
+  
+public:
+  SvSelfAIS(int vessel_id, const ais::aisStaticData& sdata, const ais::aisVoyageData& vdata, const ais::aisDynamicData& ddata);
+  ~SvSelfAIS(); 
+  
+//  int vesselId() { return _vessel_id; }
+  
+//  void setStaticData(const ais::aisStaticData& sdata) { _static_data = sdata; }
+//  void setVoyageData(const ais::aisVoyageData& vdata) { _voyage_data = vdata; }
+//  void setDynamicData(const ais::aisDynamicData& ddata) { _dynamic_data = ddata; }
+  
+//  void setGeoPosition(const geo::GEOPOSITION& geopos) { _dynamic_data.geoposition = geopos; }
+//  void setNavStatus(const QString& status) { _dynamic_data.navstat = status; }
+
+  qreal receiveRange() { return _receive_range; }
+  void setReceiveRange(qreal range) { _receive_range = range; }
+  
+  qreal distanceTo(ais::SvAIS* remoteAIS); /*{ if(!remoteAIS) return 0.0; 
+    else {
+      geo::GEOPOSITION g;
+      int i = remoteAIS->aisDynamicData()->geoposition.course;
+      return geo::geo2geo_distance(_dynamic_data.geoposition, g); }*/
+                                          
+  idev::SvSimulatedDeviceTypes type() const { return idev::sdtSelfAIS; }
+  
+//  ais::aisStaticData *aisStaticData() { return &_static_data; }
+//  ais::aisVoyageData *aisVoyageData() { return &_voyage_data; }
+//  ais::aisDynamicData *aisDynamicData() { return &_dynamic_data; }
+  
   bool open();
   void close();
   
@@ -84,55 +149,95 @@ public:
   void stop();
   
 private:
-//  geo::GEOPOSITION _current_geo_position;
+  qreal _receive_range;
   
-  ais::SvAISEmitter* _ais_emitter = nullptr;
+//  ais::aisStaticData _static_data;
+//  ais::aisVoyageData _voyage_data;
+//  ais::aisDynamicData _dynamic_data;
   
-  ais::aisStaticData _static_data;
-  ais::aisVoyageData _voyage_data;
-  ais::aisDynamicData _dynamic_data;
-  
-  int _vessel_id = -1;
-  
-  QMutex _mutex;
+//  int _vessel_id = -1;
   
 signals:
-  void updateVessel();
+  void updateSelfVessel();
+  void updateVesselById(int id);
+//  void broadcast();
   
 public slots:
-  void newSelfGeoPosition(const geo::GEOPOSITION& geopos);
+  void newGPSData(const geo::GEOPOSITION& geopos);
+  void on_receive_ais_data(ais::SvAIS* ais, ais::AISDataTypes type);
+//  void on_receive_voyage (const ais::aisVoyageData& vdata);
+//  void on_receive_dynamic(const ais::aisDynamicData& ddata);
+  
+
   
 };
 
-class ais::SvAISEmitter : public QThread
+
+class ais::SvOtherAIS : public ais::SvAIS
 {
   Q_OBJECT
   
 public:
-  SvAISEmitter(ais::aisStaticData *sdata, ais::aisVoyageData *vdata, ais::aisDynamicData *ddata, QMutex *mutex);
-  ~SvAISEmitter();
+  SvOtherAIS(int vessel_id, const ais::aisStaticData& sdata, const ais::aisVoyageData& vdata, const ais::aisDynamicData& ddata);
+  ~SvOtherAIS(); 
   
+  idev::SvSimulatedDeviceTypes type() const { return idev::sdtOtherAIS; }
+    
+  bool open();
+  void close();
+  
+  bool start(quint32 msecs);
   void stop();
   
-  int vessel_id = -1;
-  
-private:
-  void run() Q_DECL_OVERRIDE;
-  
-  bool _started = false;
-  bool _finished = false;
-  
-  ais::aisStaticData *_static_data = nullptr;
-  ais::aisVoyageData *_voyage_data = nullptr;
-  ais::aisDynamicData *_dynamic_data = nullptr;
-  
-  QMutex *_mutex = nullptr;
+private:  
+  QTimer _timer_static;
+  QTimer _timer_voyage;
+  QTimer _timer_dynamic;
   
 signals:
-  void ais_static_data(ais::aisStaticData *data);
-  void ais_voyage_data(ais::aisVoyageData *data);
-  void ais_dynamic_data(ais::aisDynamicData *data);
+  void broadcast_ais_data(ais::SvAIS* ais, ais::AISDataTypes type);
+  
+public slots:
+  void newGPSData(const geo::GEOPOSITION& geopos);
+  
+private slots:
+  void on_timer_static()  { emit broadcast_ais_data(this, ais::aisStatic); }
+  void on_timer_voyage()  { emit broadcast_ais_data(this, ais::aisVoyage); }
+  void on_timer_dynamic() { emit broadcast_ais_data(this, ais::aisDynamic); }
+
   
 };
+
+
+//class ais::SvAISEmitter : public QThread
+//{
+//  Q_OBJECT
+  
+//public:
+//  SvAISEmitter(ais::aisStaticData *sdata, ais::aisVoyageData *vdata, ais::aisDynamicData *ddata, QMutex *mutex);
+//  ~SvAISEmitter();
+  
+//  void stop();
+  
+//  int vessel_id = -1;
+  
+//private:
+//  void run() Q_DECL_OVERRIDE;
+  
+//  bool _started = false;
+//  bool _finished = false;
+  
+//  ais::aisStaticData *_static_data = nullptr;
+//  ais::aisVoyageData *_voyage_data = nullptr;
+//  ais::aisDynamicData *_dynamic_data = nullptr;
+  
+//  QMutex *_mutex = nullptr;
+  
+//signals:
+//  void ais_static_data(ais::aisStaticData *data);
+//  void ais_voyage_data(ais::aisVoyageData *data);
+//  void ais_dynamic_data(ais::aisDynamicData *data);
+  
+//};
 
 #endif // SV_AIS_H

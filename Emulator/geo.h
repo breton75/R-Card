@@ -41,16 +41,16 @@ namespace geo {
       this->course = course; this->speed = speed; this->utc = QDateTime::currentDateTime();
     }
     
-    qreal latitude = 0.0;
-    qreal longtitude = 0.0; 
-    int course;
-    qreal speed;
+    qreal latitude = -1.0;
+    qreal longtitude = -1.0; 
+    int course = -1;
+    qreal speed = -1.0;
     QDateTime utc;
     
-    bool isValid() { return ((longtitude != -1.0) && (latitude != -1.0) && (course != -1) && (speed != -1)); }
+    bool isValid() { return ((longtitude != -1.0) && (latitude != -1.0) && (course != -1) && (speed != -1.0)); }
     bool isValidCoordinates() { return ((longtitude != -1.0) && (latitude != -1.0)); }
     bool isValidCourse() { return course != -1; }
-    bool isValidSpeed() { return speed != -1; }
+    bool isValidSpeed() { return speed != -1.0; }
     
     geo::GEOPOSITION& operator =(const geo::GEOPOSITION& other)
     { 

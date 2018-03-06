@@ -176,23 +176,7 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QSpinBox" name="spinAISUploadRaduis">
-                     <property name="font">
-                      <font>
-                       <weight>50</weight>
-                       <bold>false</bold>
-                      </font>
-                     </property>
-                     <property name="suffix">
-                      <string> мили</string>
-                     </property>
-                     <property name="maximum">
-                      <number>100000</number>
-                     </property>
-                     <property name="value">
-                      <number>1</number>
-                     </property>
-                    </widget>
+                    <widget class="QDoubleSpinBox" name="dspinAISRadius"/>
                    </item>
                   </layout>
                  </item>
@@ -219,8 +203,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>347</width>
-               <height>328</height>
+               <width>383</width>
+               <height>380</height>
               </rect>
              </property>
              <attribute name="label">
@@ -304,26 +288,6 @@
                    </property>
                   </widget>
                  </item>
-                 <item>
-                  <widget class="QPushButton" name="bnSelfMotionParams">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text">
-                    <string/>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="res.qrc">
-                     <normaloff>:/buttons/Icons/Loop.ico</normaloff>:/buttons/Icons/Loop.ico</iconset>
-                   </property>
-                   <property name="flat">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
                 </layout>
                </widget>
               </item>
@@ -344,8 +308,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>347</width>
-               <height>328</height>
+               <width>383</width>
+               <height>380</height>
               </rect>
              </property>
              <attribute name="label">
@@ -469,26 +433,6 @@
                    <property name="icon">
                     <iconset resource="res.qrc">
                      <normaloff>:/buttons/Icons/Info2.ico</normaloff>:/buttons/Icons/Info2.ico</iconset>
-                   </property>
-                   <property name="flat">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="bnAddVessel_3">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text">
-                    <string/>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="res.qrc">
-                     <normaloff>:/buttons/Icons/Loop.ico</normaloff>:/buttons/Icons/Loop.ico</iconset>
                    </property>
                    <property name="flat">
                     <bool>true</bool>
@@ -1264,6 +1208,13 @@
      <height>21</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>Параметры</string>
+    </property>
+    <addaction name="action"/>
+   </widget>
+   <addaction name="menu"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -1294,10 +1245,100 @@
     <layout class="QVBoxLayout" name="vlayDock"/>
    </widget>
   </widget>
+  <action name="actionNewVessel">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/buttons/Icons/Health.ico</normaloff>:/buttons/Icons/Health.ico</iconset>
+   </property>
+   <property name="text">
+    <string>Новое судно</string>
+   </property>
+   <property name="toolTip">
+    <string>Добавить новое судно</string>
+   </property>
+  </action>
+  <action name="actionEditVessel">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/buttons/Icons/Pen.ico</normaloff>:/buttons/Icons/Pen.ico</iconset>
+   </property>
+   <property name="text">
+    <string>Редактировать</string>
+   </property>
+   <property name="toolTip">
+    <string>Редактировать информацию о судне</string>
+   </property>
+  </action>
+  <action name="actionRemoveVessel">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/buttons/Icons/Cancel.ico</normaloff>:/buttons/Icons/Cancel.ico</iconset>
+   </property>
+   <property name="text">
+    <string>Удалить</string>
+   </property>
+   <property name="toolTip">
+    <string>Удалить судно</string>
+   </property>
+  </action>
+  <action name="action">
+   <property name="text">
+    <string>Параметры имитации</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
   <include location="res.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>bnAddVessel</sender>
+   <signal>clicked()</signal>
+   <receiver>actionNewVessel</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>111</x>
+     <y>179</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>bnEditVessel</sender>
+   <signal>clicked()</signal>
+   <receiver>actionEditVessel</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>141</x>
+     <y>179</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>bnRemoveVessel</sender>
+   <signal>clicked()</signal>
+   <receiver>actionRemoveVessel</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>171</x>
+     <y>179</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

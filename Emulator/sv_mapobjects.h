@@ -57,6 +57,8 @@ class SvMapObject : public QGraphicsItem
     virtual int id() { return _id; }
     virtual void setId(int id) { _id = id; }
   
+  virtual void setOutdated(bool isOutdate) { }
+  
     geo::GEOPOSITION geoPosition() { return _geo_position; }
     void setGeoPosition(const geo::GEOPOSITION& geopos) { _geo_position = geopos; }
     
@@ -329,7 +331,9 @@ class SvMapObjectVesselAbstract : public SvMapObject
       SvMapObject(parent) { setId(id); }
   
 //    int id() const { return _id; }
-  
+     
+    
+    
 //    vsl::SvVessel* vessel() { return _vessel; }
 //    int vesselId() const { return _vessel->id; }
     
@@ -357,6 +361,8 @@ class SvMapObjectVessel : public SvMapObjectVesselAbstract
     
     int type() const { return motVessel; }
     
+    void setOutdated(bool isOutdate) { setBrush(isOutdate ? QColor(Qt::gray) : QColor(0x14c546)); }
+    
     QAction *removeAction;
     QAction *editAction;
 
@@ -381,6 +387,8 @@ class SvMapObjectSelfVessel : public SvMapObjectVesselAbstract
     explicit SvMapObjectSelfVessel(QWidget* parent, int id);
     
     int type() const { return motSelfVessel; }
+    
+    void setOutdated(bool isOutdate) { setBrush(isOutdate ? QColor(Qt::gray) : QColor("tomato")); }
     
     QAction *removeAction;
     QAction *editAction;
