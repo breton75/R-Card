@@ -19,8 +19,8 @@
                            "       ais.dynamic_latitude AS dynamic_latitude, " CR \
                            "       ais.dynamic_longtitude AS dynamic_longtitude, " CR \
                            "       ais.dynamic_speed AS dynamic_speed, " CR \
-                           "       ais.dynamic_status_id AS dynamic_status_id, " CR \
                            "       ais.dynamic_utc AS dynamic_utc, " CR \
+                           "       ais.nav_status_id AS nav_status_id, " CR \
                            "       gps.timeout AS gps_timeout, " CR \
                            "       gps.init_random_coordinates AS init_random_coordinates, " CR \
                            "       gps.init_random_course AS init_random_course, " CR \
@@ -31,13 +31,13 @@
                            "       gps.init_speed_change_segment AS init_speed_change_segment, " CR \
                            "       vessel_types.type_name AS static_vessel_type_name, " CR \
                            "       cargo_types.type_name AS voyage_cargo_type_name, " CR \
-                           "       status_types.status_name AS dynamic_status_name " CR \
+                           "       nav_statuses.status_name AS nav_status_name " CR \
                            "FROM vessels " CR \
                            "LEFT JOIN gps ON vessels.id = gps.vessel_id " CR \
                            "LEFT JOIN ais ON vessels.id = ais.vessel_id " CR \
                            "LEFT JOIN cargo_types ON ais.voyage_cargo_type_id = cargo_types.id " CR \
                            "LEFT JOIN vessel_types ON ais.static_type_id = vessel_types.id " CR \
-                           "LEFT JOIN status_types ON ais.dynamic_status_id = status_types.id  "
+                           "LEFT JOIN nav_statuses ON ais.nav_status_id = nav_statuses.id  "
 
 #define SQL_WHERE_SELF "WHERE vessels.self = %1 "
 #define SQL_WHERE_ID   "WHERE vessels.id = %1 "
@@ -53,9 +53,6 @@
 #define SQL_SELECT_VESSEL_WHERE_ID (SQL_SELECT_VESSELS SQL_WHERE_ID)
 
 #define SQL_SELECT_LAST_INSERTED_VESSEL (SQL_SELECT_VESSELS SQL_WHERE_LAST_INSERTED)
-
-#define SQL_SELECT_VESSEL_TYPES "SELECT id, type_name FROM vessel_types;"
-#define SQL_SELECT_CARGO_TYPES "SELECT id, type_name FROM cargo_types;"
 
 
 //#define SQL_INSERT_NEW_VESSEL "BEGIN TRANSACTION;" CR \
@@ -106,5 +103,12 @@
                            "        %6, " CR \
                            "        %7, " CR \
                            "        %8);"
+
+
+#define SQL_SELECT_VESSEL_TYPES "SELECT id, type_name FROM vessel_types;"
+#define SQL_SELECT_CARGO_TYPES "SELECT id, type_name FROM cargo_types;"
+#define SQL_SELECT_NAV_STATS "select id, status_name, static_interval, voyage_interval, dynamic_interval from nav_statuses"
+#define SQL_SELECT_LAG_TYPES "select id, type_name from lag_types"
+
 
 #endif // SQL_DEFS_H

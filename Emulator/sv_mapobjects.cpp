@@ -346,7 +346,7 @@ SvMapObjectVessel::SvMapObjectVessel(QWidget* parent, int id):
   path()->setFillRule(Qt::OddEvenFill);
   
   setBrush(QBrush(QColor(0x14c546)));
-  setPen(QPen(Qt::blue));
+  setPen(Qt::blue, Qt::SolidLine);
   
   editAction = new QAction(QIcon(":/Icons/Pen.ico"), QString("Редактировать"), 0);
   removeAction = new QAction(QIcon(":/Icons/Cancel.ico"), QString("Удалить"), 0);
@@ -424,5 +424,26 @@ SvMapObjectSelection::SvMapObjectSelection(QWidget* parent, SvMapObject* mapobj)
   QPen pen(QColor("darkred"));
   pen.setWidth(2);
   setPen(pen);
+  
+}
+
+/** ********************************************** **/
+/** ***************** Identifier ***************** **/
+/** ********************************************** **/
+SvMapObjectIdentifier::SvMapObjectIdentifier(QWidget* parent, SvMapObject* mapobj, int id):
+  SvMapObject(parent)
+{ 
+  _mapobj = mapobj;
+  _id = id;
+
+  qreal sz = _mapobj->boundingRect().width() > _mapobj->boundingRect().height() ?
+               _mapobj->boundingRect().width() / 2 : _mapobj->boundingRect().height() / 2;
+  
+  path()->addText(-2, -sz, QFont("Arial", 8), QString::number(_id));
+      
+//  path()->setFillRule(Qt::OddEvenFill);
+  
+  setBrush(QBrush(Qt::NoBrush));
+  setPen(QColor("darkred"), Qt::SolidLine, 1);
   
 }

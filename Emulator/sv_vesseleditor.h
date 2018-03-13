@@ -8,22 +8,13 @@
 
 #include "../../svlib/sv_sqlite.h"
 #include "sql_defs.h"
+#include "sv_exception.h"
 
 //#define SQL_SELECT_BEACON "select plan.id, plan.uid, plan.lon, plan.lat, plan.date_time, plan.description from plan where id=%1"
 
 namespace Ui {
 class SvVesselEditorDialog;
 }
-
-class SvException: public QException
-{
-public:
-    void raise(QString error) { err = error; throw *this; }
-    SvException *clone() const { return new SvException(*this); }
-
-    QString err;
-
-};
 
 class SvVesselEditor : public QDialog
 {

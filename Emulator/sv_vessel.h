@@ -13,6 +13,7 @@
 
 #include "sv_gps.h"
 #include "sv_ais.h"
+#include "sv_lag.h"
 #include "sv_mapobjects.h"
 
 namespace vsl {
@@ -38,17 +39,16 @@ public:
   
   void mountAIS(ais::SvAIS* ais) { _ais = ais; }
   void mountGPS(gps::SvGPS* gps) { _gps = gps; }
-//  void mountLAG(lag::SvLAG* lag_dev) { _lag_dev = lag_dev; }
+  void mountLAG(lag::SvLAG* lag) { _lag = lag; }
   
   void assignMapObject(SvMapObjectVesselAbstract* map_object) { _map_object = map_object; }
   SvMapObjectVesselAbstract* mapObject() { return _map_object; }
-  
-  QString get();
   
   int id = -1;
 
   gps::SvGPS* gps() { return _gps; }
   ais::SvAIS* ais() { return _ais; }
+  lag::SvLAG* lag() { return _lag; }
   
 //  geo::GEOPOSITION currentGeoPosition() const { return _current_geo_position; }
 //  void setGeoPosition(const geo::GEOPOSITION& current_geo_position) { _current_geo_position = current_geo_position; }
@@ -68,7 +68,7 @@ private:
   
   gps::SvGPS* _gps = nullptr;
   ais::SvAIS* _ais = nullptr;
-//  lag::SvLAG* _lag = nullptr;
+  lag::SvLAG* _lag = nullptr;
   
   SvMapObjectVesselAbstract* _map_object = nullptr;
   

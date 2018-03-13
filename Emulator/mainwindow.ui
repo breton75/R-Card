@@ -56,7 +56,7 @@
                <x>0</x>
                <y>0</y>
                <width>383</width>
-               <height>380</height>
+               <height>266</height>
               </rect>
              </property>
              <attribute name="label">
@@ -176,7 +176,11 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QDoubleSpinBox" name="dspinAISRadius"/>
+                    <widget class="QDoubleSpinBox" name="dspinAISRadius">
+                     <property name="suffix">
+                      <string> км.</string>
+                     </property>
+                    </widget>
                    </item>
                   </layout>
                  </item>
@@ -204,7 +208,7 @@
                <x>0</x>
                <y>0</y>
                <width>383</width>
-               <height>380</height>
+               <height>266</height>
               </rect>
              </property>
              <attribute name="label">
@@ -309,7 +313,7 @@
                <x>0</x>
                <y>0</y>
                <width>383</width>
-               <height>380</height>
+               <height>266</height>
               </rect>
              </property>
              <attribute name="label">
@@ -449,16 +453,6 @@
                   <weight>50</weight>
                   <bold>false</bold>
                  </font>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QTextEdit" name="textEdit_2">
-                <property name="styleSheet">
-                 <string notr="true">background-color: rgb(240, 240, 240);</string>
-                </property>
-                <property name="readOnly">
-                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -1225,7 +1219,7 @@
    </attribute>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
-  <widget class="QDockWidget" name="dockWidget">
+  <widget class="QDockWidget" name="dockGraphics">
    <property name="sizePolicy">
     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
      <horstretch>0</horstretch>
@@ -1243,6 +1237,40 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents">
     <layout class="QVBoxLayout" name="vlayDock"/>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="dockLog">
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_2">
+    <layout class="QVBoxLayout" name="verticalLayout_12">
+     <item>
+      <widget class="QTextEdit" name="textLog"/>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="dockCarrentInfo">
+   <property name="floating">
+    <bool>true</bool>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_3">
+    <layout class="QVBoxLayout" name="verticalLayout_13">
+     <item>
+      <widget class="QTextEdit" name="textEdit_2">
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(240, 240, 240);</string>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <action name="actionNewVessel">

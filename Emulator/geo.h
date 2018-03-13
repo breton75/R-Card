@@ -60,14 +60,14 @@ namespace geo {
     
   };
   
-  struct POSITION {
-    geo::COORDINATES coord;
-    qreal course;
-//    qreal angular_speed;
+//  struct POSITION {
+//    geo::COORDINATES coord;
+//    qreal course;
+////    qreal angular_speed;
     
-    QString navstat;
+//    QString navstat;
     
-  };
+//  };
   
   // расстояние между двумя координатами 
   qreal geo2geo_distance(geo::GEOPOSITION& gp1, geo::GEOPOSITION& gp2); 

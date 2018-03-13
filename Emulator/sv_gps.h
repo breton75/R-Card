@@ -56,6 +56,7 @@ public:
     
   bool waitWhileRunned() { while(_gps_emitter != nullptr) qApp->processEvents();  }
   
+  
 private:
 //  geo::GEOPOSITION _current_geo_position;
   
@@ -67,13 +68,16 @@ private:
   
   QMutex _mutex;
   
+  quint32 _multiplier = 1;
+  
 public slots:
   bool open();
   void close();
   
-  bool start(quint32 multiplier = 1);
+  bool start(quint32 msecs = 1);
   void stop();
   
+  void set_multiplier(quint32 multiplier) { _multiplier = multiplier;  }
   
 signals:
   void newGPSData(const geo::GEOPOSITION& geopos);

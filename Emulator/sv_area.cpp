@@ -714,6 +714,9 @@ void area::SvAreaScene::setMapObjectPos(SvMapObject* mapObject, const geo::GEOPO
   mapObject->setPos(new_pos.x() + BORDER_WIDTH, new_pos.y() + BORDER_WIDTH);
   mapObject->setRotation(geopos.course);
   
+  if(mapObject->identifier())
+    mapObject->identifier()->setPos(new_pos.x() + BORDER_WIDTH, new_pos.y() + BORDER_WIDTH);
+  
   if(!(mapObject->isSelected() && mapObject->selection()))
     return;
   

@@ -1,9 +1,10 @@
 #include "sv_ais.h"
 
-ais::SvAIS* SELF_AIS;
+//ais::SvAIS* SELF_AIS;
+QMap<int, ais::aisNavStat> NAVSTATS;
 
 /** --------- Self AIS --------- **/
-ais::SvSelfAIS::SvSelfAIS(int vessel_id, const ais::aisStaticData& sdata, const ais::aisVoyageData& vdata, const ais::aisDynamicData& ddata)
+ais::SvSelfAIS::SvSelfAIS(int vessel_id, const ais::aisStaticData& sdata, const ais::aisVoyageData& vdata, const ais::aisDynamicData& ddata, svlog::SvLog &log)
 //  ais::SvAIS(vessel_id, sdata, vdata, ddata)
 
 {
@@ -12,6 +13,8 @@ ais::SvSelfAIS::SvSelfAIS(int vessel_id, const ais::aisStaticData& sdata, const 
   setStaticData(sdata);
   setVoyageData(vdata);
   setDynamicData(ddata);
+  
+  _log = log;
   
 //  _vessel_id = vessel_id;
 //  _static_data = sdata;  
@@ -36,7 +39,7 @@ void ais::SvSelfAIS::close()
 
 bool ais::SvSelfAIS::start(quint32 msecs)
 {
-  
+
 }
 
 void ais::SvSelfAIS::stop()
@@ -50,24 +53,44 @@ void ais::SvSelfAIS::newGPSData(const geo::GEOPOSITION& geopos)
   emit updateSelfVessel(); 
 }
 
-void ais::SvSelfAIS::on_receive_ais_data(ais::SvAIS* ais, ais::AISDataTypes type)
+void ais::SvSelfAIS::on_receive_ais_data(ais::SvAIS* otherAIS, ais::AISDataTypes type)
 {
   /** проверяем расстояние. если в радиусе действия антенны, то обрабатываем данные */
-  if(distanceTo(ais) < _receive_range) {
+  if(distanceTo(otherAIS) < _receive_range * 1000) {
     
     /** обрабатываем данные **/
-//    switch (type) {
+    switch (type) {
       
-//      case ais::ais
+      case ais::aisStatic:
+        _log << svlog::Time << svlog::Data << QString("static data from %1: %2 ")
+                .arg(otherAIS->getStaticData()->id)
+                .arg(otherAIS->getStaticData()->callsign) << svlog::endl;
+        break;
+      
+      case ais::aisVoyage:
+        _log << svlog::Time << svlog::Data << QString("voyage data from %1: %2")
+             .arg(otherAIS->getStaticData()->id) 
+             .arg(otherAIS->getVoyageData()->destination) << svlog::endl;
+        break;
+
+      case ais::aisDynamic:
+        _log << svlog::Time << svlog::Data << QString("dynamic data from %1: lat:%2 lon:%3 crs:%4 spd:%5")
+             .arg(otherAIS->getStaticData()->id) 
+             .arg(otherAIS->getDynamicData()->geoposition.latitude)
+             .arg(otherAIS->getDynamicData()->geoposition.longtitude)
+             .arg(otherAIS->getDynamicData()->geoposition.course)
+             .arg(otherAIS->getDynamicData()->geoposition.speed)
+             << svlog::endl;
+        break;
         
-//        break;
-//      default:
-//        break;
-//    }
+        
+      default:
+        break;
+    }
     
   }
   
-  emit updateVesselById(_vessel_id);
+  emit updateVesselById(otherAIS->vesselId());
   
 }
 
@@ -76,8 +99,7 @@ qreal ais::SvSelfAIS::distanceTo(ais::SvAIS* remoteAIS)
   if(!remoteAIS) return 0.0; 
   else {
     
-    geo::GEOPOSITION g;
-    int i = remoteAIS->_dynamic_data.geoposition.course;
+    geo::GEOPOSITION g = remoteAIS->_dynamic_data.geoposition;
     return geo::geo2geo_distance(_dynamic_data.geoposition, g); 
   }
 }
@@ -121,21 +143,38 @@ void ais::SvOtherAIS::close()
 bool ais::SvOtherAIS::start(quint32 msecs)
 {
   connect(&_timer_static, &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_static);
-  connect(&_timer_static, SIGNAL(), this, SLOT()); //  &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_voyage);
-  connect(&_timer_static, SIGNAL(), this, SLOT()); //  &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_dynamic);
+  connect(&_timer_voyage, &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_voyage);
+  connect(&_timer_dynamic, &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_dynamic);
   
-  _timer_static.start(10000);
-  _timer_voyage.start(5000);
-  _timer_dynamic.start(3000);
+  _static_interval = NAVSTATS.value(_nav_status).static_interval;
+  _voyage_interval = NAVSTATS.value(_nav_status).voyage_interval;
+  
+  switch (_nav_status) {
+    case 2:
+    case 6:
+      _dynamic_interval = _dynamic_data.geoposition.speed > 3 ? 10 * 1000 : 3 * 60 * 1000;
+      
+      break;
+      
+    default:
+      if(_dynamic_data.geoposition.speed < 14) _dynamic_interval = 5 * 1000;
+      else if(_dynamic_data.geoposition.speed < 23) _dynamic_interval = 3 * 1000;
+      else _dynamic_interval = 2 * 1000;
+      break;
+  }
+  
+  _timer_static.start(_static_interval);
+  _timer_voyage.start(_voyage_interval);
+  _timer_dynamic.start(_dynamic_interval);
   
   return true;
 }
 
 void ais::SvOtherAIS::stop()
 {
-  disconnect(&_timer_static, &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_static);
-  disconnect(&_timer_static, &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_voyage);
-  disconnect(&_timer_static, &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_dynamic);
+//  disconnect(&_timer_static, &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_static);
+//  disconnect(&_timer_voyage, &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_voyage);
+//  disconnect(&_timer_dynamic, &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_dynamic);
   
   _timer_static.stop();
   _timer_voyage.stop();

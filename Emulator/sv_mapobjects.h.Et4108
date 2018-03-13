@@ -130,7 +130,7 @@ class SvMapObject : public QGraphicsItem
     QColor _selectionColor = QColor(DEFAULT_SELECTION_COLOR);
     
     SvMapObjectSelection* _selection = nullptr;
-    SvMapObjectIdentifier* _identifier = nullptr;
+    SvMapObjectIentifier* _identifier = nullptr;
   
 };
 
@@ -428,11 +428,11 @@ private:
 /** **************** Identifier ****************** **/
 /** ********************************************** **/
 
-class SvMapObjectIdentifier : public SvMapObject
+class SvMapObjectIentifier : public SvMapObject
 {
   public:
     
-    explicit SvMapObjectIdentifier(QWidget* parent, SvMapObject* mapobj, int id);
+    explicit SvMapObjectIentifier(QWidget* parent, SvMapObject* mapobj, int id);
   
 private:
   SvMapObject* _mapobj = nullptr;

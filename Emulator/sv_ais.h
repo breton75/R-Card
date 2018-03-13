@@ -11,6 +11,7 @@
 #include "geo.h"
 #include "sv_gps.h"
 #include "sv_idevice.h"
+#include "../../svlib/sv_log.h"
 
 namespace ais {
 
@@ -43,7 +44,7 @@ namespace ais {
                                           // Угол крена, дифферента
                                           // Угол килевой качки
                                           // Угловая скорость поворота
-    QString navstat;                      // Навигационный статус (к примеру: Лишен возможности управляться или Ограничен в возможности маневрировать)
+//    quint32 navstat;                      // Навигационный статус (к примеру: Лишен возможности управляться или Ограничен в возможности маневрировать)
   
   };
   
@@ -55,6 +56,13 @@ namespace ais {
     QString cargo;                        // Информация о грузе (класс/категория груза)
     quint32 team;                         // Количество людей на борту
                                           // Сообщения для предупреждения и обеспечения безопасности грузоперевозки
+  };
+  
+  struct aisNavStat {
+    QString name;
+    quint32 static_interval;
+    quint32 voyage_interval;
+    quint32 dynamic_interval;
   };
   
   class SvAIS;
@@ -80,7 +88,9 @@ public:
   void setDynamicData(const ais::aisDynamicData& ddata) { _dynamic_data = ddata; }
   
   void setGeoPosition(const geo::GEOPOSITION& geopos) { _dynamic_data.geoposition = geopos; }
-  void setNavStatus(const QString& status) { _dynamic_data.navstat = status; }
+  
+  int navStatus() { return _nav_status; }
+  void setNavStatus(const int status) { _nav_status = status; }
   
   ais::aisStaticData  *getStaticData() { return &_static_data; }
   ais::aisVoyageData  *getVoyageData() { return &_voyage_data; }
@@ -104,6 +114,8 @@ private:
   
   int _vessel_id = -1;
   
+  quint32 _nav_status = 1;
+  
 //public slots:
 //  void newGPSData(const geo::GEOPOSITION& geopos);
   
@@ -115,7 +127,7 @@ class ais::SvSelfAIS : public ais::SvAIS
   Q_OBJECT
   
 public:
-  SvSelfAIS(int vessel_id, const ais::aisStaticData& sdata, const ais::aisVoyageData& vdata, const ais::aisDynamicData& ddata);
+  SvSelfAIS(int vessel_id, const ais::aisStaticData& sdata, const ais::aisVoyageData& vdata, const ais::aisDynamicData& ddata, svlog::SvLog& log);
   ~SvSelfAIS(); 
   
 //  int vesselId() { return _vessel_id; }
@@ -151,6 +163,7 @@ public:
 private:
   qreal _receive_range;
   
+  svlog::SvLog _log;
 //  ais::aisStaticData _static_data;
 //  ais::aisVoyageData _voyage_data;
 //  ais::aisDynamicData _dynamic_data;
@@ -164,7 +177,7 @@ signals:
   
 public slots:
   void newGPSData(const geo::GEOPOSITION& geopos);
-  void on_receive_ais_data(ais::SvAIS* ais, ais::AISDataTypes type);
+  void on_receive_ais_data(ais::SvAIS* otherAIS, ais::AISDataTypes type);
 //  void on_receive_voyage (const ais::aisVoyageData& vdata);
 //  void on_receive_dynamic(const ais::aisDynamicData& ddata);
   
@@ -193,6 +206,10 @@ private:
   QTimer _timer_static;
   QTimer _timer_voyage;
   QTimer _timer_dynamic;
+  
+  quint32 _static_interval;
+  quint32 _voyage_interval;
+  quint32 _dynamic_interval;
   
 signals:
   void broadcast_ais_data(ais::SvAIS* ais, ais::AISDataTypes type);

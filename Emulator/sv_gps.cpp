@@ -26,12 +26,12 @@ void gps::SvGPS::close()
   _isOpened = false;
 }
 
-bool gps::SvGPS::start(quint32 multiplier)
+bool gps::SvGPS::start(quint32 msecs)
 {
   if(_gps_emitter) 
     delete _gps_emitter;
   
-  _gps_emitter = new gps::SvGPSEmitter(_vessel_id, _gps_params, _bounds, multiplier);
+  _gps_emitter = new gps::SvGPSEmitter(_vessel_id, _gps_params, _bounds, _multiplier);
   connect(_gps_emitter, &gps::SvGPSEmitter::finished, _gps_emitter, &gps::SvGPSEmitter::deleteLater);
   connect(_gps_emitter, SIGNAL(newGPSData(const geo::GEOPOSITION&)), this, SIGNAL(newGPSData(const geo::GEOPOSITION&)));
   _gps_emitter->start();
@@ -85,14 +85,21 @@ void gps::SvGPSEmitter::run()
   _started = true;
   _finished = false;
 
+  quint64 time_counter = QDateTime::currentDateTime().currentMSecsSinceEpoch();
+  
   while(_started) {
+    
+    if(QDateTime::currentDateTime().currentMSecsSinceEpoch() - time_counter < _gps_params.gps_timeout) {
+      
+      continue;
+    }
+    
+    time_counter = QDateTime::currentDateTime().currentMSecsSinceEpoch();
     
     emit newGPSData(_current_geo_position);
     
-    msleep(_gps_params.gps_timeout);
-    
     /** вычисляем новый курс **/
-    if(_gps_params.course_change_ratio && 
+    if(_gps_params.course_change_ratio * 1000 && 
        _gps_params.course_change_segment && 
        (course_segment_counter > _gps_params.course_change_segment)) {
       

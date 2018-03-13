@@ -7,6 +7,8 @@
 #include <QThread>
 #include <QSqlDatabase>
 #include <QSqlQuery>
+#include <QSerialPort>
+#include <QSerialPortInfo>
 
 #include "sv_area.h"
 #include "../../svlib/sv_settings.h"
@@ -15,10 +17,13 @@
 #include "sv_idevice.h"
 #include "sv_gps.h"
 #include "sv_ais.h"
+#include "sv_lag.h"
 #include "sv_mapobjects.h"
 #include "sv_vesseleditor.h"
 
 #include "sql_defs.h"
+#include "../../svlib/sv_log.h"
+#include "sv_exception.h"
 
 namespace Ui {
 class MainWindow;
@@ -34,6 +39,8 @@ public:
   
   bool init();
   
+  svlog::SvLog log;
+  
 public slots:
 //  void on_bnStart_clicked();
  
@@ -44,7 +51,7 @@ public slots:
   ais::aisVoyageData getAISVoyageData(QSqlQuery* q);
   ais::aisDynamicData getAISDynamicData(QSqlQuery* q);
   
-  void updateMapObjectInfo(SvMapObject* mapObject, const geo::GEOPOSITION& geopos);
+  void updateMapObjectInfo(SvMapObject* mapObject);
   
 //  QString fillVesselNavStatus(QSqlQuery* q) const;
   
@@ -64,14 +71,18 @@ private:
   gps::SvGPS* _self_gps = nullptr;
   ais::SvSelfAIS* _self_ais = nullptr;
   vsl::SvVessel* _self_vessel = nullptr;
+  lag::SvLAG* _self_lag = nullptr;
   
-  SvMapObjectSelfVessel* _self_map_obj;
+//  SvMapObjectSelfVessel* _self_map_obj;
   QMap<int, SvMapObjectSelfVessel*> _vessels_map_obj;
   
   States _current_state = sStopped;
   
+  QSqlQuery* _query;
+  SvException _exception;
+  
 public slots:
-  void on_update_vessel_by_id(int id);
+  void update_vessel_by_id(int id);
   
 private slots:
   void stateChanged(States state);
@@ -86,11 +97,22 @@ private slots:
   
   void on_actionNewVessel_triggered();
   
+  void on_listVessels_currentRowChanged(int currentRow);
+  
 signals:
   void newState(States state);
   
-  void startEmulation(quint32 multiplier);
-  void stopEmulation();
+  void setMultiplier(quint32 multiplier);
+  
+  void startGPSEmulation(quint32 msecs);
+  void startAISEmulation(quint32 msecs);
+  void startLAGEmulation(quint32 msecs);
+//  void startNAVEmulation(quint32 msecs);
+  
+  void stopGPSEmulation();
+  void stopAISEmulation();
+  void stopLAGEmulation();
+//  void stopNAVEmulation();
   
 };
 
