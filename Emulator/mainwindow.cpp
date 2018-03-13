@@ -338,6 +338,7 @@ void MainWindow::stateChanged(States state)
     {
       ui->bnCycle->setEnabled(false);
       ui->tabWidget->setEnabled(false);
+      break;
     }
       
     default:
@@ -351,12 +352,29 @@ void MainWindow::stateChanged(States state)
 
 void MainWindow::on_bnCycle_clicked()
 {
+  QSerialPortInfo info;
+  info = QSerialPortInfo::availablePorts().first();
+  _self_lag->setSerialPortInfo(info);
   
   switch (_current_state) {
     
     case sStopped:
     {
       emit newState(sRunning);
+      
+      try {
+        
+        /** открываем порты устройств **/
+        if(!_self_lag->open()) _exception.raise(_self_lag->lastError());
+//        if(!_self_lag->open()) _exception.raise(_self_lag->lastError());
+//        if(!_self_lag->open()) _exception.raise(_self_lag->lastError());
+      }
+      
+      catch(SvException &e) {
+        QMessageBox::critical(this, "Ошибка", QString("Ошибка открытия порта.\n%1").arg(e.err), QMessageBox::Ok);
+        emit newState(sStopped);
+        return;
+      }
       
       emit setMultiplier(ui->spinEmulationMultiplier->value());
       
@@ -384,6 +402,10 @@ void MainWindow::on_bnCycle_clicked()
         gps->waitWhileRunned();
 //        gps->stop();
       }
+      
+      
+      /** закрываем порты **/
+      _self_lag->close();
       
       emit newState(sStopped);
       break;
@@ -483,19 +505,15 @@ vsl::SvVessel *MainWindow::createSelfVessel(QSqlQuery* q)
   // GPS
   _self_gps = new gps::SvGPS(vessel_id, gps_params, _area->bounds());
   GPSs.insert(vessel_id, _self_gps);
-  _self_gps->open();
- 
   
   // АИС
   _self_ais = new ais::SvSelfAIS(vessel_id, static_data, voyage_data, dynamic_data, log);
   _self_ais->setReceiveRange(ui->dspinAISRadius->value()); /** надо переделать */
   AISs.insert(vessel_id, _self_ais);
-  _self_ais->open();
-  
   
   // LAG
   _self_lag = new lag::SvLAG(vessel_id, dynamic_data.geoposition, log);
-  _self_lag->open();
+
   
   /** --------- создаем объект собственного судна -------------- **/
   _self_vessel = new vsl::SvVessel(this, vessel_id);
@@ -557,18 +575,13 @@ vsl::SvVessel *MainWindow::createOtherVessel(QSqlQuery* q)
   // GPS
   gps::SvGPS* newGPS = new gps::SvGPS(vessel_id, gps_params, _area->bounds());
   GPSs.insert(vessel_id, newGPS);
-  newGPS->open();
  
   
   // АИС
   ais::SvOtherAIS* newAIS;
   newAIS = new ais::SvOtherAIS(vessel_id, static_data, voyage_data, dynamic_data);
   AISs.insert(vessel_id, newAIS);
-  newAIS->open();
-  
-  
-  // LAG
-  
+
   
   /** --------- создаем объект судна -------------- **/
   vsl::SvVessel* newVessel = new vsl::SvVessel(this, vessel_id);

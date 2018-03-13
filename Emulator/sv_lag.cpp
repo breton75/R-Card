@@ -17,13 +17,23 @@ lag::SvLAG::~SvLAG()
   
 bool lag::SvLAG::open()
 {
+  if(!_port.open(QSerialPort::WriteOnly)) {
+    
+    setLastError(_port.errorString());
+    return false;
+  }
+  
   connect(&_timer, &QTimer::timeout, this, &lag::SvLAG::write_data);
   
   _isOpened = true;
+  
+  return true;
 }
 
 void lag::SvLAG::close()
 {
+  _port.close();
+  
   disconnect(&_timer, &QTimer::timeout, this, &lag::SvLAG::write_data);
   
   _isOpened = false;
@@ -55,3 +65,10 @@ void lag::SvLAG::write_data()
   
 }
 
+void lag::SvLAG::setSerialPortInfo(const QSerialPortInfo& info)
+{ 
+  _port_info = QSerialPortInfo(info); 
+  
+  _port.setPort(info);
+  
+}

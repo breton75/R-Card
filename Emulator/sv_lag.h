@@ -7,6 +7,8 @@
 #include <QTime>
 #include <QMutex>
 #include <QTimer>
+#include <QSerialPort>
+#include <QSerialPortInfo>
 
 #include "geo.h"
 #include "sv_gps.h"
@@ -46,6 +48,8 @@ public:
   
   void setData(const lag::lagData& ldata) { _data = ldata; }
   
+  void setSerialPortInfo(const QSerialPortInfo& info);
+  
   lag::lagData  *getData() { return &_data; }
     
   bool open();
@@ -66,6 +70,9 @@ private:
   geo::GEOPOSITION _current_geoposition;
   
   QTimer _timer;
+  
+  QSerialPort _port;
+  QSerialPortInfo _port_info;
   
 private slots:
   void write_data();
