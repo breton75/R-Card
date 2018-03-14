@@ -38,7 +38,8 @@ SOURCES += main.cpp\
     sv_gps.cpp \
     sv_ais.cpp \
     ../../svlib/sv_log.cpp \
-    sv_lag.cpp
+    sv_lag.cpp \
+    nmea.cpp
 
 HEADERS  += mainwindow.h \
     types.h \
@@ -58,7 +59,8 @@ HEADERS  += mainwindow.h \
     sv_vessel_graphics.h \
     ../../svlib/sv_log.h \
     sv_lag.h \
-    sv_exception.h
+    sv_exception.h \
+    nmea.h
 
 FORMS    += mainwindow.ui \
     sv_vesseleditor.ui \

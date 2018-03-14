@@ -76,6 +76,7 @@ private:
   
 private slots:
   void write_data();
+  void read_data();
   
 public slots:
   void newGPSData(const geo::GEOPOSITION& geopos);
