@@ -16,9 +16,10 @@
 namespace ais {
 
   enum AISDataTypes {
-    aisStatic,
-    aisVoyage,
-    aisDynamic
+    adtStatic,
+    adtVoyage,
+    adtStaticVoyage,
+    adtDynamic
   };
 
   struct aisStaticData {                     // Информация о судне. Данные передаются каждые 6 минут
@@ -60,8 +61,8 @@ namespace ais {
   
   struct aisNavStat {
     QString name;
-    quint32 static_interval;
-    quint32 voyage_interval;
+    quint32 static_voyage_interval;
+//    quint32 voyage_interval;
     quint32 dynamic_interval;
   };
   
@@ -203,12 +204,12 @@ public:
   void stop();
   
 private:  
-  QTimer _timer_static;
-  QTimer _timer_voyage;
+  QTimer _timer_static_voyage;
+//  QTimer _timer_voyage;
   QTimer _timer_dynamic;
   
-  quint32 _static_interval;
-  quint32 _voyage_interval;
+  quint32 _static_voyage_interval;
+//  quint32 _voyage_interval;
   quint32 _dynamic_interval;
   
 signals:
@@ -218,9 +219,10 @@ public slots:
   void newGPSData(const geo::GEOPOSITION& geopos);
   
 private slots:
-  void on_timer_static()  { emit broadcast_ais_data(this, ais::aisStatic); }
-  void on_timer_voyage()  { emit broadcast_ais_data(this, ais::aisVoyage); }
-  void on_timer_dynamic() { emit broadcast_ais_data(this, ais::aisDynamic); }
+  void on_timer_static_voyage()  { _timer_static_voyage.setInterval(_static_voyage_interval);
+                                   emit broadcast_ais_data(this, ais::adtStaticVoyage); }
+//  void on_timer_voyage()  { emit broadcast_ais_data(this, ais::aisVoyage); }
+  void on_timer_dynamic() { emit broadcast_ais_data(this, ais::adtDynamic); }
 
   
 };

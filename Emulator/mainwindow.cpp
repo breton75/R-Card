@@ -56,6 +56,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->cbNAVTEKSelectInterface->addItem(spinf.portName());
   }
   
+  
 }
 
 bool MainWindow::init()
@@ -96,8 +97,8 @@ bool MainWindow::init()
       
       int id = _query->value("id").toInt();
       stat.name = _query->value("status_name").toString();
-      stat.static_interval = _query->value("static_interval").toUInt();
-      stat.voyage_interval = _query->value("voyage_interval").toUInt();
+      stat.static_voyage_interval = _query->value("static_voyage_interval").toUInt();
+//      stat.voyage_interval = _query->value("voyage_interval").toUInt();
       stat.dynamic_interval = _query->value("dynamic_interval").toUInt();
 
       NAVSTATS.insert(id, stat);
@@ -219,9 +220,11 @@ MainWindow::~MainWindow()
   delete ui;
 }
 
-gps::gpsInitParams MainWindow::getGPSInitParams(QSqlQuery* q, ais::aisDynamicData& dynamic_data)
+gps::gpsInitParams MainWindow::getGPSInitParams(QSqlQuery* q, ais::aisDynamicData& dynamic_data, int vessel_id)
 {
   gps::gpsInitParams result;
+  QDateTime dt = q->value("gps_last_update").toDateTime(); // для нормальной генерации случайных чисел
+
   result.gps_timeout = q->value("gps_timeout").toUInt();
   result.init_random_coordinates = q->value("init_random_coordinates").toBool();
   result.init_random_course = q->value("init_random_course").toBool();
@@ -235,7 +238,7 @@ gps::gpsInitParams MainWindow::getGPSInitParams(QSqlQuery* q, ais::aisDynamicDat
   if(result.init_random_coordinates || 
      (!result.init_random_coordinates && !dynamic_data.geoposition.isValidCoordinates())) {
     
-    geo::COORDINATES coord = geo::get_rnd_coordinates(_area->bounds());
+    geo::COORDINATES coord = geo::get_rnd_coordinates(_area->bounds(), vessel_id + dt.time().second() * 1000 + dt.time().msec());
     
     result.geoposition.latitude = coord.latitude;
     result.geoposition.longtitude = coord.longtitude;
@@ -498,7 +501,7 @@ vsl::SvVessel *MainWindow::createSelfVessel(QSqlQuery* q)
   ais::aisStaticData static_data = getAISStaticData(q); 
   ais::aisVoyageData voyage_data = getAISVoyageData(q);
   ais::aisDynamicData dynamic_data = getAISDynamicData(q);
-  gps::gpsInitParams gps_params = getGPSInitParams(q, dynamic_data);
+  gps::gpsInitParams gps_params = getGPSInitParams(q, dynamic_data, vessel_id);
                      
   
   /** ----- создаем устройства ------ **/
@@ -568,7 +571,7 @@ vsl::SvVessel *MainWindow::createOtherVessel(QSqlQuery* q)
   ais::aisStaticData static_data = getAISStaticData(q); 
   ais::aisVoyageData voyage_data = getAISVoyageData(q);
   ais::aisDynamicData dynamic_data = getAISDynamicData(q);
-  gps::gpsInitParams gps_params = getGPSInitParams(q, dynamic_data);
+  gps::gpsInitParams gps_params = getGPSInitParams(q, dynamic_data, vessel_id);
                      
   
   /** ----- создаем устройства ------ **/

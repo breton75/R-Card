@@ -29,7 +29,6 @@
                            "       gps.init_course_change_segment AS init_course_change_segment, " CR \
                            "       gps.init_speed_change_ratio AS init_speed_change_ratio, " CR \
                            "       gps.init_speed_change_segment AS init_speed_change_segment, " CR \
-                           "       gps.last_update AS gps_last_update, " CR \
                            "       vessel_types.type_name AS static_vessel_type_name, " CR \
                            "       cargo_types.type_name AS voyage_cargo_type_name, " CR \
                            "       nav_statuses.status_name AS nav_status_name " CR \

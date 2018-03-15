@@ -80,31 +80,32 @@ bool geo::geoposition_within_bounds(const geo::GEOPOSITION& geopos, geo::BOUNDS*
           (geopos.latitude <= bounds->max_lat));
 }
 
-int geo::get_rnd_course()
+int geo::get_rnd_course(int diff)
 {
   QTime t = QTime::currentTime();
-  qsrand(t.msecsSinceStartOfDay()); // secsTo(QTime::currentTime()));
-
+  int d = -1 + t.msec() %2;
+//  qsrand(t.msecsSinceStartOfDay() + d * diff);
+  
   return qrand() % 360;
 }
 
-qreal geo::get_rnd_speed()
+qreal geo::get_rnd_speed(int diff)
 {
-  QTime t = QTime::currentTime();
-  qsrand(t.msecsSinceStartOfDay()); // .secsTo(QTime::currentTime()));
+//  QTime t = QTime::currentTime();
+  qsrand(QTime::currentTime().msec() + diff);
   
   return qreal(qrand() % 50); // максимальная скорость 50 узлов
 }
 
-geo::COORDINATES geo::get_rnd_coordinates(geo::BOUNDS* bounds)
+geo::COORDINATES geo::get_rnd_coordinates(geo::BOUNDS* bounds, int diff)
 {
   geo::COORDINATES result;
   
   qreal lat_diff = bounds->max_lat - bounds->min_lat;
   qreal lon_diff = bounds->max_lon - bounds->min_lon;
   
-  QTime t = QTime::currentTime();
-  qsrand(t.msecsSinceStartOfDay()); // secsTo(QTime::currentTime()));
+//  QTime t = QTime::currentTime();
+  qsrand(QTime::currentTime().msec() + diff); // secsTo(QTime::currentTime()));
   qreal r1 = qreal(qrand() % 100) / 100.0;
 
   result.latitude = bounds->min_lat + r1 * lat_diff;
@@ -118,16 +119,16 @@ geo::COORDINATES geo::get_rnd_coordinates(geo::BOUNDS* bounds)
   
 }
 
-geo::GEOPOSITION geo::get_rnd_position(geo::BOUNDS* bounds)
+geo::GEOPOSITION geo::get_rnd_position(geo::BOUNDS* bounds, int diff)
 {
   geo::GEOPOSITION result;
   
-  geo::COORDINATES coord = get_rnd_coordinates(bounds);
+  geo::COORDINATES coord = get_rnd_coordinates(bounds, diff);
   
   result.latitude = coord.latitude;
   result.longtitude = coord.longtitude;
-  result.course = get_rnd_course();
-  result.speed = get_rnd_speed();
+  result.course = get_rnd_course(diff);
+  result.speed = get_rnd_speed(diff);
   
   return result;
   

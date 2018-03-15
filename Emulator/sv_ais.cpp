@@ -61,19 +61,19 @@ void ais::SvSelfAIS::on_receive_ais_data(ais::SvAIS* otherAIS, ais::AISDataTypes
     /** обрабатываем данные **/
     switch (type) {
       
-      case ais::aisStatic:
+      case ais::adtStaticVoyage:
         _log << svlog::Time << svlog::Data << QString("static data from %1: %2 ")
                 .arg(otherAIS->getStaticData()->id)
                 .arg(otherAIS->getStaticData()->callsign) << svlog::endl;
         break;
       
-      case ais::aisVoyage:
-        _log << svlog::Time << svlog::Data << QString("voyage data from %1: %2")
-             .arg(otherAIS->getStaticData()->id) 
-             .arg(otherAIS->getVoyageData()->destination) << svlog::endl;
-        break;
+//      case ais::aisVoyage:
+//        _log << svlog::Time << svlog::Data << QString("voyage data from %1: %2")
+//             .arg(otherAIS->getStaticData()->id) 
+//             .arg(otherAIS->getVoyageData()->destination) << svlog::endl;
+//        break;
 
-      case ais::aisDynamic:
+      case ais::adtDynamic:
         _log << svlog::Time << svlog::Data << QString("dynamic data from %1: lat:%2 lon:%3 crs:%4 spd:%5")
              .arg(otherAIS->getStaticData()->id) 
              .arg(otherAIS->getDynamicData()->geoposition.latitude)
@@ -142,12 +142,12 @@ void ais::SvOtherAIS::close()
 
 bool ais::SvOtherAIS::start(quint32 msecs)
 {
-  connect(&_timer_static, &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_static);
-  connect(&_timer_voyage, &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_voyage);
+  connect(&_timer_static_voyage, &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_static_voyage);
+//  connect(&_timer_voyage, &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_voyage);
   connect(&_timer_dynamic, &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_dynamic);
   
-  _static_interval = NAVSTATS.value(_nav_status).static_interval;
-  _voyage_interval = NAVSTATS.value(_nav_status).voyage_interval;
+  _static_voyage_interval = NAVSTATS.value(_nav_status).static_voyage_interval;
+//  _voyage_interval = NAVSTATS.value(_nav_status).voyage_interval;
   
   switch (_nav_status) {
     case 2:
@@ -163,8 +163,14 @@ bool ais::SvOtherAIS::start(quint32 msecs)
       break;
   }
   
-  _timer_static.start(_static_interval);
-  _timer_voyage.start(_voyage_interval);
+  // при первом запуске ставим интервал случайный, чтобы все корабли не отбивались одновременно
+  QTime t = QTime::currentTime();
+  qsrand(t.msec() + _vessel_id);
+  qreal r = qreal(qrand() % 100) / 100.0;
+  quint32 first_interval = quint32(_static_voyage_interval * r);
+  qDebug() << first_interval;
+  _timer_static_voyage.start(first_interval);
+//  _timer_voyage.start(_voyage_interval);
   _timer_dynamic.start(_dynamic_interval);
   
   return true;
@@ -176,8 +182,8 @@ void ais::SvOtherAIS::stop()
 //  disconnect(&_timer_voyage, &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_voyage);
 //  disconnect(&_timer_dynamic, &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_dynamic);
   
-  _timer_static.stop();
-  _timer_voyage.stop();
+  _timer_static_voyage.stop();
+//  _timer_voyage.stop();
   _timer_dynamic.stop();
 }
 

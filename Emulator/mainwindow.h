@@ -46,7 +46,7 @@ public slots:
  
 //  gps::GPSParams fillVesselInitParams(QSqlQuery* q) const;
 //  vsl:: setVesselData(QSqlQuery* q);
-  gps::gpsInitParams getGPSInitParams(QSqlQuery* q, ais::aisDynamicData &dynamic_data);
+  gps::gpsInitParams getGPSInitParams(QSqlQuery* q, ais::aisDynamicData &dynamic_data, int vessel_id);
   ais::aisStaticData getAISStaticData(QSqlQuery* q);
   ais::aisVoyageData getAISVoyageData(QSqlQuery* q);
   ais::aisDynamicData getAISDynamicData(QSqlQuery* q);
@@ -80,6 +80,8 @@ private:
   
   QSqlQuery* _query;
   SvException _exception;
+  
+  QTimer _tm;
   
 public slots:
   void update_vessel_by_id(int id);

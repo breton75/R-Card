@@ -81,11 +81,11 @@ namespace geo {
   
   bool geoposition_within_bounds(const geo::GEOPOSITION& geopos, geo::BOUNDS* bounds);
   
-  int get_rnd_course();
-  qreal get_rnd_speed();
-  geo::COORDINATES get_rnd_coordinates(geo::BOUNDS *bounds);
+  int get_rnd_course(int diff = 0);
+  qreal get_rnd_speed(int diff = 0);
+  geo::COORDINATES get_rnd_coordinates(geo::BOUNDS *bounds, int diff = 0);
   
-  geo::GEOPOSITION get_rnd_position(geo::BOUNDS* bounds);
+  geo::GEOPOSITION get_rnd_position(geo::BOUNDS* bounds, int diff = 0);
   
   qreal meridian2parallel_km_in_1degree(qreal longtitude, qreal latitude);
 }

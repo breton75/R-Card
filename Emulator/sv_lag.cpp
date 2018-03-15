@@ -24,7 +24,7 @@ bool lag::SvLAG::open()
   }
   
   connect(&_timer, &QTimer::timeout, this, &lag::SvLAG::write_data);
-  connect(_port, &QSerialPort::readyRead, this, &lag::SvLAG::read_data);
+//  connect(_port, &QSerialPort::readyRead, this, &lag::SvLAG::read_data);
   
   
   _isOpened = true;
@@ -37,7 +37,7 @@ void lag::SvLAG::close()
   _port.close();
   
   disconnect(&_timer, &QTimer::timeout, this, &lag::SvLAG::write_data);
-  disconnect(_port, &QSerialPort::readyRead, this, &lag::SvLAG::read_data);
+//  disconnect(_port, &QSerialPort::readyRead, this, &lag::SvLAG::read_data);
   
   _isOpened = false;
 }
