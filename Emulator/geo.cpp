@@ -80,13 +80,13 @@ bool geo::geoposition_within_bounds(const geo::GEOPOSITION& geopos, geo::BOUNDS*
           (geopos.latitude <= bounds->max_lat));
 }
 
-int geo::get_rnd_course(int diff)
+qreal geo::get_rnd_course(int diff)
 {
   QTime t = QTime::currentTime();
   int d = -1 + t.msec() %2;
 //  qsrand(t.msecsSinceStartOfDay() + d * diff);
   
-  return qrand() % 360;
+  return qreal(qrand() % 360);
 }
 
 qreal geo::get_rnd_speed(int diff)

@@ -24,6 +24,7 @@
 #include "sql_defs.h"
 #include "../../svlib/sv_log.h"
 #include "sv_exception.h"
+#include "nmea.h"
 
 namespace Ui {
 class MainWindow;

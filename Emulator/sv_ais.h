@@ -21,11 +21,11 @@ namespace ais {
     adtStaticVoyage,
     adtDynamic
   };
-
+  
   struct aisStaticData {                     // Информация о судне. Данные передаются каждые 6 минут
     
     quint32 id;                           // id судна в БД
-    QString mmsi;                         // Номер MMSI
+    quint32 mmsi;                         // Номер MMSI
     QString imo;                          // Номер Международной морской организации (IMO)
     QString callsign;                     // Радиопозывной и название плавучего средства
     quint32 length;                       // Габариты

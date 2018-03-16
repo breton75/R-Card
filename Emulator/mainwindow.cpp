@@ -170,6 +170,19 @@ SV:
     
     connect(this, SIGNAL(newState(States)), this, SLOT(stateChanged(States)));
     
+    QString vdm6bit = nmea::message1(0, _self_ais->getStaticData()->mmsi,0, 0, _self_ais->getDynamicData()->geoposition.speed,
+                                 0, _self_ais->getDynamicData()->geoposition.longtitude, _self_ais->getDynamicData()->geoposition.latitude,
+                                 _self_ais->getDynamicData()->geoposition.course);
+    
+    QString vdm = QString("$AIVDM,1,1,,A,%1*").arg(vdm6bit);
+    quint8 src = 0;
+    for(int i = 1; i <= vdm.length(); i++)
+      src = src ^ quint8(vdm.at(i).toLatin1());
+    
+    vdm.append(QString("%1%2%3").arg(src, 2, 16).arg(QChar(10)).arg(QChar(13)));
+    
+    qDebug() << vdm;
+    
     return true;
   }
   
@@ -280,7 +293,7 @@ ais::aisStaticData  MainWindow::getAISStaticData(QSqlQuery* q)
 {
   ais::aisStaticData result;
   result.id = q->value("id").toUInt();
-  result.mmsi = q->value("static_mmsi").toString();
+  result.mmsi = q->value("static_mmsi").toUInt();
   result.imo = q->value("static_imo").toString();
   result.callsign = q->value("static_callsign").toString();
   result.length = q->value("static_length").isNull() ? 20 : q->value("static_length").toUInt();
@@ -306,7 +319,7 @@ ais::aisDynamicData MainWindow::getAISDynamicData(QSqlQuery* q)
   ais::aisDynamicData result;
   result.geoposition.latitude = q->value("dynamic_latitude").isNull() ? -1.0 : q->value("dynamic_latitude").toReal();
   result.geoposition.longtitude = q->value("dynamic_longtitude").isNull() ? -1.0 : q->value("dynamic_longtitude").toReal();
-  result.geoposition.course = q->value("dynamic_course").isNull() ? -1 : q->value("dynamic_course").toInt();
+  result.geoposition.course = q->value("dynamic_course").isNull() ? -1 : q->value("dynamic_course").toReal();
   result.geoposition.speed = q->value("dynamic_speed").isNull() ? -1 : q->value("dynamic_speed").toReal();
 //  result.navstat = q->value("nav_status_id").toUInt();
   
