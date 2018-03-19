@@ -30,10 +30,17 @@ ais::SvSelfAIS::~SvSelfAIS()
   
 bool ais::SvSelfAIS::open()
 {
+  if(!_port.open(QSerialPort::WriteOnly)) {
+    
+    setLastError(_port.errorString());
+    return false;
+  }
+  
   _isOpened = true;
 }
 void ais::SvSelfAIS::close()
 {
+  _port.close();
   _isOpened = false;
 }
 
@@ -62,9 +69,10 @@ void ais::SvSelfAIS::on_receive_ais_data(ais::SvAIS* otherAIS, ais::AISDataTypes
     switch (type) {
       
       case ais::adtStaticVoyage:
-        _log << svlog::Time << svlog::Data << QString("static data from %1: %2 ")
-                .arg(otherAIS->getStaticData()->id)
-                .arg(otherAIS->getStaticData()->callsign) << svlog::endl;
+       
+        _current_message = nmea::message1(0, otherAIS->getStaticData()->mmsi, otherAIS->navStatus(), 10, otherAIS->getDynamicData()->geoposition);
+        write_data();
+        
         break;
       
 //      case ais::aisVoyage:
@@ -74,13 +82,17 @@ void ais::SvSelfAIS::on_receive_ais_data(ais::SvAIS* otherAIS, ais::AISDataTypes
 //        break;
 
       case ais::adtDynamic:
-        _log << svlog::Time << svlog::Data << QString("dynamic data from %1: lat:%2 lon:%3 crs:%4 spd:%5")
-             .arg(otherAIS->getStaticData()->id) 
-             .arg(otherAIS->getDynamicData()->geoposition.latitude)
-             .arg(otherAIS->getDynamicData()->geoposition.longtitude)
-             .arg(otherAIS->getDynamicData()->geoposition.course)
-             .arg(otherAIS->getDynamicData()->geoposition.speed)
-             << svlog::endl;
+//        _log << svlog::Time << svlog::Data << QString("dynamic data from %1: lat:%2 lon:%3 crs:%4 spd:%5")
+//             .arg(otherAIS->getStaticData()->id) 
+//             .arg(otherAIS->getDynamicData()->geoposition.latitude)
+//             .arg(otherAIS->getDynamicData()->geoposition.longtitude)
+//             .arg(otherAIS->getDynamicData()->geoposition.course)
+//             .arg(otherAIS->getDynamicData()->geoposition.speed)
+//             << svlog::endl;
+        
+        _current_message = nmea::message1(0, otherAIS->getStaticData()->mmsi, otherAIS->navStatus(), 10, otherAIS->getDynamicData()->geoposition);
+        write_data();
+        
         break;
         
         
@@ -104,15 +116,27 @@ qreal ais::SvSelfAIS::distanceTo(ais::SvAIS* remoteAIS)
   }
 }
 
-//void ais::SvSelfAIS::on_receive_voyage(const ais::aisVoyageData& vdata)
-//{
-  
-//}
 
-//void ais::SvSelfAIS::on_receive_dynamic(ais::SvAIS* ais)
-//{
+void ais::SvSelfAIS::write_data()
+{
+  _log << svlog::Time << svlog::Data << _current_message << svlog::endl;
   
-//}
+  _port.write(_current_message.toStdString().c_str(), _current_message.size());
+  
+}
+
+void ais::SvSelfAIS::setSerialPortInfo(const QSerialPortInfo& info)
+{ 
+  _port_info = QSerialPortInfo(info); 
+  
+  _port.setPort(info);
+  
+}
+
+void ais::SvSelfAIS::read_data()
+{
+  
+}
 
 
 /** ----- Vessel AIS ------- **/

@@ -61,10 +61,10 @@ void lag::SvLAG::newGPSData(const geo::GEOPOSITION& geopos)
 
 void lag::SvLAG::write_data()
 {
-  _log << svlog::Time << svlog::Data << QString("lag data: %1: spd:%2")
-       .arg(_vessel_id) 
-       .arg(_current_geoposition.speed, 0, 'g', 2)
-       << svlog::endl;
+//  _log << svlog::Time << svlog::Data << QString("lag data: %1: spd:%2")
+//       .arg(_vessel_id) 
+//       .arg(_current_geoposition.speed, 0, 'g', 2)
+//       << svlog::endl;
   
 }
 

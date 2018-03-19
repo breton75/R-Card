@@ -7,11 +7,14 @@
 #include <QTime>
 #include <QMutex>
 #include <QTimer>
+#include <QSerialPort>
+#include <QSerialPortInfo>
 
 #include "geo.h"
 #include "sv_gps.h"
 #include "sv_idevice.h"
 #include "../../svlib/sv_log.h"
+#include "nmea.h"
 
 namespace ais {
 
@@ -131,14 +134,7 @@ public:
   SvSelfAIS(int vessel_id, const ais::aisStaticData& sdata, const ais::aisVoyageData& vdata, const ais::aisDynamicData& ddata, svlog::SvLog& log);
   ~SvSelfAIS(); 
   
-//  int vesselId() { return _vessel_id; }
-  
-//  void setStaticData(const ais::aisStaticData& sdata) { _static_data = sdata; }
-//  void setVoyageData(const ais::aisVoyageData& vdata) { _voyage_data = vdata; }
-//  void setDynamicData(const ais::aisDynamicData& ddata) { _dynamic_data = ddata; }
-  
-//  void setGeoPosition(const geo::GEOPOSITION& geopos) { _dynamic_data.geoposition = geopos; }
-//  void setNavStatus(const QString& status) { _dynamic_data.navstat = status; }
+  void setSerialPortInfo(const QSerialPortInfo& info);
 
   qreal receiveRange() { return _receive_range; }
   void setReceiveRange(qreal range) { _receive_range = range; }
@@ -165,11 +161,15 @@ private:
   qreal _receive_range;
   
   svlog::SvLog _log;
-//  ais::aisStaticData _static_data;
-//  ais::aisVoyageData _voyage_data;
-//  ais::aisDynamicData _dynamic_data;
   
-//  int _vessel_id = -1;
+  QSerialPort _port;
+  QSerialPortInfo _port_info;
+  
+  QString _current_message = "";
+  
+private slots:
+  void write_data();
+  void read_data();
   
 signals:
   void updateSelfVessel();

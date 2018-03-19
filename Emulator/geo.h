@@ -45,7 +45,8 @@ namespace geo {
     qreal longtitude = -1.0; 
     qreal course = -1.0;
     qreal speed = -1.0;
-    QDateTime utc;
+    QDateTime utc = QDateTime::currentDateTimeUtc();
+    quint8 accuracy = 1;
     
     bool isValid() { return ((longtitude != -1.0) && (latitude != -1.0) && (course != -1) && (speed != -1.0)); }
     bool isValidCoordinates() { return ((longtitude != -1.0) && (latitude != -1.0)); }
@@ -55,7 +56,7 @@ namespace geo {
     geo::GEOPOSITION& operator =(const geo::GEOPOSITION& other)
     { 
       latitude = other.latitude; longtitude = other.longtitude; 
-      course = other.course; speed = other.speed; utc = other.utc;
+      course = other.course; speed = other.speed; utc = other.utc; accuracy = other.accuracy;
     }
     
   };

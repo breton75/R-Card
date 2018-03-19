@@ -2,8 +2,10 @@
 #define NMEA_H
  
 #include <QMap>
+#include <QDebug>
 
-//#include "sv_ais.h"
+#include "geo.h"
+#include "sv_ais.h"
 
 namespace nmea {
 
@@ -30,8 +32,7 @@ namespace nmea {
   inline QString str_to_6bit(const QString& str);
 
   
-  QString message1(quint8 repeat_indicator, quint32 mmsi, quint8 nav_status, qint8 rot, qreal sog,
-                   quint8 pos_accuracy, qreal longtitude, qreal latitude, qreal cog); //, int true_heading, QDateTime utc,
+  QString message1(quint8 repeat_indicator, quint32 mmsi, quint8 nav_status, qint8 rot, geo::GEOPOSITION& geopos); //, int true_heading, QDateTime utc,
 //                   int manouevre, int raim, int communication_state);
   
 }

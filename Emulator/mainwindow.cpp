@@ -170,19 +170,6 @@ SV:
     
     connect(this, SIGNAL(newState(States)), this, SLOT(stateChanged(States)));
     
-    QString vdm6bit = nmea::message1(0, _self_ais->getStaticData()->mmsi,0, 0, _self_ais->getDynamicData()->geoposition.speed,
-                                 0, _self_ais->getDynamicData()->geoposition.longtitude, _self_ais->getDynamicData()->geoposition.latitude,
-                                 _self_ais->getDynamicData()->geoposition.course);
-    
-    QString vdm = QString("$AIVDM,1,1,,A,%1*").arg(vdm6bit);
-    quint8 src = 0;
-    for(int i = 1; i <= vdm.length(); i++)
-      src = src ^ quint8(vdm.at(i).toLatin1());
-    
-    vdm.append(QString("%1%2%3").arg(src, 2, 16).arg(QChar(10)).arg(QChar(13)));
-    
-    qDebug() << vdm;
-    
     return true;
   }
   

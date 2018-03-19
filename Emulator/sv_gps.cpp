@@ -124,13 +124,17 @@ void gps::SvGPSEmitter::run()
       
     }
     
+    _current_geo_position.utc = QDateTime::currentDateTimeUtc();
+    
     geo::GEOPOSITION new_geopos = geo::get_next_geoposition(_current_geo_position, _one_tick_length);
-
+    
     // если новая координата выходит за границу карты, то меняем курс и вычисляем новые координаты
     if(!geo::geoposition_within_bounds(new_geopos, _bounds)) {
       _current_geo_position.course = normalize_course(_current_geo_position.course + quint64(geo::get_rnd_course()) % 45);
       continue;
     }
+    
+    
     
     _current_geo_position = new_geopos;
     
