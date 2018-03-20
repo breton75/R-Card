@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>491</width>
-    <height>638</height>
+    <height>643</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -56,7 +56,7 @@
                <x>0</x>
                <y>0</y>
                <width>383</width>
-               <height>266</height>
+               <height>270</height>
               </rect>
              </property>
              <attribute name="label">
@@ -111,7 +111,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="bnAISUploadData">
+                  <widget class="QPushButton" name="bnAISEditSerialParams">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -122,8 +122,8 @@
                     <string/>
                    </property>
                    <property name="icon">
-                    <iconset>
-                     <normaloff>:/Common/Icons/google/Rss-Upload.ico</normaloff>:/Common/Icons/google/Rss-Upload.ico</iconset>
+                    <iconset resource="res.qrc">
+                     <normaloff>:/buttons/Icons/Gears.ico</normaloff>:/buttons/Icons/Gears.ico</iconset>
                    </property>
                    <property name="flat">
                     <bool>true</bool>
@@ -208,7 +208,7 @@
                <x>0</x>
                <y>0</y>
                <width>383</width>
-               <height>266</height>
+               <height>270</height>
               </rect>
              </property>
              <attribute name="label">
@@ -313,7 +313,7 @@
                <x>0</x>
                <y>0</y>
                <width>383</width>
-               <height>266</height>
+               <height>270</height>
               </rect>
              </property>
              <attribute name="label">
@@ -509,7 +509,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="bnLAGUploadData">
+              <widget class="QPushButton" name="bnLAGEditSerialParams">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -520,8 +520,8 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset>
-                 <normaloff>:/Common/Icons/google/Rss-Upload.ico</normaloff>:/Common/Icons/google/Rss-Upload.ico</iconset>
+                <iconset resource="res.qrc">
+                 <normaloff>:/buttons/Icons/Gears.ico</normaloff>:/buttons/Icons/Gears.ico</iconset>
                </property>
                <property name="flat">
                 <bool>true</bool>
@@ -691,7 +691,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="bnNAVTEKUploadData">
+              <widget class="QPushButton" name="bnNAVTEKEditSerialParams">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -702,8 +702,8 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset>
-                 <normaloff>:/Common/Icons/google/Rss-Upload.ico</normaloff>:/Common/Icons/google/Rss-Upload.ico</iconset>
+                <iconset resource="res.qrc">
+                 <normaloff>:/buttons/Icons/Gears.ico</normaloff>:/buttons/Icons/Gears.ico</iconset>
                </property>
                <property name="flat">
                 <bool>true</bool>

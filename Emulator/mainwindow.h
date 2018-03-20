@@ -25,6 +25,7 @@
 #include "../../svlib/sv_log.h"
 #include "sv_exception.h"
 #include "nmea.h"
+#include "sv_serialeditor.h"
 
 namespace Ui {
 class MainWindow;
@@ -84,6 +85,12 @@ private:
   
   QTimer _tm;
   
+  SerialPortParams _lag_serial_params = SerialPortParams(sdLAG);
+  SerialPortParams _ais_serial_params = SerialPortParams(sdAIS);
+//  QSerialPort _navteks_serial;
+//  QSerialPort _echo_serial;
+  
+    
 public slots:
   void update_vessel_by_id(int id);
   
@@ -101,6 +108,12 @@ private slots:
   void on_actionNewVessel_triggered();
   
   void on_listVessels_currentRowChanged(int currentRow);
+  
+  void on_bnAISEditSerialParams_clicked();
+  
+  void on_bnLAGEditSerialParams_clicked();
+  
+  void on_bnNAVTEKEditSerialParams_clicked();
   
 signals:
   void newState(States state);

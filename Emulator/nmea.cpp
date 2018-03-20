@@ -48,7 +48,7 @@ inline QString str_to_6bit(const QString& str)
   
 }
 
-QString nmea::message1(quint8 repeat_indicator, quint32 mmsi, quint8 nav_status, qint8 rot, geo::GEOPOSITION &geopos) //, int true_heading, QDateTime utc,
+QString nmea::ais_message_1(quint8 repeat_indicator, quint32 mmsi, quint8 nav_status, qint8 rot, geo::GEOPOSITION &geopos) //, int true_heading, QDateTime utc,
 //                 int manouevre, int raim, int communication_state)
 {
   QString result = "";
@@ -154,10 +154,32 @@ QString nmea::message1(quint8 repeat_indicator, quint32 mmsi, quint8 nav_status,
     src = src ^ quint8(result.at(i).toLatin1());
   
   
-  result.append(QString("%1%2%3").arg(src, 2, 16, '0').arg(QChar(13)).arg(QChar(10)));
-    
+  result.append(QString("%1%2%3").arg(src, 2, 16).arg(QChar(13)).arg(QChar(10)).replace(' ', '0'));
   
   return result;
   
+}
+
+
+
+
+QString nmea::lag_VBW(const geo::GEOPOSITION& geopos)
+{
+  QString result = QString("$VDVBW,%1,%2,A,%3,%4,A,%5,A,%6,A*")
+                .arg(geopos.speed, 0, 'f', 1)
+                .arg(0.0, 0, 'g', 1)
+                .arg(geopos.speed, 0, 'f', 1)
+                .arg(0.0, 0, 'g', 1)
+                .arg(0.0, 0, 'g', 1)
+                .arg(0.0, 0, 'g', 1);
   
+  quint8 src = 0;
+  for(int i = 1; i <= result.length() - 1; i++)
+    src = src ^ quint8(result.at(i).toLatin1());
+  
+  
+  result.append(QString("%1%2%3").arg(src, 2, 16).arg(QChar(13)).arg(QChar(10)));
+  
+  
+  return result;
 }

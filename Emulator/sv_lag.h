@@ -9,11 +9,14 @@
 #include <QTimer>
 #include <QSerialPort>
 #include <QSerialPortInfo>
+#include <QByteArray>
 
 #include "geo.h"
 #include "sv_gps.h"
 #include "sv_idevice.h"
 #include "../../svlib/sv_log.h"
+#include "nmea.h"
+#include "sv_serialeditor.h"
 
 namespace lag {
 
@@ -48,7 +51,7 @@ public:
   
   void setData(const lag::lagData& ldata) { _data = ldata; }
   
-  void setSerialPortInfo(const QSerialPortInfo& info);
+  void setSerialPortParams(const SerialPortParams& params);
   
   lag::lagData  *getData() { return &_data; }
     
@@ -72,11 +75,14 @@ private:
   QTimer _timer;
   
   QSerialPort _port;
-  QSerialPortInfo _port_info;
+  
+signals:
+  void write_message(const QString& message);
   
 private slots:
-  void write_data();
-  void read_data();
+  void write(const QString& message);
+  void read();
+  void prepare_message();
   
 public slots:
   void newGPSData(const geo::GEOPOSITION& geopos);

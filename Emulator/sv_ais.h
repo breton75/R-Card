@@ -15,6 +15,7 @@
 #include "sv_idevice.h"
 #include "../../svlib/sv_log.h"
 #include "nmea.h"
+#include "sv_serialeditor.h"
 
 namespace ais {
 
@@ -134,7 +135,7 @@ public:
   SvSelfAIS(int vessel_id, const ais::aisStaticData& sdata, const ais::aisVoyageData& vdata, const ais::aisDynamicData& ddata, svlog::SvLog& log);
   ~SvSelfAIS(); 
   
-  void setSerialPortInfo(const QSerialPortInfo& info);
+  void setSerialPortParams(const SerialPortParams& params);
 
   qreal receiveRange() { return _receive_range; }
   void setReceiveRange(qreal range) { _receive_range = range; }
@@ -163,24 +164,22 @@ private:
   svlog::SvLog _log;
   
   QSerialPort _port;
-  QSerialPortInfo _port_info;
+  SerialPortParams _port_params;
   
-  QString _current_message = "";
+//  QString _current_message = "";
   
 private slots:
-  void write_data();
-  void read_data();
+  void write(const QString& message);
+  void read();
   
 signals:
   void updateSelfVessel();
   void updateVesselById(int id);
-//  void broadcast();
+  void write_message(const QString& message);
   
 public slots:
   void newGPSData(const geo::GEOPOSITION& geopos);
   void on_receive_ais_data(ais::SvAIS* otherAIS, ais::AISDataTypes type);
-//  void on_receive_voyage (const ais::aisVoyageData& vdata);
-//  void on_receive_dynamic(const ais::aisDynamicData& ddata);
   
 
   

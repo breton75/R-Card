@@ -32,8 +32,11 @@ namespace nmea {
   inline QString str_to_6bit(const QString& str);
 
   
-  QString message1(quint8 repeat_indicator, quint32 mmsi, quint8 nav_status, qint8 rot, geo::GEOPOSITION& geopos); //, int true_heading, QDateTime utc,
+  QString ais_message_1(quint8 repeat_indicator, quint32 mmsi, quint8 nav_status, qint8 rot, geo::GEOPOSITION& geopos); //, int true_heading, QDateTime utc,
 //                   int manouevre, int raim, int communication_state);
+  
+  
+  QString lag_VBW(const geo::GEOPOSITION &geopos);
   
 }
 

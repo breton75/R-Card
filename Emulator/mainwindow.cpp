@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 extern SvSQLITE *SQLITE;
+extern SvSerialEditor* SERIALEDITOR_UI;
 
 //vsl::SvVessel* SELF_VESSEL;
 
@@ -55,7 +56,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->cbLAGSelectInterface->addItem(spinf.portName());
     ui->cbNAVTEKSelectInterface->addItem(spinf.portName());
   }
-  
+
   
 }
 
@@ -355,10 +356,6 @@ void MainWindow::stateChanged(States state)
 
 void MainWindow::on_bnCycle_clicked()
 {
-  QSerialPortInfo info;
-  info = QSerialPortInfo::availablePorts().first();
-  _self_lag->setSerialPortInfo(info);
-  
   switch (_current_state) {
     
     case sStopped:
@@ -368,8 +365,22 @@ void MainWindow::on_bnCycle_clicked()
       try {
         
         /** открываем порты устройств **/
-        if(!_self_lag->open()) _exception.raise(_self_lag->lastError());
-//        if(!_self_lag->open()) _exception.raise(_self_lag->lastError());
+        /// LAG
+        if(ui->checkLAGEnabled->isChecked()) {
+          
+          _self_lag->setSerialPortParams(_lag_serial_params);
+          if(!_self_lag->open()) _exception.raise(QString("ЛАГ: %1").arg(_self_lag->lastError()));
+        }
+        
+        /// AIS
+        if(ui->checkAISEnabled->isChecked()) {
+         
+          _self_ais->setSerialPortParams(_ais_serial_params);
+          if(!_self_ais->open()) _exception.raise(QString("АИС: %1").arg(_self_ais->lastError()));
+          
+        }
+        
+        
 //        if(!_self_lag->open()) _exception.raise(_self_lag->lastError());
       }
       
@@ -717,4 +728,65 @@ void MainWindow::on_listVessels_currentRowChanged(int currentRow)
   
   }
   
+}
+
+void MainWindow::on_bnAISEditSerialParams_clicked()
+{
+  SERIALEDITOR_UI = new SvSerialEditor(_ais_serial_params, this);
+  if(SERIALEDITOR_UI->exec() != QDialog::Accepted) {
+
+    if(SERIALEDITOR_UI->result() != SvSerialEditor::rcNoError)
+      QMessageBox::critical(this, "Ошибка", QString("Ошибка при изменении параметров:\n%1").arg(SERIALEDITOR_UI->last_error()), QMessageBox::Ok);
+    
+    delete SERIALEDITOR_UI;
+    
+    return;
+    
+  }
+  
+  _ais_serial_params.name = SERIALEDITOR_UI->params.name;
+  _ais_serial_params.baudrate = SERIALEDITOR_UI->params.baudrate;
+  _ais_serial_params.databits = SERIALEDITOR_UI->params.databits;
+  _ais_serial_params.flowcontrol = SERIALEDITOR_UI->params.flowcontrol;
+  _ais_serial_params.parity = SERIALEDITOR_UI->params.parity;
+  _ais_serial_params.stopbits = SERIALEDITOR_UI->params.stopbits;
+  
+  delete SERIALEDITOR_UI;
+
+}
+
+void MainWindow::on_bnLAGEditSerialParams_clicked()
+{
+  SERIALEDITOR_UI = new SvSerialEditor(_lag_serial_params, this);
+  if(SERIALEDITOR_UI->exec() != QDialog::Accepted) {
+
+    if(SERIALEDITOR_UI->result() != SvSerialEditor::rcNoError)
+      QMessageBox::critical(this, "Ошибка", QString("Ошибка при изменении параметров:\n%1").arg(SERIALEDITOR_UI->last_error()), QMessageBox::Ok);
+    
+    delete SERIALEDITOR_UI;
+    
+    return;
+    
+  }
+  
+  _lag_serial_params.name = SERIALEDITOR_UI->params.name;
+  _lag_serial_params.baudrate = SERIALEDITOR_UI->params.baudrate;
+  _lag_serial_params.databits = SERIALEDITOR_UI->params.databits;
+  _lag_serial_params.flowcontrol = SERIALEDITOR_UI->params.flowcontrol;
+  _lag_serial_params.parity = SERIALEDITOR_UI->params.parity;
+  _lag_serial_params.stopbits = SERIALEDITOR_UI->params.stopbits;
+  
+  delete SERIALEDITOR_UI;
+
+}
+
+void MainWindow::on_bnNAVTEKEditSerialParams_clicked()
+{
+//  SERIALEDITOR_UI = new SvSerialEditor(_navtek_serial, this);
+//  if(SERIALEDITOR_UI->exec() != QDialog::Accepted) {
+
+//  }
+  
+//  delete SERIALEDITOR_UI;
+
 }

@@ -39,7 +39,8 @@ SOURCES += main.cpp\
     sv_ais.cpp \
     ../../svlib/sv_log.cpp \
     sv_lag.cpp \
-    nmea.cpp
+    nmea.cpp \
+    sv_serialeditor.cpp
 
 HEADERS  += mainwindow.h \
     types.h \
@@ -60,12 +61,14 @@ HEADERS  += mainwindow.h \
     ../../svlib/sv_log.h \
     sv_lag.h \
     sv_exception.h \
-    nmea.h
+    nmea.h \
+    sv_serialeditor.h
 
 FORMS    += mainwindow.ui \
     sv_vesseleditor.ui \
     sv_vesselmotioneditor.ui \
-    sv_vesselposition.ui
+    sv_vesselposition.ui \
+    sv_serialeditor.ui
 
 RESOURCES += \
     res.qrc

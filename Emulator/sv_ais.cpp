@@ -30,17 +30,24 @@ ais::SvSelfAIS::~SvSelfAIS()
   
 bool ais::SvSelfAIS::open()
 {
-  if(!_port.open(QSerialPort::WriteOnly)) {
+  if(!_port.open(QSerialPort::ReadWrite)) {
     
     setLastError(_port.errorString());
     return false;
   }
   
-  _isOpened = true;
+  _isOpened = _port.isOpen();
+  
+  connect(this, &ais::SvSelfAIS::write_message, this, &ais::SvSelfAIS::write);
+  
+  return _isOpened;
 }
+
 void ais::SvSelfAIS::close()
 {
   _port.close();
+  disconnect(this, &ais::SvSelfAIS::write_message, this, &ais::SvSelfAIS::write);
+  
   _isOpened = false;
 }
 
@@ -70,8 +77,8 @@ void ais::SvSelfAIS::on_receive_ais_data(ais::SvAIS* otherAIS, ais::AISDataTypes
       
       case ais::adtStaticVoyage:
        
-        _current_message = nmea::message1(0, otherAIS->getStaticData()->mmsi, otherAIS->navStatus(), 10, otherAIS->getDynamicData()->geoposition);
-        write_data();
+//        msg = nmea::message1(0, otherAIS->getStaticData()->mmsi, otherAIS->navStatus(), 10, otherAIS->getDynamicData()->geoposition);
+//        write(msg);
         
         break;
       
@@ -82,19 +89,12 @@ void ais::SvSelfAIS::on_receive_ais_data(ais::SvAIS* otherAIS, ais::AISDataTypes
 //        break;
 
       case ais::adtDynamic:
-//        _log << svlog::Time << svlog::Data << QString("dynamic data from %1: lat:%2 lon:%3 crs:%4 spd:%5")
-//             .arg(otherAIS->getStaticData()->id) 
-//             .arg(otherAIS->getDynamicData()->geoposition.latitude)
-//             .arg(otherAIS->getDynamicData()->geoposition.longtitude)
-//             .arg(otherAIS->getDynamicData()->geoposition.course)
-//             .arg(otherAIS->getDynamicData()->geoposition.speed)
-//             << svlog::endl;
-        
-        _current_message = nmea::message1(0, otherAIS->getStaticData()->mmsi, otherAIS->navStatus(), 10, otherAIS->getDynamicData()->geoposition);
-        write_data();
+      {
+        QString msg = nmea::ais_message_1(0, otherAIS->getStaticData()->mmsi, otherAIS->navStatus(), 10, otherAIS->getDynamicData()->geoposition);
+        emit write_message(msg);
         
         break;
-        
+       } 
         
       default:
         break;
@@ -117,23 +117,26 @@ qreal ais::SvSelfAIS::distanceTo(ais::SvAIS* remoteAIS)
 }
 
 
-void ais::SvSelfAIS::write_data()
+void ais::SvSelfAIS::write(const QString &message)
 {
-  _log << svlog::Time << svlog::Data << _current_message << svlog::endl;
+  _log << svlog::Time << svlog::Data << message << svlog::endl;
   
-  _port.write(_current_message.toStdString().c_str(), _current_message.size());
+  _port.write(message.toStdString().c_str(), message.size());
+  _log << svlog::Data << svlog::Time << message << svlog::endl;
   
 }
 
-void ais::SvSelfAIS::setSerialPortInfo(const QSerialPortInfo& info)
+void ais::SvSelfAIS::setSerialPortParams(const SerialPortParams& params)
 { 
-  _port_info = QSerialPortInfo(info); 
-  
-  _port.setPort(info);
-  
+  _port.setPortName(params.name);
+  _port.setBaudRate(params.baudrate);
+  _port.setDataBits(params.databits);
+  _port.setFlowControl(params.flowcontrol);
+  _port.setParity(params.parity);
+  _port.setStopBits(params.stopbits);
 }
 
-void ais::SvSelfAIS::read_data()
+void ais::SvSelfAIS::read()
 {
   
 }

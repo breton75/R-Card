@@ -114,4 +114,12 @@
 #define SQL_SELECT_LAG_TYPES "select id, type_name from lag_types"
 
 
+#define SQL_SELECT_COUNT_FROM_SERIAL_WHERE  "SELECT count() as count " \
+                                      "FROM serial_port_params WHERE device_type = %1"
+
+#define SQL_INSERT_SERIAL  "INSERT INTO serial_port_params (device_type) VALUES(%1)"
+
+#define SQL_UPDATE_SERIAL_WHERE  "UPDATE serial_port_params SET port_name='%1', baudrate=%2, "\
+                                 "parity=%3, stop_bits=%4, data_bits=%5, flow_control=%6 WHERE device_type = %7"
+
 #endif // SQL_DEFS_H
