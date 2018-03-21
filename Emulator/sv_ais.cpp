@@ -47,7 +47,7 @@ void ais::SvSelfAIS::close()
 {
   _port.close();
   disconnect(this, &ais::SvSelfAIS::write_message, this, &ais::SvSelfAIS::write);
-  
+  qDebug() << "closed";
   _isOpened = false;
 }
 

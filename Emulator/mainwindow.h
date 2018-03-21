@@ -90,7 +90,8 @@ private:
 //  QSerialPort _navteks_serial;
 //  QSerialPort _echo_serial;
   
-    
+  int _selected_vessel_id = -1;
+  
 public slots:
   void update_vessel_by_id(int id);
   
@@ -98,7 +99,7 @@ private slots:
   void stateChanged(States state);
   void on_bnCycle_clicked();
   
-  void selectionChanged();
+  void on_area_selection_changed();
   
 //  void initGeposition(gps::gpsInitParams& gpsParams, const ais::aisDynamicData& dynamicData);
   
@@ -106,14 +107,19 @@ private slots:
   vsl::SvVessel* createOtherVessel(QSqlQuery* q);
   
   void on_actionNewVessel_triggered();
+  void on_actionEditVessel_triggered();
   
-  void on_listVessels_currentRowChanged(int currentRow);
+//  void on_listVessels_currentRowChanged(int currentRow);
   
   void on_bnAISEditSerialParams_clicked();
   
   void on_bnLAGEditSerialParams_clicked();
   
   void on_bnNAVTEKEditSerialParams_clicked();
+    
+  void currentVesselListItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
+  
+  void editVessel(int id);
   
 signals:
   void newState(States state);

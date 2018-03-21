@@ -48,14 +48,14 @@
              <string notr="true">background-color: rgb(255, 255, 255);</string>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>2</number>
             </property>
             <widget class="QWidget" name="page">
              <property name="geometry">
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>383</width>
+               <width>386</width>
                <height>270</height>
               </rect>
              </property>
@@ -207,7 +207,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>383</width>
+               <width>386</width>
                <height>270</height>
               </rect>
              </property>
@@ -312,7 +312,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>383</width>
+               <width>386</width>
                <height>270</height>
               </rect>
              </property>
@@ -366,9 +366,6 @@
                  </item>
                  <item>
                   <widget class="QPushButton" name="bnEditVessel">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -389,9 +386,6 @@
                  </item>
                  <item>
                   <widget class="QPushButton" name="bnRemoveVessel">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>

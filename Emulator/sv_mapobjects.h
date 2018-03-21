@@ -41,8 +41,23 @@ enum SvMapObjectTypes
 //QColor defaultSelectionColor = QColor(0xffef0b);
 //}
 
+
+class SvSignalHandler : public QObject
+{
+  Q_OBJECT
+  
+public:
+  explicit SvSignalHandler() { }
+  void mapObjectMouseDoubleClicked(int mapObjectId) { emit mouseDoubleClick(mapObjectId); }
+  
+signals:
+  void mouseDoubleClick(int id);
+  
+};
+
 class SvMapObjectSelection;
 class SvMapObjectIdentifier;
+
 
 class SvMapObject : public QGraphicsItem
 {
@@ -63,6 +78,7 @@ class SvMapObject : public QGraphicsItem
     geo::GEOPOSITION geoPosition() { return _geo_position; }
     void setGeoPosition(const geo::GEOPOSITION& geopos) { _geo_position = geopos; }
     
+    SvSignalHandler signalHandler;
     
     QPainterPath* path() const { return _path; }
     
@@ -131,7 +147,8 @@ class SvMapObject : public QGraphicsItem
     
     SvMapObjectSelection* _selection = nullptr;
     SvMapObjectIdentifier* _identifier = nullptr;
-  
+    
+ 
 };
 
 
@@ -336,7 +353,7 @@ class SvMapObjectVesselAbstract : public SvMapObject
   
 //    int id() const { return _id; }
      
-    
+  void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE { qDebug() << 11; signalHandler.mapObjectMouseDoubleClicked(id()); }
     
 //    vsl::SvVessel* vessel() { return _vessel; }
 //    int vesselId() const { return _vessel->id; }
@@ -375,7 +392,9 @@ class SvMapObjectVessel : public SvMapObjectVesselAbstract
     QAction *removeAction;
     QAction *editAction;
 
-//    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
+//    SvSignalHandler signalHandler;
+    
+//    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE { signalHandler.mapObjectMouseDoubleClicked(id()); }
 //    virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
 };
 

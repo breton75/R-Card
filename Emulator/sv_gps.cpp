@@ -5,8 +5,10 @@ gps::SvGPS* SELF_GPS;
 gps::SvGPS::SvGPS(int vessel_id, gpsInitParams &params, geo::BOUNDS* bounds)
 {
   _vessel_id = vessel_id;
-  _gps_params = params;
   _bounds = bounds;
+  
+  setInitParams(params);
+  
 }
 
 gps::SvGPS::~SvGPS()
@@ -91,6 +93,7 @@ void gps::SvGPSEmitter::run()
     
     if(QDateTime::currentDateTime().currentMSecsSinceEpoch() - time_counter < _gps_params.gps_timeout) {
       
+      msleep(1); // чтоб не грузило систему
       continue;
     }
     

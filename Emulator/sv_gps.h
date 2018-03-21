@@ -50,6 +50,8 @@ public:
   
   int vesselId() { return _vessel_id; }
   
+  void setInitParams(gps::gpsInitParams &params) { _gps_params = params; }
+  
 //  gps::SvGPSEmitter* emitter() { return _gps_emitter; }
   
   idev::SvSimulatedDeviceTypes type() const { return idev::sdtGPS; }

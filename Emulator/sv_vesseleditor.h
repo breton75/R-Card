@@ -32,7 +32,7 @@ public:
   
   QString last_error() { return _last_error; }
   
-  int     t_id = -1;
+  int     t_vessel_id = -1;
   bool    t_self = false;
   QString t_static_callsign = "";
   QString t_static_imo = "";

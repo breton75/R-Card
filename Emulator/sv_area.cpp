@@ -877,6 +877,11 @@ void area::SvAreaView::mouseMoveEvent(QMouseEvent * event)
 //  update();
 }
 
+void area::SvAreaView::mouseDoubleClickEvent(QMouseEvent * event)
+{
+  
+}
+
 /** ******** RULERS ****** **/
 area::SvHRuler::SvHRuler(QWidget *parent, float *scale, QSize* areaSize)
 {

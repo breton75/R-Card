@@ -78,6 +78,7 @@ void SvMapObject::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void SvMapObject::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
+  qDebug() << 11-11-11;
   QGraphicsItem::mouseDoubleClickEvent(event);
 }
 
@@ -394,21 +395,21 @@ SvMapObjectSelection::SvMapObjectSelection(QWidget* parent, SvMapObject* mapobj)
   qreal sz = _mapobj->boundingRect().width() > _mapobj->boundingRect().height() ?
                _mapobj->boundingRect().width() / 2 : _mapobj->boundingRect().height() / 2;
   
-  path()->moveTo(-sz - 5, -sz);
-  path()->lineTo(-sz - 5, -sz - 5);
-  path()->lineTo(-sz, -sz - 5);
+  path()->moveTo(-sz - 8, -sz);
+  path()->lineTo(-sz - 8, -sz - 8);
+  path()->lineTo(-sz, -sz - 8);
   
-  path()->moveTo(sz + 5, -sz);
-  path()->lineTo(sz + 5, -sz - 5);
-  path()->lineTo(sz, -sz - 5);
+  path()->moveTo(sz + 8, -sz);
+  path()->lineTo(sz + 8, -sz - 8);
+  path()->lineTo(sz, -sz - 8);
   
-  path()->moveTo(sz + 5, sz);
-  path()->lineTo(sz + 5, sz + 5);
-  path()->lineTo(sz, sz + 5);
+  path()->moveTo(sz + 8, sz);
+  path()->lineTo(sz + 8, sz + 8);
+  path()->lineTo(sz, sz + 8);
   
-  path()->moveTo(-sz, sz + 5);
-  path()->lineTo(-sz - 5, sz + 5);
-  path()->lineTo(-sz - 5, sz);
+  path()->moveTo(-sz, sz + 8);
+  path()->lineTo(-sz - 8, sz + 8);
+  path()->lineTo(-sz - 8, sz);
   
   
 //  path()->addText(-sz - 7, sz + 7, QFont("Arial"), QString("ш.%1\nд.%2\nк.%3/nс.%4")
@@ -421,8 +422,8 @@ SvMapObjectSelection::SvMapObjectSelection(QWidget* parent, SvMapObject* mapobj)
   
   setBrush(QBrush(Qt::NoBrush));
   
-  QPen pen(QColor("darkred"));
-  pen.setWidth(2);
+  QPen pen(QColor("red"));
+  pen.setWidth(3);
   setPen(pen);
   
 }

@@ -68,7 +68,7 @@ QString nmea::ais_message_1(quint8 repeat_indicator, quint32 mmsi, quint8 nav_st
   
   for(int i = 0; i < 6; i++) {
     mmsi64 >>= 2;
-    b6[1 + i] += mmsi64 >> (56 - i * 8);
+    b6[1 + i] += (mmsi64 >> (56 - i * 8));
     mmsi64 &= (0x00FFFFFFFFFFFFFF >> (i * 8));
   }
   

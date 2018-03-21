@@ -30,7 +30,7 @@ SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId, bool self) :
    
     if(q->next()) {
       
-      t_id = vesselId;
+      t_vessel_id = vesselId;
       
       t_self = q->value("self").toBool();            
       t_static_callsign = q->value("static_callsign").toString();
@@ -63,7 +63,7 @@ SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId, bool self) :
     
   }
   
-  ui->ediId->setText(showMode == smNew ? "<Новый>" : QString::number(t_id));
+  ui->ediId->setText(showMode == smNew ? "<Новый>" : QString::number(t_vessel_id));
 //  ui-> set(t_self = false;
   ui->editCallsign->setText(t_static_callsign);
   ui->editIMO->setText(t_static_imo);
@@ -166,8 +166,7 @@ void SvVesselEditor::loadInitRandoms()
 
 void SvVesselEditor::accept()
 {
-//  t_id = ui->ediId->text();
-//  ui-> set(t_self = false;
+
   t_static_callsign = ui->editCallsign->text();
   t_static_imo = ui->editIMO->text();
   t_static_mmsi = ui->editMMSI->text();
@@ -197,7 +196,6 @@ void SvVesselEditor::accept()
   
   setResult(rcNoError);
   
-//  bool result = false;
   switch (this->showMode) {
     
     case smNew: {
@@ -238,62 +236,66 @@ void SvVesselEditor::accept()
           if(!SQLITE->commit()) _exception.raise(SQLITE->db.lastError().databaseText());
           
       }
+      
       catch(SvException &e) {
           
         SQLITE->rollback();
         setResult(rcSqlError);
         _last_error = e.err;
-        qDebug() << _last_error;
-//        QMessageBox::critical(this, "Ошибка", QString("Ошибка при добавлении записи:\n%1").arg(_last_error), QMessageBox::Ok);
+//        qDebug() << _last_error;
       }
         
       break;
-        
-        
-      
-//      QSqlQuery* q = new QSqlQuery(SQLITE->db);
-//      sql = SQLITE->execSQL(QString("select id from plan order by id desc limit 1"), q);
-      
-//      if(QSqlError::NoError != sql.type()) {
-        
-//        _last_error = sql.databaseText();
-//        q->finish();
-//        setResult(rcSqlError);
-        
-//        QMessageBox::critical(this, "Ошибка", QString("Ошибка при добавлении записи:\n%1").arg(_last_error), QMessageBox::Ok);
-//        break;
-//      }
-
-//      q->first();
-////      t_id = q->value("id").toInt();
-//      q->finish();
-//      delete q;
-
-//      result = true;
-//      break;
       
     }
 
     case smEdit: {
-      /**
-      QSqlError sql = SQLITE->execSQL(QString("update plan set uid='%1', lon=%2, lat=%3, date_time='%4', description='%5' where id=%6")
-                                      .arg(t_uid)
-                                      .arg(t_lon)
-                                      .arg(t_lat)
-                                      .arg(t_date_time.toString("dd/MM/yyyy hh:mm:ss"))
-                                      .arg(t_description)
-                                      .arg(t_id));
-      
-      if(QSqlError::NoError != sql.type()) {
+      try {
         
+        if(!SQLITE->transaction()) _exception.raise(SQLITE->db.lastError().databaseText());
+        
+        QSqlError sql = SQLITE->execSQL(QString(SQL_UPDATE_AIS)
+                                      .arg(t_static_mmsi)
+                                      .arg(t_static_imo)
+                                      .arg(t_static_type_id)
+                                      .arg(t_static_callsign)
+                                      .arg(t_static_length)
+                                      .arg(t_static_width)  
+                                      .arg(t_voyage_destination)
+                                      .arg(t_voyage_draft)
+                                      .arg(t_voyage_cargo_type_id)
+                                      .arg(t_voyage_team)
+                                      .arg(t_vessel_id));
+      
+        if(QSqlError::NoError != sql.type()) _exception.raise(sql.databaseText());
+        
+        sql = SQLITE->execSQL(QString(SQL_UPDATE_GPS)
+                              .arg(t_gps_timeout)
+                              .arg(t_init_random_coordinates)
+                              .arg(t_init_random_course)
+                              .arg(t_init_random_speed)
+                              .arg(t_init_course_change_ratio)
+                              .arg(t_init_speed_change_ratio)
+                              .arg(t_init_course_change_segment)
+                              .arg(t_init_speed_change_segment)
+                              .arg(t_vessel_id));
+              
+        if(QSqlError::NoError != sql.type()) _exception.raise(sql.databaseText());
+        
+        if(!SQLITE->commit()) _exception.raise(SQLITE->db.lastError().databaseText());
+        
+        
+      }
+      
+      catch(SvException &e) {
+          
+        SQLITE->rollback();
         setResult(rcSqlError);
-        _last_error = sql.databaseText();
-        QMessageBox::critical(this, "Ошибка", QString("Не удалось обновить запись:\n%1").arg(_last_error), QMessageBox::Ok);
-        break;
-      } **/     
+        _last_error = e.err;
+  //        qDebug() << _last_error;
+      }
       
-      
-//      result = true;
+
       break;
     }
   }

@@ -56,11 +56,6 @@
 #define SQL_SELECT_LAST_INSERTED_VESSEL (SQL_SELECT_VESSELS SQL_WHERE_LAST_INSERTED)
 
 
-//#define SQL_INSERT_NEW_VESSEL "BEGIN TRANSACTION;" CR \
-//                              "INSERT INTO vessels (type_id) VALUES (4);" CR \
-//                              "INSERT INTO ais (vessel_id) VALUES ((select id from vessels order by id desc limit 1));" CR \
-//                              "COMMIT;"
-
 #define SQL_INSERT_NEW_VESSEL "INSERT INTO vessels (self) VALUES (%1);"
 
 #define SQL_INSERT_NEW_AIS "INSERT INTO ais (vessel_id, " CR \
@@ -75,16 +70,7 @@
                            "                 voyage_cargo_type_id, " CR \
                            "                 voyage_team)  " CR \
                            "VALUES ((select id from vessels order by id desc limit 1), " CR \
-                           "        '%1', " CR \
-                           "        '%2', " CR \
-                           "         %3, " CR \
-                           "        '%4', " CR \
-                           "         %5, " CR \
-                           "         %6, " CR \
-                           "        '%7', " CR \
-                           "         %8, " CR \
-                           "         %9, " CR \
-                           "         %10);"
+                           "        '%1', '%2', %3, '%4', %5, %6, '%7', %8, %9, %10);"
 
 #define SQL_INSERT_NEW_GPS "INSERT INTO gps (vessel_id," CR \
                            "                 timeout," CR \
@@ -97,15 +83,33 @@
                            "                 init_speed_change_segment," CR \
                            "                 last_update)" CR \
                            "VALUES ((select id from vessels order by id desc limit 1), " CR \
-                           "        %1, " CR \
-                           "       '%2', " CR \
-                           "       '%3', " CR \
-                           "       '%4', " CR \
-                           "        %5, " CR \
-                           "        %6, " CR \
-                           "        %7, " CR \
-                           "        %8, " CR \
+                           "        %1, '%2', '%3', '%4', %5, %6, %7, %8, " CR \
                            "        strftime('%Y-%m-%d %H:%M:%f', 'now', 'localtime'));"
+
+
+#define SQL_UPDATE_AIS "UPDATE ais SET static_mmsi = %1, " CR \
+                       "               static_imo = %2, " CR \
+                       "               static_type_id = %3, " CR \
+                       "               static_callsign = '%4', " CR \
+                       "               static_length = %5, " CR \
+                       "               static_width = %6, " CR \
+                       "               voyage_destination = '%7', " CR \
+                       "               voyage_draft = %8, " CR \
+                       "               voyage_cargo_type_id = %9, " CR \
+                       "               voyage_team = %10)  " CR \
+                       "WHERE vessel_id = %11 "
+
+
+#define SQL_UPDATE_GPS "UPDATE gps SET timeout = %1," CR \
+                       "               init_random_coordinates = '%2'," CR \
+                       "               init_random_course = '%3'," CR \
+                       "               init_random_speed = '%4'," CR \
+                       "               init_course_change_ratio = %5," CR \
+                       "               init_speed_change_ratio = %6," CR \
+                       "               init_course_change_segment = %7," CR \
+                       "               init_speed_change_segment = %8," CR \
+                       "               last_update = strftime('%Y-%m-%d %H:%M:%f', 'now', 'localtime')" CR \
+                       "WHERE vessel_id = %9"
 
 
 #define SQL_SELECT_VESSEL_TYPES "SELECT id, type_name FROM vessel_types;"
