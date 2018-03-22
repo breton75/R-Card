@@ -99,7 +99,7 @@ private slots:
   void stateChanged(States state);
   void on_bnCycle_clicked();
   
-  void on_area_selection_changed();
+  void area_selection_changed();
   
 //  void initGeposition(gps::gpsInitParams& gpsParams, const ais::aisDynamicData& dynamicData);
   
@@ -120,6 +120,8 @@ private slots:
   void currentVesselListItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
   
   void editVessel(int id);
+  
+  void on_listVessels_doubleClicked(const QModelIndex &index);
   
 signals:
   void newState(States state);

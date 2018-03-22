@@ -34,8 +34,8 @@ SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId, bool self) :
       
       t_self = q->value("self").toBool();            
       t_static_callsign = q->value("static_callsign").toString();
-      t_static_imo = q->value("static_imo").toString();
-      t_static_mmsi = q->value("static_mmsi").toString();
+      t_static_imo = q->value("static_imo").toUInt();
+      t_static_mmsi = q->value("static_mmsi").toUInt();
       t_static_type_id = q->value("static_type_id").toUInt();
       t_static_vessel_type_name = q->value("static_vessel_type_name").toString();
       t_static_length = q->value("static_length").toUInt();
@@ -66,8 +66,8 @@ SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId, bool self) :
   ui->ediId->setText(showMode == smNew ? "<Новый>" : QString::number(t_vessel_id));
 //  ui-> set(t_self = false;
   ui->editCallsign->setText(t_static_callsign);
-  ui->editIMO->setText(t_static_imo);
-  ui->editMMSI->setText(t_static_mmsi);
+  ui->spinIMO->setValue(t_static_imo);
+  ui->spinMMSI->setValue(t_static_mmsi);
   
   ui->cbVesselType->setCurrentIndex(ui->cbVesselType->findData(t_static_type_id));
   
@@ -168,8 +168,8 @@ void SvVesselEditor::accept()
 {
 
   t_static_callsign = ui->editCallsign->text();
-  t_static_imo = ui->editIMO->text();
-  t_static_mmsi = ui->editMMSI->text();
+  t_static_imo = ui->spinIMO->value();
+  t_static_mmsi = ui->spinMMSI->value();
   
   t_static_type_id = ui->cbVesselType->currentData().toUInt();
   
@@ -193,8 +193,6 @@ void SvVesselEditor::accept()
   t_init_course_change_segment = ui->spinCourseChangeRatio->value();
   t_init_speed_change_ratio = ui->spinSpeedChangeRatio->value();
   t_init_speed_change_segment = ui->spinSpeedChangeSegment->value();
-  
-  setResult(rcNoError);
   
   switch (this->showMode) {
     
@@ -240,9 +238,11 @@ void SvVesselEditor::accept()
       catch(SvException &e) {
           
         SQLITE->rollback();
-        setResult(rcSqlError);
         _last_error = e.err;
 //        qDebug() << _last_error;
+        QDialog::reject();
+        
+        return;
       }
         
       break;
@@ -255,20 +255,20 @@ void SvVesselEditor::accept()
         if(!SQLITE->transaction()) _exception.raise(SQLITE->db.lastError().databaseText());
         
         QSqlError sql = SQLITE->execSQL(QString(SQL_UPDATE_AIS)
-                                      .arg(t_static_mmsi)
-                                      .arg(t_static_imo)
-                                      .arg(t_static_type_id)
-                                      .arg(t_static_callsign)
-                                      .arg(t_static_length)
-                                      .arg(t_static_width)  
-                                      .arg(t_voyage_destination)
-                                      .arg(t_voyage_draft)
-                                      .arg(t_voyage_cargo_type_id)
-                                      .arg(t_voyage_team)
-                                      .arg(t_vessel_id));
+                                        .arg(t_static_mmsi)
+                                        .arg(t_static_imo)
+                                        .arg(t_static_type_id)
+                                        .arg(t_static_callsign)
+                                        .arg(t_static_length)
+                                        .arg(t_static_width)  
+                                        .arg(t_voyage_destination)
+                                        .arg(t_voyage_draft)
+                                        .arg(t_voyage_cargo_type_id)
+                                        .arg(t_voyage_team)
+                                        .arg(t_vessel_id));
       
         if(QSqlError::NoError != sql.type()) _exception.raise(sql.databaseText());
-        
+
         sql = SQLITE->execSQL(QString(SQL_UPDATE_GPS)
                               .arg(t_gps_timeout)
                               .arg(t_init_random_coordinates)
@@ -290,9 +290,11 @@ void SvVesselEditor::accept()
       catch(SvException &e) {
           
         SQLITE->rollback();
-        setResult(rcSqlError);
         _last_error = e.err;
-  //        qDebug() << _last_error;
+//        qDebug() << _last_error;
+        QDialog::reject();
+        
+        return;
       }
       
 
@@ -300,8 +302,6 @@ void SvVesselEditor::accept()
     }
   }
 
-    
-  if(result() == rcNoError) QDialog::accept();
-  else QDialog::reject();
+  QDialog::accept();
   
 }

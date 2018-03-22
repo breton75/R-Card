@@ -400,7 +400,7 @@ class SvMapObjectVessel : public SvMapObjectVesselAbstract
 
 //    SvSignalHandler signalHandler;
     
-    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
 //    virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
 };
 
@@ -459,7 +459,7 @@ class SvMapObjectIdentifier : public SvMapObject
 {
   public:
     
-    explicit SvMapObjectIdentifier(QWidget* parent, SvMapObject* mapobj);
+    explicit SvMapObjectIdentifier(QWidget* parent, SvMapObject* mapobj, int id);
   
     int type() { return motIdentifier; }
   
@@ -467,7 +467,6 @@ private:
   SvMapObject* _mapobj = nullptr;
 //  int _id;
   
-//  void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) Q_DECL_OVERRIDE;
   
 };
 

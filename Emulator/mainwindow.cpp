@@ -131,7 +131,7 @@ SV:
       }
       else {
         
-        if(VESSELEDITOR_UI->result() != SvVesselEditor::rcNoError)
+        if(!VESSELEDITOR_UI->last_error().isEmpty())
           _exception.raise(VESSELEDITOR_UI->last_error());
       }
         
@@ -168,11 +168,11 @@ SV:
   
   qInfo() << 4;
     
-    connect(_area->scene, SIGNAL(selectionChanged()), this, SLOT(on_area_selection_changed()));
+    connect(_area->scene, SIGNAL(selectionChanged()), this, SLOT(area_selection_changed()));
     connect(ui->listVessels, &QListWidget::currentItemChanged, this, &MainWindow::currentVesselListItemChanged);
     
     connect(this, SIGNAL(newState(States)), this, SLOT(stateChanged(States)));
-    
+   
     
     return true;
   }
@@ -442,44 +442,39 @@ void MainWindow::on_bnCycle_clicked()
 }
 
 //void MainWindow::onFocusItemChanged(QGraphicsItem *newFocusItem, QGraphicsItem *oldFocusItem, Qt::FocusReason reason)
-void MainWindow::on_area_selection_changed()
+void MainWindow::area_selection_changed()
 {
   /// ищем все выделения и удаляем их
-  foreach (SvMapObject* item, _area->scene->mapObjects()) {
-    
+  for (SvMapObject* item: _area->scene->mapObjects()) {
     if(item->selection()) {  
-      _area->scene->removeItem(item->selection());
+      _area->scene->removeMapObject(item->selection());
       item->deleteSelection();
     }
   }
-  
+
   /// если ничего не  выделено, то сбрасываем
   if(_area->scene->selectedItems().isEmpty()) {
-    
     _selected_vessel_id = -1;
     _area->setLabelInfo("");
-    
   }
   else {
-    
     /// создаем новое выделение
     SvMapObject* mo = (SvMapObject*)(_area->scene->selectedItems().first());
-    
     mo->setSelection(new SvMapObjectSelection(_area, mo));
     _area->scene->addMapObject(mo->selection());
     mo->selection()->setVisible(true);
     _area->scene->setMapObjectPos(mo, mo->geoPosition());
-    
-    updateMapObjectInfo(mo);
-    
     _selected_vessel_id = mo->id();
-    
+    updateMapObjectInfo(mo);
   }
-  
+
   /// выделяем судно в списке  
   disconnect(ui->listVessels, &QListWidget::currentItemChanged, this, &MainWindow::currentVesselListItemChanged);
   
-  if((_selected_vessel_id == -1) | (_self_vessel->id == _selected_vessel_id)) ui->listVessels->setCurrentRow(-1);
+  if((_selected_vessel_id == -1) || (_self_vessel->id == _selected_vessel_id)) {\
+    ui->listVessels->setCurrentRow(-1);
+    ui->textMapObjectInfo->setText("");
+  }
   else ui->listVessels->setCurrentItem(LISTITEMs.value(_selected_vessel_id));
 
   bool b = ui->listVessels->currentRow() > -1;
@@ -507,7 +502,7 @@ void MainWindow::updateMapObjectInfo(SvMapObject* mapObject)
         
         ais::SvAIS* a = AISs.value(mapObject->id());
       
-        ui->textEdit_2->setText(QString("Текущий объект:\nID:\t%1\nCallsign:\t%2\nMMSI:\t%3\nIMO:\t\t%4\nDest:\t%5\nDraft:\t%6\nTeam:\t%7\n\n"
+        ui->textMapObjectInfo->setText(QString("Текущий объект:\nID:\t%1\nCallsign:\t%2\nMMSI:\t%3\nIMO:\t%4\nDest:\t%5\nDraft:\t%6\nTeam:\t%7\n\n"
                                         "Текущая геопозиция:\nШирота:\t%8\nДолгота:\t%9\nКурс:\t%10%11\nСкорость:\t%12 км/ч\nСтатус:\t%13")
                             .arg(a->vesselId())
                             .arg(a->getStaticData()->callsign)
@@ -644,7 +639,7 @@ vsl::SvVessel *MainWindow::createOtherVessel(QSqlQuery* q)
   newVessel->mapObject()->setZValue(1);
   connect(&newVessel->mapObject()->signalHandler, SIGNAL(mouseDoubleClick(int)), this, SLOT(editVessel(int)));
   
-  newVessel->mapObject()->setIdentifier(new SvMapObjectIdentifier(_area, newVessel->mapObject(), vessel_id));
+  newVessel->mapObject()->setIdentifier(new SvMapObjectIdentifier(_area, newVessel->mapObject()));
   _area->scene->addMapObject(newVessel->mapObject()->identifier());
   newVessel->mapObject()->identifier()->setVisible(true);
   newVessel->mapObject()->identifier()->setZValue(1);
@@ -698,7 +693,7 @@ void MainWindow::on_actionNewVessel_triggered()
   VESSELEDITOR_UI = new SvVesselEditor(this);
   if(VESSELEDITOR_UI->exec() != QDialog::Accepted) {
     
-    if(VESSELEDITOR_UI->result() != SvVesselEditor::rcNoError)
+    if(!VESSELEDITOR_UI->last_error().isEmpty())
       QMessageBox::critical(this, "Ошибка", QString("Ошибка при добавлении записи:\n%1").arg(VESSELEDITOR_UI->last_error()), QMessageBox::Ok);
     
     delete VESSELEDITOR_UI;
@@ -748,10 +743,10 @@ void MainWindow::on_actionEditVessel_triggered()
 
 void MainWindow::editVessel(int id)
 {
-  VESSELEDITOR_UI = new SvVesselEditor(this, id);
+  VESSELEDITOR_UI = new SvVesselEditor(0, id);
   if(VESSELEDITOR_UI->exec() != QDialog::Accepted) {
     
-    if(VESSELEDITOR_UI->result() != SvVesselEditor::rcNoError)
+    if(!VESSELEDITOR_UI->last_error().isEmpty())
       QMessageBox::critical(this, "Ошибка", QString("Ошибка при редактировании записи:\n%1").arg(VESSELEDITOR_UI->last_error()), QMessageBox::Ok);
     
     delete VESSELEDITOR_UI;
@@ -789,19 +784,22 @@ void MainWindow::editVessel(int id)
     
     ais::aisStaticData static_data = getAISStaticData(q); 
     ais::aisVoyageData voyage_data = getAISVoyageData(q);
-    ais::aisDynamicData dynamic_data = getAISDynamicData(q);
-    gps::gpsInitParams gps_params = getGPSInitParams(q, dynamic_data, id);
+    ais::aisDynamicData *dynamic_data = VESSELs.value(id)->ais()->getDynamicData();
+    gps::gpsInitParams gps_params = getGPSInitParams(q, *dynamic_data, id);
     q->finish();
-        
+    
+//    dynamic_data.geoposition = VESSELs.value(id)->ais()->getDynamicData()->geoposition;
+    
     vsl::SvVessel* vessel = VESSELs.value(id);
     
     vessel->ais()->setStaticData(static_data);
     vessel->ais()->setVoyageData(voyage_data);
-    vessel->ais()->setDynamicData(dynamic_data);
+//    vessel->ais()->setDynamicData(dynamic_data);
     vessel->gps()->setInitParams(gps_params);
     
     vessel->updateVessel();
     
+    LISTITEMs.value(id)->setText(QString("%1 %2").arg(id).arg(static_data.callsign));
   }
 }
 
@@ -889,13 +887,18 @@ void MainWindow::on_bnNAVTEKEditSerialParams_clicked()
 
 void MainWindow::currentVesselListItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
 {
-  disconnect(_area->scene, SIGNAL(selectionChanged()), this, SLOT(on_area_selection_changed()));
+  disconnect(_area->scene, SIGNAL(selectionChanged()), this, SLOT(area_selection_changed()));
   
   foreach (SvMapObject* obj, _area->scene->mapObjects()) 
     obj->setSelected(obj->id() == LISTITEMs.key(current)); 
   
-  on_area_selection_changed();
+  area_selection_changed();
   
-  connect(_area->scene, SIGNAL(selectionChanged()), this, SLOT(on_area_selection_changed()));
+  connect(_area->scene, SIGNAL(selectionChanged()), this, SLOT(area_selection_changed()));
   
+}
+
+void MainWindow::on_listVessels_doubleClicked(const QModelIndex &index)
+{
+   editVessel(LISTITEMs.key(ui->listVessels->item(index.row())));
 }

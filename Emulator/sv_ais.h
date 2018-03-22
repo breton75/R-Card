@@ -9,6 +9,7 @@
 #include <QTimer>
 #include <QSerialPort>
 #include <QSerialPortInfo>
+#include <QUdpSocket>
 
 #include "geo.h"
 #include "sv_gps.h"
@@ -165,6 +166,8 @@ private:
   
   QSerialPort _port;
   SerialPortParams _port_params;
+  
+  QUdpSocket* udp = nullptr;
   
 //  QString _current_message = "";
   

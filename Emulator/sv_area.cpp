@@ -636,19 +636,30 @@ void area::SvArea::setScale(qreal scale)
   scene->setSceneRect(QRectF(0, 0, _area_data.area_curr_size.width() + BORDER_WIDTH * 2, _area_data.area_curr_size.height() + BORDER_WIDTH * 2));
 
   /* квадратики по углам */
-  qreal cs = _area_data.gridCellStep;
-  scene->ltsq->setPos(BORDER_WIDTH + 2, BORDER_WIDTH + 2);                                                                                     
-  scene->rtsq->setPos(_area_data.area_curr_size.width() - cs - 2 + BORDER_WIDTH, BORDER_WIDTH + 2);                                           
-  scene->lbsq->setPos(BORDER_WIDTH + 2, _area_data.area_curr_size.height() - cs - 2 + BORDER_WIDTH);                                          
-  scene->rbsq->setPos(_area_data.area_curr_size.width() - cs - 2 + BORDER_WIDTH, _area_data.area_curr_size.height() - cs - 2 + BORDER_WIDTH);
+//  qreal cs = _area_data.gridCellStep;
+//  scene->ltsq->setPos(BORDER_WIDTH + 2, BORDER_WIDTH + 2);                                                                                     
+//  scene->rtsq->setPos(_area_data.area_curr_size.width() - cs - 2 + BORDER_WIDTH, BORDER_WIDTH + 2);                                           
+//  scene->lbsq->setPos(BORDER_WIDTH + 2, _area_data.area_curr_size.height() - cs - 2 + BORDER_WIDTH);                                          
+//  scene->rbsq->setPos(_area_data.area_curr_size.width() - cs - 2 + BORDER_WIDTH, _area_data.area_curr_size.height() - cs - 2 + BORDER_WIDTH);
 
   view->resize(_area_data.area_curr_size.width() + BORDER_WIDTH * 2, _area_data.area_curr_size.height() + BORDER_WIDTH * 2);
   
   
   // пересчитываем координаты всех объектов 
   foreach (SvMapObject* item, scene->mapObjects()) {
-    const QPointF p = geo2point(&_area_data, item->geoPosition().longtitude, item->geoPosition().latitude);
-    item->setPos(p);
+    
+    switch (item->type()) {
+      case motVessel:
+      case motSelfVessel:
+      case motNavtek:
+        
+        scene->setMapObjectPos(item, item->geoPosition());
+
+        break;
+        
+      default:
+        break;
+    }
   }
   
 }
@@ -700,10 +711,10 @@ area::SvAreaScene::SvAreaScene(AREA_DATA *area_data)
 //  lbtxt = addText("3");
 //  rbtxt = addText("4");
   
-  rbsq = addRect(0, 0, cs, cs, QPen(QColor(0, 0, 0, 100)), QBrush(QColor(0, 0, 0, 100))); //(2, 2, cs, cs);
-  ltsq = addRect(0, 0, cs, cs, QPen(QColor(0, 0, 0, 100)), QBrush(QColor(0, 0, 0, 100))); //(_area_data->area_curr_size.width() - cs - 4, 2, cs, cs);                                           
-  rtsq = addRect(0, 0, cs, cs, QPen(QColor(0, 0, 0, 100)), QBrush(QColor(0, 0, 0, 100))); //(2, _area_data->area_curr_size.height() - cs - 4, cs, cs);                                       
-  lbsq = addRect(0, 0, cs, cs, QPen(QColor(0, 0, 0, 100)), QBrush(QColor(0, 0, 0, 100))); //(_area_data->area_curr_size.width() - cs - 4, _area_data->area_curr_size.height() - cs - 4, cs, cs);
+//  rbsq = addRect(0, 0, cs, cs, QPen(QColor(0, 0, 0, 100)), QBrush(QColor(0, 0, 0, 100))); //(2, 2, cs, cs);
+//  ltsq = addRect(0, 0, cs, cs, QPen(QColor(0, 0, 0, 100)), QBrush(QColor(0, 0, 0, 100))); //(_area_data->area_curr_size.width() - cs - 4, 2, cs, cs);                                           
+//  rtsq = addRect(0, 0, cs, cs, QPen(QColor(0, 0, 0, 100)), QBrush(QColor(0, 0, 0, 100))); //(2, _area_data->area_curr_size.height() - cs - 4, cs, cs);                                       
+//  lbsq = addRect(0, 0, cs, cs, QPen(QColor(0, 0, 0, 100)), QBrush(QColor(0, 0, 0, 100))); //(_area_data->area_curr_size.width() - cs - 4, _area_data->area_curr_size.height() - cs - 4, cs, cs);
       
 //  resizeScene();
 }
@@ -748,6 +759,7 @@ area::SvAreaView::SvAreaView(QWidget *parent, AREA_DATA *area_data) :
   _gridMajorColor = QColor(0, 0, 255, 50);
   _mapCoastColor = QColor(0, 85, 127, 150);
   _fontColor = QColor(0, 0, 255, 200);
+  _scaleColor = QColor("navy");
 
   _penBorder.setColor(_gridBorderColor);
   _penBorder.setStyle(Qt::SolidLine);
@@ -764,6 +776,10 @@ area::SvAreaView::SvAreaView(QWidget *parent, AREA_DATA *area_data) :
   _pen_coastLine.setColor(_mapCoastColor);
   _pen_coastLine.setStyle(Qt::SolidLine);
   _pen_coastLine.setWidth(2);  
+  
+  _pen_scale.setColor(_scaleColor);
+  _pen_scale.setStyle(Qt::SolidLine);
+  _pen_scale.setWidth(1); 
   
   setVisible(true);
   
@@ -831,28 +847,31 @@ void area::SvAreaView::drawBackground(QPainter *painter, const QRectF &r)
   }
 
   /* рисуем шкалу масштаба */
-//  painter->setPen(Qt::NoPen);
-  int font_size = 9;
-  painter->setPen(_penBorder);
-//  painter->setBrush(QBrush(QColor(255, 255, 255, 150)));
-//  painter->drawRect(_area_data->gridCellStep * 1.5, _area_data->gridCellStep * 1.5, _area_data->gridCellStep * 5.5, _area_data->gridCellStep * 0.5 + font_size + 10);
-  
+  qreal x1 = _area_data->gridXstep;
+  qreal y1 = _area_data->gridYstep * 2;
+  qreal y2 = _area_data->gridYstep * 2 + 5;
+   
   QPainterPath path;
+                      
+  path.moveTo(x1 * 5 + BORDER_WIDTH, y1 + BORDER_WIDTH);
+  path.lineTo(x1 * 15 + BORDER_WIDTH, y1 + BORDER_WIDTH);
   
-  qreal x1 = _area_data->gridCellStep;
-  qreal y1 = _area_data->gridCellStep * 2;
-  qreal y2 = _area_data->gridCellStep * 2 + 4;
-
-  path.moveTo(x1 * 2, y1);
-  path.lineTo(x1 * 6, y1);
-  
-  for(int i = 2; i < 7; i++){
-    path.moveTo(x1 * i, y1);
-    path.lineTo(x1 * i, y2);
+  for(int i = 5; i < 16; i++){
+    path.moveTo(x1 * i + BORDER_WIDTH, y1 + BORDER_WIDTH);
+    path.lineTo(x1 * i + BORDER_WIDTH, y2 + BORDER_WIDTH + (i%5 == 0 ? 5 : 0));
   }
-
-  path.addText(x1 * 2, y2 + 10, QFont("Courier New", font_size), QString("%1 м.").arg(_area_data->gridCellDistance * 5));
   
+//  QGraphicsTextItem t(s);
+//  t.setFont(font);
+//  qreal dx = t.boundingRect().width() / 2;
+//  qreal dy = t.boundingRect().height() / 2;
+  
+  QFont font("Courier New", 9, QFont::Normal);
+  QString s = QString("%1 км.").arg(qreal(MINOR_VGRID_DISTANCE * 10) / _area_data->scale / 1000.0, 0, 'f', 1);
+  path.addText(x1 * 5 + BORDER_WIDTH, y2 + 16 + BORDER_WIDTH, font, s);
+  
+  painter->setPen(_pen_scale);
+  painter->setBrush(QBrush());
   painter->drawPath(path);
   
   
@@ -877,10 +896,10 @@ void area::SvAreaView::mouseMoveEvent(QMouseEvent * event)
 //  update();
 }
 
-void area::SvAreaView::mouseDoubleClickEvent(QMouseEvent * event)
-{
+//void area::SvAreaView::mouseDoubleClickEvent(QMouseEvent * event)
+//{
   
-}
+//}
 
 /** ******** RULERS ****** **/
 area::SvHRuler::SvHRuler(QWidget *parent, float *scale, QSize* areaSize)

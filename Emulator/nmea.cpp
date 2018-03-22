@@ -142,7 +142,7 @@ QString nmea::ais_message_1(quint8 repeat_indicator, quint32 mmsi, quint8 nav_st
   b6[26] += (m & 0x7F) >> 4;
   b6[27] += (m & 0x0F) << 2;
   
-  /// форимруем сообщение
+  /// формируем сообщение
   QString msg = "";
   for(int i = 0; i < 28; i++)
     msg.append(SIXBIT_SYMBOLS.value(b6[i]));  // message id
@@ -150,11 +150,11 @@ QString nmea::ais_message_1(quint8 repeat_indicator, quint32 mmsi, quint8 nav_st
   result = QString("$AIVDM,1,1,,A,%1,0*").arg(msg);
   
   quint8 src = 0;
-  for(int i = 1; i <= result.length() - 1; i++)
-    src = src ^ quint8(result.at(i).toLatin1());
+  for(int i = 1; i <= result.length() - 2; i++) {
+    src = src ^ quint8(result. at(i).toLatin1());
+  }
   
-  
-  result.append(QString("%1%2%3").arg(src, 2, 16).arg(QChar(13)).arg(QChar(10)).replace(' ', '0'));
+  result.append(QString("%1%2%3").arg(src, 2, 16).arg(QChar(13)).arg(QChar(10)).replace(' ', '0').toUpper());
   
   return result;
   
@@ -174,11 +174,11 @@ QString nmea::lag_VBW(const geo::GEOPOSITION& geopos)
                 .arg(0.0, 0, 'g', 1);
   
   quint8 src = 0;
-  for(int i = 1; i <= result.length() - 1; i++)
+  for(int i = 1; i <= result.length() - 2; i++)
     src = src ^ quint8(result.at(i).toLatin1());
   
   
-  result.append(QString("%1%2%3").arg(src, 2, 16).arg(QChar(13)).arg(QChar(10)));
+  result.append(QString("%1%2%3").arg(src, 2, 16).arg(QChar(13)).arg(QChar(10)).replace(' ', '0').toUpper());
   
   
   return result;

@@ -78,7 +78,6 @@ void SvMapObject::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void SvMapObject::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
-  qDebug() << 11-11-11;
   QGraphicsItem::mouseDoubleClickEvent(event);
 }
 
@@ -152,7 +151,6 @@ void SvMapObjectBeaconPlanned::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *e
  
 //  }
 //  BEACONEDITOR_UI->~SvBeaconEditor();
-
   SvMapObject::mouseDoubleClickEvent(event);
 
 }
@@ -354,7 +352,14 @@ SvMapObjectVessel::SvMapObjectVessel(QWidget* parent, int id):
   
 }
 
-
+void SvMapObjectVessel::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+{
+  /// чтобы работали эти события, надо убрать их обработчики в сцене
+  signalHandler.mapObjectMouseDoubleClicked(id()); 
+  
+  SvMapObject::mouseDoubleClickEvent(event);
+  
+}
 
 
 SvMapObjectSelfVessel::SvMapObjectSelfVessel(QWidget* parent, int id):
@@ -387,10 +392,12 @@ SvMapObjectSelfVessel::SvMapObjectSelfVessel(QWidget* parent, int id):
 /** ********************************************** **/
 /** ***************** SELECTION ****************** **/
 /** ********************************************** **/
-SvMapObjectSelection::SvMapObjectSelection(QWidget* parent, SvMapObject* mapobj): //, vsl::SvVessel* vessel):
+SvMapObjectSelection::SvMapObjectSelection(QWidget* parent, SvMapObject* mapobj):
   SvMapObject(parent)
 { 
   _mapobj = mapobj;
+  
+  setFlags(0);
   
   qreal sz = _mapobj->boundingRect().width() > _mapobj->boundingRect().height() ?
                _mapobj->boundingRect().width() / 2 : _mapobj->boundingRect().height() / 2;
@@ -423,7 +430,7 @@ SvMapObjectSelection::SvMapObjectSelection(QWidget* parent, SvMapObject* mapobj)
   setBrush(QBrush(Qt::NoBrush));
   
   QPen pen(QColor("red"));
-  pen.setWidth(3);
+  pen.setWidth(2);
   setPen(pen);
   
 }
@@ -431,20 +438,34 @@ SvMapObjectSelection::SvMapObjectSelection(QWidget* parent, SvMapObject* mapobj)
 /** ********************************************** **/
 /** ***************** Identifier ***************** **/
 /** ********************************************** **/
-SvMapObjectIdentifier::SvMapObjectIdentifier(QWidget* parent, SvMapObject* mapobj, int id):
+SvMapObjectIdentifier::SvMapObjectIdentifier(QWidget* parent, SvMapObject* mapobj):
   SvMapObject(parent)
 { 
   _mapobj = mapobj;
-  _id = id;
+  
+  setFlags(0);
 
-  qreal sz = _mapobj->boundingRect().width() > _mapobj->boundingRect().height() ?
-               _mapobj->boundingRect().width() / 2 : _mapobj->boundingRect().height() / 2;
-  
-  path()->addText(-2, -sz, QFont("Arial", 8), QString::number(_id));
-      
-//  path()->setFillRule(Qt::OddEvenFill);
-  
   setBrush(QBrush(Qt::NoBrush));
   setPen(QColor("darkred"), Qt::SolidLine, 1);
   
+  qreal sz = _mapobj->boundingRect().width() > _mapobj->boundingRect().height() ?
+               _mapobj->boundingRect().width() / 2 : _mapobj->boundingRect().height() / 2;
+  
+  QFont font("Courier New", 9, QFont::Normal);
+  
+  QGraphicsTextItem t(QString::number(mapobj->id()), this);
+  t.setFont(font);
+  qreal dx = t.boundingRect().width() / 4;
+  qreal dy = t.boundingRect().height() / 2 + 2;
+  
+  path()->addText(-dx, -dy, font, QString::number(mapobj->id()));
+      
+  path()->setFillRule(Qt::OddEvenFill);
+  
+  
 }
+
+//void SvMapObjectIdentifier::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+//{
+////  painter->drawPath(_pathNum);
+//}

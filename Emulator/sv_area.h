@@ -252,15 +252,15 @@ class area::SvAreaScene: public QGraphicsScene
     explicit SvAreaScene(area::AREA_DATA *area_data);
     ~SvAreaScene() { deleteLater(); }
     
-    QGraphicsRectItem* ltsq;
-    QGraphicsRectItem* rtsq;
-    QGraphicsRectItem* lbsq;
-    QGraphicsRectItem* rbsq;
+//    QGraphicsRectItem* ltsq;
+//    QGraphicsRectItem* rtsq;
+//    QGraphicsRectItem* lbsq;
+//    QGraphicsRectItem* rbsq;
     
     QList<SvMapObject*> mapObjects() { return _mapObjects; }  
 
     void addMapObject(SvMapObject* object){ addItem(object); _mapObjects.append(object); }
-    void removeMapObject(SvMapObject* object) { removeItem(object); _mapObjects.removeOne(object); }
+    void removeMapObject(SvMapObject* object) { _mapObjects.removeOne(object); removeItem(object); }
   
     void setMapObjectPos(SvMapObject* mapObject, const geo::GEOPOSITION& geopos);
     
@@ -304,7 +304,7 @@ private:
   void mousePressEvent(QMouseEvent * event) Q_DECL_OVERRIDE;
   void mouseReleaseEvent(QMouseEvent * event) Q_DECL_OVERRIDE;
   void mouseMoveEvent(QMouseEvent * event) Q_DECL_OVERRIDE;
-  void mouseDoubleClickEvent(QMouseEvent * event) Q_DECL_OVERRIDE;
+//  void mouseDoubleClickEvent(QMouseEvent * event) Q_DECL_OVERRIDE;
   
   void drawBackground(QPainter *painter, const QRectF &r);
 
@@ -318,11 +318,13 @@ private:
   QColor _gridMajorColor;
   QColor _mapCoastColor;
   QColor _fontColor;
+  QColor _scaleColor;
   
   QPen _penBorder;
   QPen _penMajorLine;
   QPen _penMinorLine;
   QPen _pen_coastLine;
+  QPen _pen_scale;
 
 //  QWidget* _parentWidget;
 

@@ -53,7 +53,8 @@ void ais::SvSelfAIS::close()
 
 bool ais::SvSelfAIS::start(quint32 msecs)
 {
-
+  
+  
 }
 
 void ais::SvSelfAIS::stop()
@@ -120,10 +121,14 @@ qreal ais::SvSelfAIS::distanceTo(ais::SvAIS* remoteAIS)
 void ais::SvSelfAIS::write(const QString &message)
 {
   _log << svlog::Time << svlog::Data << message << svlog::endl;
+  udp = new QUdpSocket();
+//  _port.write(message.toStdString().c_str(), message.size());
+  QByteArray b(message.toStdString().c_str(), message.size());
+  udp->writeDatagram(b, QHostAddress("192.168.44.228"), 29421);
   
-  _port.write(message.toStdString().c_str(), message.size());
   _log << svlog::Data << svlog::Time << message << svlog::endl;
   
+  udp->close();
 }
 
 void ais::SvSelfAIS::setSerialPortParams(const SerialPortParams& params)

@@ -55,8 +55,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>386</width>
-               <height>270</height>
+               <width>236</width>
+               <height>176</height>
               </rect>
              </property>
              <attribute name="label">
@@ -207,8 +207,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>386</width>
-               <height>270</height>
+               <width>98</width>
+               <height>127</height>
               </rect>
              </property>
              <attribute name="label">
@@ -312,7 +312,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>386</width>
+               <width>383</width>
                <height>270</height>
               </rect>
              </property>
@@ -1255,7 +1255,7 @@
    <widget class="QWidget" name="dockWidgetContents_3">
     <layout class="QVBoxLayout" name="verticalLayout_13">
      <item>
-      <widget class="QTextEdit" name="textEdit_2">
+      <widget class="QTextEdit" name="textMapObjectInfo">
        <property name="styleSheet">
         <string notr="true">background-color: rgb(240, 240, 240);</string>
        </property>

@@ -22,7 +22,6 @@ class SvVesselEditor : public QDialog
   
 public:
   enum ShowMode { smNew = 0, smEdit = 1 };
-  enum ResultCode { rcSqlError = -1, rcNoError };
                   
   explicit SvVesselEditor(QWidget *parent, int vesselId = -1, bool self = false);
 
@@ -35,8 +34,8 @@ public:
   int     t_vessel_id = -1;
   bool    t_self = false;
   QString t_static_callsign = "";
-  QString t_static_imo = "";
-  QString t_static_mmsi = "";
+  quint32 t_static_imo = 0;
+  quint32 t_static_mmsi = 0;
   quint32 t_static_type_id;
   QString t_static_vessel_type_name = "";
   quint32 t_static_length = 1;

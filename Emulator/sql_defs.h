@@ -96,7 +96,7 @@
                        "               voyage_destination = '%7', " CR \
                        "               voyage_draft = %8, " CR \
                        "               voyage_cargo_type_id = %9, " CR \
-                       "               voyage_team = %10)  " CR \
+                       "               voyage_team = %10  " CR \
                        "WHERE vessel_id = %11 "
 
 
