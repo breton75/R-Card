@@ -160,7 +160,64 @@ QString nmea::ais_message_1(quint8 repeat_indicator, quint32 mmsi, quint8 nav_st
   
 }
 
+QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData& static_data, ais::aisDynamicData& dynamic_data, ais::aisNavStat& navstat)
+{
+  QStringList result = QStringList();
+  
+  quint8 b6[71];
+  memset(&b6, 0, 71);
+  
+  /// Message ID
+  b6[0] = 5;
+  
+  /// Repeat indicator
+  b6[1] = (repeat_indicator & 0x03) << 4; // 2 значащих бита
+  
+  /// User ID
+  quint64 mmsi64 = mmsi & 0x3FFFFFFF; // 30 значащих бит
+  mmsi64 <<= 32; // << 32;
+  
+  for(int i = 0; i < 6; i++) {
+    mmsi64 >>= 2;
+    b6[1 + i] += (mmsi64 >> (56 - i * 8));
+    mmsi64 &= (0x00FFFFFFFFFFFFFF >> (i * 8));
+  }
+  
+  /// AIS version indicator 
+  b6[6] += 0x0C; // 2 значащих бита
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  /// формируем сообщение
+  QString msg = "";
+  for(int i = 0; i < 28; i++)
+    msg.append(SIXBIT_SYMBOLS.value(b6[i]));  // message id
+  
+  result = QString("$AIVDM,1,1,,A,%1,0*").arg(msg);
+  
+  quint8 src = 0;
+  for(int i = 1; i <= result.length() - 2; i++) {
+    src = src ^ quint8(result. at(i).toLatin1());
+  }
+  
+  result.append(QString("%1%2%3").arg(src, 2, 16).arg(QChar(13)).arg(QChar(10)).replace(' ', '0').toUpper());
+  
+  return result;
+  
+}
 
 
 QString nmea::lag_VBW(const geo::GEOPOSITION& geopos)
