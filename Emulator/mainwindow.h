@@ -52,6 +52,7 @@ public slots:
   ais::aisStaticData getAISStaticData(QSqlQuery* q);
   ais::aisVoyageData getAISVoyageData(QSqlQuery* q);
   ais::aisDynamicData getAISDynamicData(QSqlQuery* q);
+  ais::aisNavStat getNavStat(QSqlQuery* q);
   
   void updateMapObjectInfo(SvMapObject* mapObject);
   

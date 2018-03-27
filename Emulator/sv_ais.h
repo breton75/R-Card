@@ -15,7 +15,6 @@
 #include "sv_gps.h"
 #include "sv_idevice.h"
 #include "../../svlib/sv_log.h"
-#include "nmea.h"
 #include "sv_serialeditor.h"
 
 namespace ais {
@@ -31,11 +30,13 @@ namespace ais {
     
     quint32 id;                           // id судна в БД
     quint32 mmsi;                         // Номер MMSI
-    QString imo;                          // Номер Международной морской организации (IMO)
-    QString callsign;                     // Радиопозывной и название плавучего средства
+    quint32 imo;                          // Номер Международной морской организации (IMO)
+    QString callsign;                     // Радиопозывной
+    QString name;                         // Название плавучего средства
     quint32 length;                       // Габариты
     quint32 width;
-    QString type;                         // Тип плавучего средства
+    quint32 type_ITU_id;                  // Тип плавучего средства
+    QString type_name;
                                           // Данные о месте антенны (от ГНСС Глонасс или GPS)
       
   };
@@ -57,7 +58,7 @@ namespace ais {
   struct aisVoyageData {                     // Рейсовая информация
   
     QString destination;                  // Пункт назначения
-                                          // Время прибытия (ЕТА)
+    QDateTime eta;                        // Время прибытия (ЕТА)
     qreal draft;                          // Осадка судна
     QString cargo;                        // Информация о грузе (класс/категория груза)
     quint32 team;                         // Количество людей на борту
@@ -65,10 +66,11 @@ namespace ais {
   };
   
   struct aisNavStat {
+    int ITU_id;
     QString name;
     quint32 static_voyage_interval;
 //    quint32 voyage_interval;
-    quint32 dynamic_interval;
+//    quint32 dynamic_interval;
   };
   
   class SvAIS;
@@ -95,8 +97,8 @@ public:
   
   void setGeoPosition(const geo::GEOPOSITION& geopos) { _dynamic_data.geoposition = geopos; }
   
-  int navStatus() { return _nav_status; }
-  void setNavStatus(const int status) { _nav_status = status; }
+  ais::aisNavStat* navStatus() { return &_nav_status; }
+  void setNavStatus(const ais::aisNavStat status) { _nav_status = status; }
   
   ais::aisStaticData  *getStaticData() { return &_static_data; }
   ais::aisVoyageData  *getVoyageData() { return &_voyage_data; }
@@ -120,7 +122,7 @@ private:
   
   int _vessel_id = -1;
   
-  quint32 _nav_status = 1;
+  ais::aisNavStat _nav_status;
   
 //public slots:
 //  void newGPSData(const geo::GEOPOSITION& geopos);

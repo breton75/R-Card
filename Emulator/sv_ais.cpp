@@ -1,7 +1,8 @@
 #include "sv_ais.h"
+#include "nmea.h"
 
 //ais::SvAIS* SELF_AIS;
-QMap<int, ais::aisNavStat> NAVSTATS;
+QMap<quint32, ais::aisNavStat> NAVSTATs;
 
 /** --------- Self AIS --------- **/
 ais::SvSelfAIS::SvSelfAIS(int vessel_id, const ais::aisStaticData& sdata, const ais::aisVoyageData& vdata, const ais::aisDynamicData& ddata, svlog::SvLog &log)
@@ -91,8 +92,9 @@ void ais::SvSelfAIS::on_receive_ais_data(ais::SvAIS* otherAIS, ais::AISDataTypes
 
       case ais::adtDynamic:
       {
-        QString msg = nmea::ais_message_1(0, otherAIS->getStaticData()->mmsi, otherAIS->navStatus(), 10, otherAIS->getDynamicData()->geoposition);
-        emit write_message(msg);
+        
+//        QString msg = nmea::ais_message_1(0, otherAIS->getStaticData()->mmsi, otherAIS->navStatus(), 10, otherAIS->getDynamicData()->geoposition);
+//        emit write_message(msg);
         
         break;
        } 
@@ -179,10 +181,10 @@ bool ais::SvOtherAIS::start(quint32 msecs)
 //  connect(&_timer_voyage, &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_voyage);
   connect(&_timer_dynamic, &QTimer::timeout, this, &ais::SvOtherAIS::on_timer_dynamic);
   
-  _static_voyage_interval = NAVSTATS.value(_nav_status).static_voyage_interval;
+  _static_voyage_interval = _nav_status.static_voyage_interval;
 //  _voyage_interval = NAVSTATS.value(_nav_status).voyage_interval;
   
-  switch (_nav_status) {
+  switch (_nav_status.ITU_id) {
     case 2:
     case 6:
       _dynamic_interval = _dynamic_data.geoposition.speed > 3 ? 10 * 1000 : 3 * 60 * 1000;

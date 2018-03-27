@@ -21,13 +21,13 @@ QMap<nmea::NMEASentence, QString> SENTENCES = {{nmea::ABK_UAIS_Addressed_and_bin
                                          {nmea::VSD_UAIS_Voyage_Static_Data, "VSD"},
                                          {nmea::Q_Query, "Q"}};
 
-inline QString str_to_6bit(const QString& str)
+inline QString nmea::str_to_6bit(const QString& str)
 {
   QString result = "";
   
-  for(int i = 1; i < str.count(); i++) {
-    
-    quint8 n = quint8(str.at(i).unicode());
+  for(int i = 0; i < str.count(); i++) {
+        
+    quint8 n = quint8(str.at(i).toLatin1()); // unicode());
     
     n += 0x28;  // 00101000
     n = n > 0x80 ? n + 0x20 : n + 0x28;
@@ -39,7 +39,7 @@ inline QString str_to_6bit(const QString& str)
       break;
       
     }
-    
+
     result.append(SIXBIT_SYMBOLS.value(n));
 
   }
@@ -160,7 +160,7 @@ QString nmea::ais_message_1(quint8 repeat_indicator, quint32 mmsi, quint8 nav_st
   
 }
 
-QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData& static_data, ais::aisDynamicData& dynamic_data, ais::aisNavStat& navstat)
+QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData* static_data, ais::aisVoyageData* voyage_data, ais::aisNavStat* navstat)
 {
   QStringList result = QStringList();
   
@@ -174,7 +174,7 @@ QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData& sta
   b6[1] = (repeat_indicator & 0x03) << 4; // 2 значащих бита
   
   /// User ID
-  quint64 mmsi64 = mmsi & 0x3FFFFFFF; // 30 значащих бит
+  quint64 mmsi64 = static_data->mmsi & 0x3FFFFFFF; // 30 значащих бит
   mmsi64 <<= 32; // << 32;
   
   for(int i = 0; i < 6; i++) {
@@ -184,34 +184,86 @@ QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData& sta
   }
   
   /// AIS version indicator 
-  b6[6] += 0x0C; // 2 значащих бита
+  b6[6] += 0x0C; // 2 значащих бита // 3 = station compliant with future editions 
 
+  
+  /// IMO number
+  quint64 imo64 = static_data->imo & 0x3FFFFFFF; // 30 значащих бит
+  imo64 <<= 28; // << 28;
+  
+  for(int i = 0; i < 6; i++) {
+    b6[6 + i] += (imo64 >> (56 - i * 8));
+    imo64 &= (0x00FFFFFFFFFFFFFF >> (i * 8));
+    imo64 >>= 2;
+  }
 
+  /// Callsign
+  QByteArray str6bit = str_to_6bit(static_data->callsign.left(7)).toLatin1(); // макс. 7 символов
+  str6bit.insert(0, 7 - str6bit.length(), char(0));
+  
+  int idx = 11;
+  for(quint8 c: str6bit) {
+    
+    b6[idx] += c >> 4;
+    idx ++;
+    b6[idx] += c << 4;
+    
+  }
 
+  /// Name  // idx продолжается дальше
+  str6bit = str_to_6bit(static_data->name.left(20)).toLatin1(); // макс. 20 символов
+  str6bit.insert(0, 20 - str6bit.length(), char(0));
+  
+  for(quint8 c: str6bit) {
+    
+    b6[idx] += c >> 4;
+    idx ++;
+    b6[idx] += c << 4;
+    
+  }
 
+  /// Type of ship and cargo type
+  b6[38] += static_data->type_ITU_id >> 6;
+  b6[39] = static_data->type_ITU_id & 0x3F;
 
+  
+  /// Overall dimension/ reference for position
+  quint16 B = static_data->length / 2 > 0x01FF ? 0x01FF : quint16(static_data->length / 2);
+  quint16 A = static_data->length - B > 0x01FF ? 0x01FF : quint16(static_data->length - B);
+  quint8 D = static_data->width / 2 > 0x3F ? 0x3F : quint8(static_data->width / 2);
+  quint8 C = static_data->width - D > 0x3F ? 0x3F : quint8(static_data->width - D);
 
+  b6[40] += D;
+  b6[41] += C;
+  b6[42] += quint8(B >> 3);
+  b6[43] += quint8((B & 0x07) << 3);
+  b6[43] += quint8(A >> 6);
+  b6[44] += quint8(A & 0x3F);
 
-
-
-
-
-
-
-
-
+  /// Type of electronic position fixing device
+  b6[45] += 0x0C;  // 3 = combined GPS/GLONASS
+  
+  
+  /// Estimated time of arrival
+  quint8 minute = voyage_data->eta.time().minute();
+  quint8 hour = voyage_data->eta.time().hour();
+  quint8 day = voyage_data->eta.date().day();
+  quint8 month = voyage_data->eta.date().month();
+  
+  
+  
   
   /// формируем сообщение
   QString msg = "";
   for(int i = 0; i < 28; i++)
     msg.append(SIXBIT_SYMBOLS.value(b6[i]));  // message id
   
-  result = QString("$AIVDM,1,1,,A,%1,0*").arg(msg);
+//  result = QString("$AIVDM,1,1,,A,%1,0*").arg(msg);
   
   quint8 src = 0;
-  for(int i = 1; i <= result.length() - 2; i++) {
-    src = src ^ quint8(result. at(i).toLatin1());
-  }
+//  for(int i = 1; i <= result.length() - 2; i++) {
+//    src = src ^ quint8(result. at(i).toLatin1());
+//  }
   
   result.append(QString("%1%2%3").arg(src, 2, 16).arg(QChar(13)).arg(QChar(10)).replace(' ', '0').toUpper());
   

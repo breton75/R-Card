@@ -34,6 +34,7 @@ SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId, bool self) :
       
       t_self = q->value("self").toBool();            
       t_static_callsign = q->value("static_callsign").toString();
+      t_static_name = q->value("static_name").toString();
       t_static_imo = q->value("static_imo").toUInt();
       t_static_mmsi = q->value("static_mmsi").toUInt();
       t_static_type_id = q->value("static_type_id").toUInt();
@@ -42,6 +43,7 @@ SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId, bool self) :
       t_static_width = q->value("static_width").toUInt();
                                  
       t_voyage_destination = q->value("voyage_destination").toString();
+      t_voyage_eta = q->value("voyage_eta").toDateTime();
       t_voyage_draft = q->value("voyage_draft").toReal();
       t_voyage_cargo_type_id = q->value("voyage_cargo_type_id").toUInt();
       t_voyage_cargo_type_name = q->value("voyage_cargo_type_name").toString();
@@ -66,6 +68,8 @@ SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId, bool self) :
   ui->ediId->setText(showMode == smNew ? "<Новый>" : QString::number(t_vessel_id));
 //  ui-> set(t_self = false;
   ui->editCallsign->setText(t_static_callsign);
+  ui->editName->setText(t_static_name);
+  
   ui->spinIMO->setValue(t_static_imo);
   ui->spinMMSI->setValue(t_static_mmsi);
   
@@ -75,6 +79,7 @@ SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId, bool self) :
   ui->spinWidth->setValue(t_static_width);
   
   ui->editDestination->setText(t_voyage_destination);
+  ui->dateTimeEstimatedTimeOfArrival->setDateTime(t_voyage_eta);
   ui->dspinDraft->setValue(t_voyage_draft);
       
   ui->cbCargoType->setCurrentIndex(ui->cbCargoType->findData(t_voyage_cargo_type_id));
@@ -116,7 +121,7 @@ void SvVesselEditor::loadVesselTypes()
   
   while(q->next())
     ui->cbVesselType->addItem(q->value("type_name").toString(),
-                              q->value("id").toInt());
+                              q->value("ITU_id").toUInt());
 
   q->finish();
   delete q;
@@ -168,6 +173,7 @@ void SvVesselEditor::accept()
 {
 
   t_static_callsign = ui->editCallsign->text();
+  t_static_name = ui->editName->text();
   t_static_imo = ui->spinIMO->value();
   t_static_mmsi = ui->spinMMSI->value();
   
@@ -177,6 +183,7 @@ void SvVesselEditor::accept()
   t_static_width = ui->spinWidth->value();
   
   t_voyage_destination = ui->editDestination->text();
+  t_voyage_eta = ui->dateTimeEstimatedTimeOfArrival->dateTime();
   t_voyage_draft = ui->dspinDraft->value();
       
   t_voyage_cargo_type_id = ui->cbCargoType->currentData().toUInt();
@@ -210,9 +217,11 @@ void SvVesselEditor::accept()
                                 .arg(t_static_imo)
                                 .arg(t_static_type_id)
                                 .arg(t_static_callsign)
+                                .arg(t_static_name)
                                 .arg(t_static_length)
                                 .arg(t_static_width)
                                 .arg(t_voyage_destination)
+                                .arg(t_voyage_eta)
                                 .arg(t_voyage_draft)
                                 .arg(t_voyage_cargo_type_id)
                                 .arg(t_voyage_team));
@@ -259,9 +268,11 @@ void SvVesselEditor::accept()
                                         .arg(t_static_imo)
                                         .arg(t_static_type_id)
                                         .arg(t_static_callsign)
+                                        .arg(t_static_name)
                                         .arg(t_static_length)
                                         .arg(t_static_width)  
                                         .arg(t_voyage_destination)
+                                        .arg(t_voyage_eta)
                                         .arg(t_voyage_draft)
                                         .arg(t_voyage_cargo_type_id)
                                         .arg(t_voyage_team)

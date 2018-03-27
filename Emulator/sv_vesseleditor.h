@@ -34,6 +34,7 @@ public:
   int     t_vessel_id = -1;
   bool    t_self = false;
   QString t_static_callsign = "";
+  QString t_static_name = "";
   quint32 t_static_imo = 0;
   quint32 t_static_mmsi = 0;
   quint32 t_static_type_id;
@@ -42,6 +43,7 @@ public:
   quint32 t_static_width = 1;
   
   QString t_voyage_destination = "";
+  QDateTime t_voyage_eta = QDateTime::currentDateTime();
   qreal   t_voyage_draft = 1.0;
   quint32 t_voyage_cargo_type_id = 0;
   QString t_voyage_cargo_type_name = "";

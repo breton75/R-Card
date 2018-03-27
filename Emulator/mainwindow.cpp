@@ -17,7 +17,8 @@ QMap<int, QListWidgetItem*> LISTITEMs;
 //extern QMap<int, vsl::SvVessel*> VESSELS;
 extern SvVesselEditor* VESSELEDITOR_UI;
 
-extern QMap<int, ais::aisNavStat> NAVSTATS;
+extern QMap<quint32, ais::aisNavStat> NAVSTATs;
+
 
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
@@ -90,6 +91,7 @@ bool MainWindow::init()
     _query = new QSqlQuery(SQLITE->db);
     
     /** грузим списки **/
+    /// список навигационных статусов
     if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELECT_NAV_STATS), _query).type()) 
       _exception.raise(_query->lastError().databaseText());
 
@@ -97,16 +99,16 @@ bool MainWindow::init()
       
       ais::aisNavStat stat;
       
-      int id = _query->value("id").toInt();
+      stat.ITU_id = _query->value("ITU_id").toUInt();
       stat.name = _query->value("status_name").toString();
       stat.static_voyage_interval = _query->value("static_voyage_interval").toUInt();
 //      stat.voyage_interval = _query->value("voyage_interval").toUInt();
-      stat.dynamic_interval = _query->value("dynamic_interval").toUInt();
+//      stat.dynamic_interval = _query->value("dynamic_interval").toUInt();
 
-      NAVSTATS.insert(id, stat);
+      NAVSTATs.insert(stat.ITU_id, stat);
     }
-    
     _query->finish();
+    
     
     qInfo() << 1;
     
@@ -173,6 +175,7 @@ SV:
     
     connect(this, SIGNAL(newState(States)), this, SLOT(stateChanged(States)));
    
+    nmea::ais_message_5(0, _self_ais->getStaticData(), _self_ais->getVoyageData(), _self_ais->navStatus());
     
     return true;
   }
@@ -285,11 +288,13 @@ ais::aisStaticData  MainWindow::getAISStaticData(QSqlQuery* q)
   ais::aisStaticData result;
   result.id = q->value("id").toUInt();
   result.mmsi = q->value("static_mmsi").toUInt();
-  result.imo = q->value("static_imo").toString();
+  result.imo = q->value("static_imo").toUInt();
   result.callsign = q->value("static_callsign").toString();
+  result.name = q->value("static_name").toString();
   result.length = q->value("static_length").isNull() ? 20 : q->value("static_length").toUInt();
   result.width = q->value("static_width").isNull() ? 20 : q->value("static_width").toUInt();
-  result.type = q->value("static_vessel_type_name").toString();
+  result.type_ITU_id = q->value("static_type_ITU_id").toUInt();
+  result.type_name = q->value("static_vessel_type_name").toString();
   
   return result;
 }
@@ -299,6 +304,7 @@ ais::aisVoyageData MainWindow::getAISVoyageData(QSqlQuery* q)
   ais::aisVoyageData result;
   result.cargo = q->value("voyage_cargo_type_name").toString();
   result.destination = q->value("voyage_destination").toString();
+  result.eta = q->value("voyage_eta").toDateTime();  
   result.draft = q->value("voyage_draft").toReal();
   result.team = q->value("voyage_team").toUInt();
   
@@ -312,8 +318,17 @@ ais::aisDynamicData MainWindow::getAISDynamicData(QSqlQuery* q)
   result.geoposition.longtitude = q->value("dynamic_longtitude").isNull() ? -1.0 : q->value("dynamic_longtitude").toReal();
   result.geoposition.course = q->value("dynamic_course").isNull() ? -1 : q->value("dynamic_course").toReal();
   result.geoposition.speed = q->value("dynamic_speed").isNull() ? -1 : q->value("dynamic_speed").toReal();
-//  result.navstat = q->value("nav_status_id").toUInt();
-  
+ 
+  return result;
+}
+
+ais::aisNavStat MainWindow::getNavStat(QSqlQuery* q)
+{
+  ais::aisNavStat result;
+  result.ITU_id = q->value("nav_status_ITU_id").toUInt(); 
+  result.name = q->value("nav_status_name").toString(); 
+  result.static_voyage_interval = q->value("nav_status_static_voyage_interval").toUInt(); 
+//  result.ITU_id = q->value("nav_status_ITU_id").toUInt(); 
   return result;
 }
 
@@ -516,7 +531,7 @@ void MainWindow::updateMapObjectInfo(SvMapObject* mapObject)
                             .arg(a->getDynamicData()->geoposition.course)
                             .arg(QChar(176))
                             .arg(a->getDynamicData()->geoposition.speed, 0, 'g', 2)
-                            .arg(NAVSTATS.value(a->navStatus()).name));
+                            .arg(a->navStatus()->name));
         
       }
         
@@ -540,7 +555,8 @@ vsl::SvVessel *MainWindow::createSelfVessel(QSqlQuery* q)
   ais::aisVoyageData voyage_data = getAISVoyageData(q);
   ais::aisDynamicData dynamic_data = getAISDynamicData(q);
   gps::gpsInitParams gps_params = getGPSInitParams(q, dynamic_data, vessel_id);
-                     
+  ais::aisNavStat nav_stat = getNavStat(q);
+  
   
   /** ----- создаем устройства ------ **/
   // GPS
@@ -551,6 +567,7 @@ vsl::SvVessel *MainWindow::createSelfVessel(QSqlQuery* q)
   _self_ais = new ais::SvSelfAIS(vessel_id, static_data, voyage_data, dynamic_data, log);
   _self_ais->setReceiveRange(ui->dspinAISRadius->value()); /** надо переделать */
   AISs.insert(vessel_id, _self_ais);
+  _self_ais->setNavStatus(nav_stat);
   
   // LAG
   _self_lag = new lag::SvLAG(vessel_id, dynamic_data.geoposition, log);
@@ -610,7 +627,7 @@ vsl::SvVessel *MainWindow::createOtherVessel(QSqlQuery* q)
   ais::aisVoyageData voyage_data = getAISVoyageData(q);
   ais::aisDynamicData dynamic_data = getAISDynamicData(q);
   gps::gpsInitParams gps_params = getGPSInitParams(q, dynamic_data, vessel_id);
-                     
+  ais::aisNavStat nav_stat = getNavStat(q);                     
   
   /** ----- создаем устройства ------ **/
   // GPS
@@ -622,7 +639,7 @@ vsl::SvVessel *MainWindow::createOtherVessel(QSqlQuery* q)
   ais::SvOtherAIS* newAIS;
   newAIS = new ais::SvOtherAIS(vessel_id, static_data, voyage_data, dynamic_data);
   AISs.insert(vessel_id, newAIS);
-
+  newAIS->setNavStatus(nav_stat);
   
   /** --------- создаем объект судна -------------- **/
   vsl::SvVessel* newVessel = new vsl::SvVessel(this, vessel_id);
