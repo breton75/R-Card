@@ -21,9 +21,9 @@ QMap<nmea::NMEASentence, QString> SENTENCES = {{nmea::ABK_UAIS_Addressed_and_bin
                                          {nmea::VSD_UAIS_Voyage_Static_Data, "VSD"},
                                          {nmea::Q_Query, "Q"}};
 
-inline QString nmea::str_to_6bit(const QString& str)
+inline QByteArray nmea::str_to_6bit(const QString& str)
 {
-  QString result = "";
+  QByteArray result = "";
   
   for(int i = 0; i < str.count(); i++) {
         
@@ -33,14 +33,16 @@ inline QString nmea::str_to_6bit(const QString& str)
     n = n > 0x80 ? n + 0x20 : n + 0x28;
     n &= 0x3f;
     
-    if(SIXBIT_SYMBOLS.find(n) == SIXBIT_SYMBOLS.end()) {
+    result.append(n);
+    
+//    if(SIXBIT_SYMBOLS.find(n) == SIXBIT_SYMBOLS.end()) {
       
-      result.clear();
-      break;
+//      result.clear();
+//      break;
       
-    }
+//    }
 
-    result.append(SIXBIT_SYMBOLS.value(n));
+//    result.append(SIXBIT_SYMBOLS.value(n));
 
   }
   
@@ -198,27 +200,31 @@ QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData* sta
   }
 
   /// Callsign
-  QByteArray str6bit = str_to_6bit(static_data->callsign.left(7)).toLatin1(); // макс. 7 символов
-  str6bit.insert(0, 7 - str6bit.length(), char(0));
+  QByteArray str6bit = str_to_6bit(static_data->callsign.left(7)); //.toLatin1(); // макс. 7 символов
+//  str6bit.insert(0, 7 - str6bit.length(), char('0'));
   
   int idx = 11;
   for(quint8 c: str6bit) {
     
     b6[idx] += c >> 4;
-    idx ++;
-    b6[idx] += c << 4;
+    idx++;
+    b6[idx] += (c & 0x0F) << 2;
     
   }
-
-  /// Name  // idx продолжается дальше
-  str6bit = str_to_6bit(static_data->name.left(20)).toLatin1(); // макс. 20 символов
-  str6bit.insert(0, 20 - str6bit.length(), char(0));
   
+  /// Name  // idx продолжается дальше
+  str6bit = str_to_6bit(static_data->name.left(20)); //.toLatin1(); // макс. 20 символов
+//  str6bit.insert(0, 20 - str6bit.length(), char('0'));
+  
+  qDebug() << str6bit << int('P') << int('O');
+  idx = 18;
+  memset(&b6[18], 1, 20);
   for(quint8 c: str6bit) {
     
-    b6[idx] += c >> 4;
-    idx ++;
-    b6[idx] += c << 4;
+//    b6[idx] += c >> 4;
+//    idx++;
+//    b6[idx] += (c & 0x0F) << 2;
+//    qDebug() << "name" << idx << char(c) << b6[idx - 1] << b6[idx];
     
   }
 
@@ -245,28 +251,76 @@ QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData* sta
   
   
   /// Estimated time of arrival
-  quint8 minute = voyage_data->eta.time().minute();
-  quint8 hour = voyage_data->eta.time().hour();
-  quint8 day = voyage_data->eta.date().day();
-  quint8 month = voyage_data->eta.date().month();
+  quint8 minute = voyage_data->eta.time().minute() & 0x3F;  // 6 bits
+  quint8 hour = voyage_data->eta.time().hour() & 0x1F;      // 5 bits
+  quint8 day = voyage_data->eta.date().day() & 0x1F;        // 5 bits
+  quint8 month = voyage_data->eta.date().month() & 0x0F;    // 4 bits
+  
+  b6[45] += minute >> 4;
+  b6[46] += (minute & 0x0F) << 2;
+  
+  b6[46] += hour >> 3;
+  b6[47] += (hour & 0x07) << 3;
+  
+  b6[47] += day >> 2;
+  b6[48] += (day & 0x03) << 4;
+  
+  b6[48] += month;
   
   
+  /// Maximum present static draught
+  quint8 draft = voyage_data->draft * 10 > 255 ? 255 : quint8(trunc(voyage_data->draft * 10));
+  
+  b6[49] += draft >> 2;
+  b6[50] += (draft & 0x03) << 4;
+  
+  /// Destination
+  str6bit = str_to_6bit(voyage_data->destination.left(20)); //.toLatin1(); // макс. 20 символов
+//  str6bit.insert(0, 20 - str6bit.length(), char('0'));
+  
+  idx = 51;
+  for(quint8 c: str6bit) {
+    
+    b6[idx] += c >> 2;
+    idx ++;
+    b6[idx] += (c & 0x03) << 4;
+    
+  }
+  
+  /// Data terminal equipment (DTE) 
+  b6[70] += 0;    // 0 = available
+  
+  /// Spare. Not used. Should be set to zero
+  b6[70] += 0;
   
   
   /// формируем сообщение
   QString msg = "";
-  for(int i = 0; i < 28; i++)
+  for(int i = 0; i < 71; i++) {
+    if(SIXBIT_SYMBOLS.find(b6[i]) == SIXBIT_SYMBOLS.end())
+      qDebug() << "no found" << i << b6[i] << char(b6[i]);
     msg.append(SIXBIT_SYMBOLS.value(b6[i]));  // message id
+  }
   
-//  result = QString("$AIVDM,1,1,,A,%1,0*").arg(msg);
-  
-  quint8 src = 0;
-//  for(int i = 1; i <= result.length() - 2; i++) {
-//    src = src ^ quint8(result. at(i).toLatin1());
-//  }
-  
-  result.append(QString("%1%2%3").arg(src, 2, 16).arg(QChar(13)).arg(QChar(10)).replace(' ', '0').toUpper());
-  
+  int total_count = int(ceil(qreal(msg.length()) / 62.0));
+  qDebug() << msg.length() << total_count;
+  for(int i = 0; i < total_count; i++) {
+    
+    
+    QString s = QString("$AIVDM,%1,%2,%3,A,%4,0*")
+                              .arg(total_count)
+                              .arg(i + 1)
+                              .arg(0)
+                              .arg(msg.mid(0 + 62 * i, 62));
+    
+        quint8 src = 0;
+        for(int j = 1; j <= s.length() - 2; j++) {
+          src = src ^ quint8(s.at(j).toLatin1());
+        }
+          
+        result.append(QString("%1%2").arg(s).arg(QString("%1%2%3").arg(src, 2, 16).arg(QChar(13)).arg(QChar(10)).replace(' ', '0').toUpper()));
+  }
+    
   return result;
   
 }

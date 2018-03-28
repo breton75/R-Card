@@ -29,7 +29,7 @@ namespace nmea {
 
 
   /** NMEA 0183 Version 3.01 --- TABLE 7 - SIX-BIT BINARY FIELD CONVERSION TABLE **/
-  inline QString str_to_6bit(const QString& str);
+  inline QByteArray str_to_6bit(const QString& str);
 
   
   QString ais_message_1(quint8 repeat_indicator, quint32 mmsi, quint8 nav_status, qint8 rot, geo::GEOPOSITION& geopos);

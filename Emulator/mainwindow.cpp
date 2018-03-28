@@ -175,7 +175,9 @@ SV:
     
     connect(this, SIGNAL(newState(States)), this, SLOT(stateChanged(States)));
    
-    nmea::ais_message_5(0, _self_ais->getStaticData(), _self_ais->getVoyageData(), _self_ais->navStatus());
+    QStringList l = nmea::ais_message_5(0, _self_ais->getStaticData(), _self_ais->getVoyageData(), _self_ais->navStatus());
+    for(QString s: l)
+      qDebug() << s;
     
     return true;
   }
