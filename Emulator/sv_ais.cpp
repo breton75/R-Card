@@ -129,7 +129,8 @@ void ais::SvSelfAIS::write(const QString &message)
   QByteArray b(message.toStdString().c_str(), message.size());
   udp->writeDatagram(b, QHostAddress("192.168.44.228"), 29421);
   udp->close();
-
+  delete udp;
+  
   _log << svlog::Data << svlog::Time << message << svlog::endl;
   
 }

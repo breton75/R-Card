@@ -33,7 +33,7 @@ inline QByteArray nmea::str_to_6bit(const QString& str)
     n = n > 0x80 ? n + 0x20 : n + 0x28;
     n &= 0x3f;
     
-    result.append(n);
+    result.append(char(n));
     
 //    if(SIXBIT_SYMBOLS.find(n) == SIXBIT_SYMBOLS.end()) {
       
@@ -200,31 +200,28 @@ QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData* sta
   }
 
   /// Callsign
-  QByteArray str6bit = str_to_6bit(static_data->callsign.left(7)); //.toLatin1(); // макс. 7 символов
-//  str6bit.insert(0, 7 - str6bit.length(), char('0'));
+  QString po = "7777777";
+  QByteArray str6bit = po.toLatin1(); // str_to_6bit(po); // static_data->callsign.left(7)); //.toLatin1(); // макс. 7 символов
+  str6bit.insert(0, 7 - str6bit.length(), char(0));
   
   int idx = 11;
-  for(quint8 c: str6bit) {
+  qDebug() << po.length() << str6bit.length();
+  for(int i = 0; i < str6bit.length(); i++) {  // static_data->callsign.length()
     
-    b6[idx] += c >> 4;
-    idx++;
+    qDebug() << QString("%1  %2").arg(quint8(str6bit.at(i)), 0, 16).arg(quint8(po.at(i).toLatin1()) & 0x3F, 0, 16);
+    quint8 c = str6bit.at(i) & 0x3F;  //  quint8(po.at(i).toLatin1()) & 0x3F; //
+    b6[idx++] += c >> 4;
+//    idx ++;
     b6[idx] += (c & 0x0F) << 2;
     
   }
-  
+
   /// Name  // idx продолжается дальше
-  str6bit = str_to_6bit(static_data->name.left(20)); //.toLatin1(); // макс. 20 символов
-//  str6bit.insert(0, 20 - str6bit.length(), char('0'));
-  
-  qDebug() << str6bit << int('P') << int('O');
-  idx = 18;
-  memset(&b6[18], 1, 20);
-  for(quint8 c: str6bit) {
+  for(int i = 0; i < static_data->name.length(); i++) {
     
-//    b6[idx] += c >> 4;
-//    idx++;
-//    b6[idx] += (c & 0x0F) << 2;
-//    qDebug() << "name" << idx << char(c) << b6[idx - 1] << b6[idx];
+    quint8 c = quint8(static_data->name.at(i).toLatin1()) &0x3F;
+    b6[idx++] += c >> 4;
+    b6[idx] += (c & 0x0F) << 2;
     
   }
 
@@ -275,14 +272,11 @@ QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData* sta
   b6[50] += (draft & 0x03) << 4;
   
   /// Destination
-  str6bit = str_to_6bit(voyage_data->destination.left(20)); //.toLatin1(); // макс. 20 символов
-//  str6bit.insert(0, 20 - str6bit.length(), char('0'));
-  
-  idx = 51;
-  for(quint8 c: str6bit) {
+  idx = 50;
+  for(int i = 0; i < voyage_data->destination.length(); i++) {
     
-    b6[idx] += c >> 2;
-    idx ++;
+    quint8 c = quint8(voyage_data->destination.at(i).toLatin1()) & 0x3F;
+    b6[idx++] += c >> 2;
     b6[idx] += (c & 0x03) << 4;
     
   }
@@ -296,21 +290,16 @@ QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData* sta
   
   /// формируем сообщение
   QString msg = "";
-  for(int i = 0; i < 71; i++) {
-    if(SIXBIT_SYMBOLS.find(b6[i]) == SIXBIT_SYMBOLS.end())
-      qDebug() << "no found" << i << b6[i] << char(b6[i]);
+  for(int i = 0; i < 71; i++)
     msg.append(SIXBIT_SYMBOLS.value(b6[i]));  // message id
-  }
   
   int total_count = int(ceil(qreal(msg.length()) / 62.0));
-  qDebug() << msg.length() << total_count;
   for(int i = 0; i < total_count; i++) {
     
     
-    QString s = QString("$AIVDM,%1,%2,%3,A,%4,0*")
+    QString s = QString("!AIVDM,%1,%2,0,A,%3,0*")
                               .arg(total_count)
                               .arg(i + 1)
-                              .arg(0)
                               .arg(msg.mid(0 + 62 * i, 62));
     
         quint8 src = 0;

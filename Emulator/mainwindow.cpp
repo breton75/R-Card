@@ -176,8 +176,17 @@ SV:
     connect(this, SIGNAL(newState(States)), this, SLOT(stateChanged(States)));
    
     QStringList l = nmea::ais_message_5(0, _self_ais->getStaticData(), _self_ais->getVoyageData(), _self_ais->navStatus());
-    for(QString s: l)
-      qDebug() << s;
+    QUdpSocket* udp = new QUdpSocket();
+    for(QString s: l) {
+      QByteArray b(s.toStdString().c_str(), s.size());
+      udp->writeDatagram(b, QHostAddress("192.168.44.228"), 29421);
+      Sleep(100);
+      log << s << svlog::endl;
+//      qDebug() << s;
+      
+    }
+    udp->close();
+    delete udp;
     
     return true;
   }
