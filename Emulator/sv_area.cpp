@@ -92,7 +92,6 @@ area::SvArea::SvArea(QWidget *parent) :
   }
  
   
-  
   /* виджет карты */
   widgetMap = new QWidget(this);
   widgetMap->setObjectName(QStringLiteral("widgetMap"));
@@ -116,7 +115,7 @@ area::SvArea::SvArea(QWidget *parent) :
   lblCurrentInfo = new QLabel("");
   vlayFrameBottom->addWidget(lblCurrentInfo);
   
-  vlayCenter = new QVBoxLayout(this);
+  vlayCenter = new QVBoxLayout();
   vlayCenter->setSpacing(6);
   vlayCenter->setContentsMargins(11, 11, 11, 11);
   vlayCenter->setObjectName(QStringLiteral("vlayCenter"));

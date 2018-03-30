@@ -97,7 +97,7 @@
                        "               static_imo = %2, " CR \
                        "               static_type_ITU_id = %3, " CR \
                        "               static_callsign = '%4', " CR \
-                       "               static_callsign = '%5', " CR \
+                       "               static_name = '%5', " CR \
                        "               static_length = %6, " CR \
                        "               static_width = %7, " CR \
                        "               voyage_destination = '%8', " CR \
@@ -126,12 +126,16 @@
 #define SQL_SELECT_LAG_TYPES "select id, type_name from lag_types"
 
 
+#define SQL_SELECT_FROM_SERIAL_PARAMS  "SELECT id, device_type, vessel_id, port_name, baudrate, parity, stop_bits, " \
+                                       "data_bits, flow_control, description " \
+                                       "FROM serial_port_params"
+
 #define SQL_SELECT_COUNT_FROM_SERIAL_WHERE  "SELECT count() as count " \
                                       "FROM serial_port_params WHERE device_type = %1"
 
 #define SQL_INSERT_SERIAL  "INSERT INTO serial_port_params (device_type) VALUES(%1)"
 
 #define SQL_UPDATE_SERIAL_WHERE  "UPDATE serial_port_params SET port_name='%1', baudrate=%2, "\
-                                 "parity=%3, stop_bits=%4, data_bits=%5, flow_control=%6 WHERE device_type = %7"
+                                 "parity=%3, stop_bits=%4, data_bits=%5, flow_control=%6, description='%7' WHERE device_type = %8"
 
 #endif // SQL_DEFS_H

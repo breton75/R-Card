@@ -9,23 +9,25 @@
 #include "../../svlib/sv_sqlite.h"
 #include "sql_defs.h"
 #include "sv_exception.h"
+#include "sv_idevice.h"
 
 namespace Ui {
 class SvSerialEditorDialog;
 }
 
-enum SerialDevices {
-  sdLAG = 0,
-  sdAIS,
-  sdNAVTEK,
-  sdECHO
-};
+//enum SerialDevices {
+//  sdLAG = 0,
+//  sdAIS,
+//  sdNAVTEK,
+//  sdECHO
+//};
 
 struct SerialPortParams {
 //public:
   SerialPortParams() {  }
-  SerialPortParams(SerialDevices type) { dev_type = type; }
-  SerialDevices dev_type;
+  SerialPortParams(idev::SvSimulatedDeviceTypes type) { dev_type = type; }
+  idev::SvSimulatedDeviceTypes dev_type;
+  QString description = "";
   QString name = "COM1";
   quint32 baudrate = 9600;
   QSerialPort::DataBits databits = QSerialPort::Data8;
@@ -71,7 +73,7 @@ private:
                                                    {QSerialPort::HardwareControl, "Аппаратное"},
                                                    {QSerialPort::SoftwareControl, "Программное"}};
   
-  QMap<SerialDevices, QString> devices_list = {{sdLAG, "ЛАГ"}, {sdAIS, "АИС"}, {sdNAVTEK, "НАВТЭК"}};
+  QMap<idev::SvSimulatedDeviceTypes, QString> devices_list = {{idev::sdtLAG, "ЛАГ"}, {idev::sdtSelfAIS, "АИС"}, {idev::sdtNavteks, "НАВТЭК"}};
   
   SvException _exception;
   QString _last_error = "";

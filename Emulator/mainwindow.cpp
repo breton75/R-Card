@@ -53,11 +53,13 @@ MainWindow::MainWindow(QWidget *parent) :
   log = svlog::SvLog(ui->textLog);
   
   QList<QSerialPortInfo> splst = QSerialPortInfo::availablePorts();
-  foreach (QSerialPortInfo spinf, splst) {
-    ui->cbAISSelectInterface->addItem(spinf.portName());
-    ui->cbLAGSelectInterface->addItem(spinf.portName());
-    ui->cbNAVTEKSelectInterface->addItem(spinf.portName());
-  }
+  
+//  foreach (QSerialPortInfo spinf, splst) {
+//    spinf.manufacturer()
+//    ui->cbAISSelectInterface->addItem(spinf.portName());
+//    ui->cbLAGSelectInterface->addItem(spinf.portName());
+//    ui->cbNAVTEKSelectInterface->addItem(spinf.portName());
+//  }
 
   
 }
@@ -110,6 +112,66 @@ bool MainWindow::init()
     _query->finish();
     
     
+    /// параметры COM портов
+    if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELECT_FROM_SERIAL_PARAMS), _query).type()) 
+      _exception.raise(_query->lastError().databaseText());
+
+    while(_query->next()) {    
+      
+      idev::SvSimulatedDeviceTypes dt = idev::SvSimulatedDeviceTypes(_query->value("device_type").toUInt());
+      
+      switch (dt) {
+        case idev::sdtLAG:
+          
+          _lag_serial_params.name =         _query->value("port_name").toString();        
+          _lag_serial_params.description =  _query->value("description").toString();
+          _lag_serial_params.baudrate =     _query->value("baudrate").toInt();                              
+          _lag_serial_params.databits =     QSerialPort::DataBits(_query->value("data_bits").toInt());      
+          _lag_serial_params.flowcontrol =  QSerialPort::FlowControl(_query->value("flow_control").toInt());
+          _lag_serial_params.parity =       QSerialPort::Parity(_query->value("parity").toInt());           
+          _lag_serial_params.stopbits =     QSerialPort::StopBits(_query->value("stop_bits").toInt());  
+          ui->editLAGSerialInterface->setText(_lag_serial_params.description);
+          break;
+          
+        case idev::sdtSelfAIS:
+          _ais_serial_params.name =         _query->value("port_name").toString();
+          _ais_serial_params.description =  _query->value("description").toString();
+          _ais_serial_params.baudrate =     _query->value("baudrate").toInt();
+          _ais_serial_params.databits =     QSerialPort::DataBits(_query->value("data_bits").toInt());
+          _ais_serial_params.flowcontrol =  QSerialPort::FlowControl(_query->value("flow_control").toInt());
+          _ais_serial_params.parity =       QSerialPort::Parity(_query->value("parity").toInt());
+          _ais_serial_params.stopbits =     QSerialPort::StopBits(_query->value("stop_bits").toInt());
+          ui->editAISSerialInterface->setText(_ais_serial_params.description);
+          
+        case idev::sdtNavteks:
+          
+//          _navteks_serial_params.name =        _query->value("port_name").toString();                          
+//          _navteks_serial_params.baudrate =    _query->value("baudrate").toInt();                              
+//          _navteks_serial_params.databits =    QSerialPort::DataBits(_query->value("data_bits").toInt());      
+//          _navteks_serial_params.flowcontrol = QSerialPort::FlowControl(_query->value("flow_control").toInt());
+//          _navteks_serial_params.parity =      QSerialPort::Parity(_query->value("parity").toInt());           
+//          _navteks_serial_params.stopbits =    QSerialPort::StopBits(_query->value("stop_bits").toInt());      
+          
+        case idev::sdtEcho:
+          
+//          _echo_serial_params.name =  
+//          _echo_serial_params.baudrate = 
+//          _echo_serial_params.databits = 
+//          _echo_serial_params.flowcontrol = 
+//          _echo_serial_params.parity = 
+//          _echo_serial_params.stopbits = 
+          
+        default:
+          break;
+      }
+      
+      
+      
+    }
+    _query->finish();
+    
+    
+    
     qInfo() << 1;
     
     
@@ -146,10 +208,9 @@ SV:
     
     /** --------- создаем собственное судно ----------- **/
     createSelfVessel(_query);
-    _query->finish();
     
-  //  _self_vessel = createSelfVessel(q); //self_vessel_id, self_gps_params, self_static_data, self_voyage_data, self_dynamic_data, true);
-  //  _self_ais = _self_vessel->ais();
+    _query->finish();
+
     _self_vessel->updateVessel();
   
     qInfo() << 3;
@@ -158,7 +219,6 @@ SV:
     /** ------ читаем список судов --------- **/
     if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELECT_VESSELS_WHERE_SELF).arg(false), _query).type())
       _exception.raise(_query->lastError().databaseText());
-
     
     /** --------- создаем суда ----------- **/
     while(_query->next()) {
@@ -175,18 +235,18 @@ SV:
     
     connect(this, SIGNAL(newState(States)), this, SLOT(stateChanged(States)));
    
-    QStringList l = nmea::ais_message_5(0, _self_ais->getStaticData(), _self_ais->getVoyageData(), _self_ais->navStatus());
-    QUdpSocket* udp = new QUdpSocket();
-    for(QString s: l) {
-      QByteArray b(s.toStdString().c_str(), s.size());
-      udp->writeDatagram(b, QHostAddress("192.168.44.228"), 29421);
-      Sleep(100);
-      log << s << svlog::endl;
-//      qDebug() << s;
+//    QStringList l = nmea::ais_message_5(0, _self_ais->getStaticData(), _self_ais->getVoyageData(), _self_ais->navStatus());
+//    QUdpSocket* udp = new QUdpSocket();
+//    for(QString s: l) {
+//      QByteArray b(s.toStdString().c_str(), s.size());
+//      udp->writeDatagram(b, QHostAddress("192.168.44.228"), 29421);
+//      Sleep(100);
+//      log << s << svlog::endl;
+////      qDebug() << s;
       
-    }
-    udp->close();
-    delete udp;
+//    }
+//    udp->close();
+//    delete udp;
     
     return true;
   }
@@ -414,6 +474,9 @@ void MainWindow::on_bnCycle_clicked()
       }
       
       catch(SvException &e) {
+        if(_self_ais->isOpened()) _self_ais->close();
+        if(_self_lag->isOpened()) _self_lag->close();
+        
         QMessageBox::critical(this, "Ошибка", QString("Ошибка открытия порта.\n%1").arg(e.err), QMessageBox::Ok);
         emit newState(sStopped);
         return;
@@ -857,7 +920,7 @@ void MainWindow::on_bnAISEditSerialParams_clicked()
   SERIALEDITOR_UI = new SvSerialEditor(_ais_serial_params, this);
   if(SERIALEDITOR_UI->exec() != QDialog::Accepted) {
 
-    if(SERIALEDITOR_UI->result() != SvSerialEditor::rcNoError)
+    if(!SERIALEDITOR_UI->last_error().isEmpty())
       QMessageBox::critical(this, "Ошибка", QString("Ошибка при изменении параметров:\n%1").arg(SERIALEDITOR_UI->last_error()), QMessageBox::Ok);
     
     delete SERIALEDITOR_UI;
@@ -867,6 +930,7 @@ void MainWindow::on_bnAISEditSerialParams_clicked()
   }
   
   _ais_serial_params.name = SERIALEDITOR_UI->params.name;
+  _ais_serial_params.description = SERIALEDITOR_UI->params.description;
   _ais_serial_params.baudrate = SERIALEDITOR_UI->params.baudrate;
   _ais_serial_params.databits = SERIALEDITOR_UI->params.databits;
   _ais_serial_params.flowcontrol = SERIALEDITOR_UI->params.flowcontrol;
@@ -874,6 +938,8 @@ void MainWindow::on_bnAISEditSerialParams_clicked()
   _ais_serial_params.stopbits = SERIALEDITOR_UI->params.stopbits;
   
   delete SERIALEDITOR_UI;
+  
+  ui->editAISSerialInterface->setText(_ais_serial_params.description);
 
 }
 
@@ -892,6 +958,7 @@ void MainWindow::on_bnLAGEditSerialParams_clicked()
   }
   
   _lag_serial_params.name = SERIALEDITOR_UI->params.name;
+  _lag_serial_params.description = SERIALEDITOR_UI->params.description;
   _lag_serial_params.baudrate = SERIALEDITOR_UI->params.baudrate;
   _lag_serial_params.databits = SERIALEDITOR_UI->params.databits;
   _lag_serial_params.flowcontrol = SERIALEDITOR_UI->params.flowcontrol;
@@ -900,6 +967,7 @@ void MainWindow::on_bnLAGEditSerialParams_clicked()
   
   delete SERIALEDITOR_UI;
 
+  ui->editLAGSerialInterface->setText(_lag_serial_params.description);
 }
 
 void MainWindow::on_bnNAVTEKEditSerialParams_clicked()

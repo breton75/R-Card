@@ -86,8 +86,8 @@ private:
   
   QTimer _tm;
   
-  SerialPortParams _lag_serial_params = SerialPortParams(sdLAG);
-  SerialPortParams _ais_serial_params = SerialPortParams(sdAIS);
+  SerialPortParams _lag_serial_params = SerialPortParams(idev::sdtLAG);
+  SerialPortParams _ais_serial_params = SerialPortParams(idev::sdtSelfAIS);
 //  QSerialPort _navteks_serial;
 //  QSerialPort _echo_serial;
   

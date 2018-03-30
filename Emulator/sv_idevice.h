@@ -9,7 +9,6 @@
 #include <QTextEdit>
 #include <QMetaType>
 
-#include "geo.h"
 
 namespace idev {
 
@@ -19,7 +18,8 @@ namespace idev {
     sdtSelfAIS,
     sdtOtherAIS,
     sdtLAG,
-    sdtNavtek,
+    sdtNavteks,
+    sdtEcho,
     sdtVessel
   };
 

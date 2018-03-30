@@ -37,7 +37,7 @@ SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId, bool self) :
       t_static_name = q->value("static_name").toString();
       t_static_imo = q->value("static_imo").toUInt();
       t_static_mmsi = q->value("static_mmsi").toUInt();
-      t_static_type_id = q->value("static_type_id").toUInt();
+      t_static_type_id = q->value("static_type_ITU_id").toUInt();
       t_static_vessel_type_name = q->value("static_vessel_type_name").toString();
       t_static_length = q->value("static_length").toUInt();
       t_static_width = q->value("static_width").toUInt();

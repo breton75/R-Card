@@ -48,7 +48,6 @@ void ais::SvSelfAIS::close()
 {
   _port.close();
   disconnect(this, &ais::SvSelfAIS::write_message, this, &ais::SvSelfAIS::write);
-  qDebug() << "closed";
   _isOpened = false;
 }
 
@@ -78,11 +77,15 @@ void ais::SvSelfAIS::on_receive_ais_data(ais::SvAIS* otherAIS, ais::AISDataTypes
     switch (type) {
       
       case ais::adtStaticVoyage:
+      {
        
-//        msg = nmea::message1(0, otherAIS->getStaticData()->mmsi, otherAIS->navStatus(), 10, otherAIS->getDynamicData()->geoposition);
-//        write(msg);
+        QStringList l = nmea::ais_message_5(0, otherAIS->getStaticData(), otherAIS->getVoyageData(), otherAIS->navStatus());
+        write(l.first());
+        for(int i = 0; i < 100000; i++) ;
+        write(l.last());
         
         break;
+      }
       
 //      case ais::aisVoyage:
 //        _log << svlog::Time << svlog::Data << QString("voyage data from %1: %2")
@@ -93,8 +96,8 @@ void ais::SvSelfAIS::on_receive_ais_data(ais::SvAIS* otherAIS, ais::AISDataTypes
       case ais::adtDynamic:
       {
         
-//        QString msg = nmea::ais_message_1(0, otherAIS->getStaticData()->mmsi, otherAIS->navStatus(), 10, otherAIS->getDynamicData()->geoposition);
-//        emit write_message(msg);
+        QString msg = nmea::ais_message_1(0, otherAIS->getStaticData()->mmsi, otherAIS->navStatus()->ITU_id, 10, otherAIS->getDynamicData()->geoposition);
+        emit write_message(msg);
         
         break;
        } 
@@ -125,11 +128,11 @@ void ais::SvSelfAIS::write(const QString &message)
   _log << svlog::Time << svlog::Data << message << svlog::endl;
   _port.write(message.toStdString().c_str(), message.size());
   
-  udp = new QUdpSocket();
-  QByteArray b(message.toStdString().c_str(), message.size());
-  udp->writeDatagram(b, QHostAddress("192.168.44.228"), 29421);
-  udp->close();
-  delete udp;
+//  udp = new QUdpSocket();
+//  QByteArray b(message.toStdString().c_str(), message.size());
+//  udp->writeDatagram(b, QHostAddress("192.168.44.228"), 29421);
+//  udp->close();
+//  delete udp;
   
   _log << svlog::Data << svlog::Time << message << svlog::endl;
   
@@ -137,6 +140,7 @@ void ais::SvSelfAIS::write(const QString &message)
 
 void ais::SvSelfAIS::setSerialPortParams(const SerialPortParams& params)
 { 
+  qDebug() << params.name;
   _port.setPortName(params.name);
   _port.setBaudRate(params.baudrate);
   _port.setDataBits(params.databits);

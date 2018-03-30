@@ -149,7 +149,7 @@ QString nmea::ais_message_1(quint8 repeat_indicator, quint32 mmsi, quint8 nav_st
   for(int i = 0; i < 28; i++)
     msg.append(SIXBIT_SYMBOLS.value(b6[i]));  // message id
   
-  result = QString("$AIVDM,1,1,,A,%1,0*").arg(msg);
+  result = QString("!AIVDM,1,1,,A,%1,2*").arg(msg);
   
   quint8 src = 0;
   for(int i = 1; i <= result.length() - 2; i++) {
@@ -186,7 +186,7 @@ QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData* sta
   }
   
   /// AIS version indicator 
-  b6[6] += 0x0C; // 2 значащих бита // 3 = station compliant with future editions 
+  b6[6] += 0x04; // 2 значащих бита // 3 = station compliant with future editions 
 
   
   /// IMO number
@@ -198,36 +198,28 @@ QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData* sta
     imo64 &= (0x00FFFFFFFFFFFFFF >> (i * 8));
     imo64 >>= 2;
   }
-
-  /// Callsign
-  QString po = "7777777";
-  QByteArray str6bit = po.toLatin1(); // str_to_6bit(po); // static_data->callsign.left(7)); //.toLatin1(); // макс. 7 символов
-  str6bit.insert(0, 7 - str6bit.length(), char(0));
   
-  int idx = 11;
-  qDebug() << po.length() << str6bit.length();
-  for(int i = 0; i < str6bit.length(); i++) {  // static_data->callsign.length()
-    
-    qDebug() << QString("%1  %2").arg(quint8(str6bit.at(i)), 0, 16).arg(quint8(po.at(i).toLatin1()) & 0x3F, 0, 16);
-    quint8 c = str6bit.at(i) & 0x3F;  //  quint8(po.at(i).toLatin1()) & 0x3F; //
-    b6[idx++] += c >> 4;
-//    idx ++;
-    b6[idx] += (c & 0x0F) << 2;
+  /// Callsign
+  for(int i = 0; i < static_data->callsign.left(7).length(); i++) {  // static_data->callsign.length()
+
+    quint8 c = quint8(static_data->callsign.at(i).toLatin1()) & 0x3F; //str6bit.at(i) & 0x3F;  //  
+    b6[11 + i] += c >> 4;
+    b6[12 + i] += (c & 0x0F) << 2;
     
   }
 
-  /// Name  // idx продолжается дальше
-  for(int i = 0; i < static_data->name.length(); i++) {
+  /// Name
+  for(int i = 0; i < static_data->name.left(20).length(); i++) {
     
     quint8 c = quint8(static_data->name.at(i).toLatin1()) &0x3F;
-    b6[idx++] += c >> 4;
-    b6[idx] += (c & 0x0F) << 2;
+    b6[18 + i] += c >> 4;
+    b6[19 + i] += (c & 0x0F) << 2;
     
   }
 
   /// Type of ship and cargo type
   b6[38] += static_data->type_ITU_id >> 6;
-  b6[39] = static_data->type_ITU_id & 0x3F;
+  b6[39] += static_data->type_ITU_id & 0x3F;
 
   
   /// Overall dimension/ reference for position
@@ -272,12 +264,11 @@ QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData* sta
   b6[50] += (draft & 0x03) << 4;
   
   /// Destination
-  idx = 50;
-  for(int i = 0; i < voyage_data->destination.length(); i++) {
+  for(int i = 0; i < voyage_data->destination.left(20).length(); i++) {
     
     quint8 c = quint8(voyage_data->destination.at(i).toLatin1()) & 0x3F;
-    b6[idx++] += c >> 2;
-    b6[idx] += (c & 0x03) << 4;
+    b6[50 + i] += c >> 2;
+    b6[51 + i] += (c & 0x03) << 4;
     
   }
   
@@ -297,7 +288,7 @@ QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData* sta
   for(int i = 0; i < total_count; i++) {
     
     
-    QString s = QString("!AIVDM,%1,%2,0,A,%3,0*")
+    QString s = QString("!AIVDM,%1,%2,0,A,%3,2*")
                               .arg(total_count)
                               .arg(i + 1)
                               .arg(msg.mid(0 + 62 * i, 62));

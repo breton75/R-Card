@@ -18,7 +18,7 @@ SvSerialEditor::SvSerialEditor(SerialPortParams params, QWidget *parent) :
   ui->cbFlowControl->clear();
   
   for(QSerialPortInfo p: QSerialPortInfo::availablePorts())
-    ui->cbPortName->addItem(p.portName());
+    ui->cbPortName->addItem(QString("%1: %2 %3").arg(p.portName()).arg(p.manufacturer()).arg(p.description()), QVariant(p.portName()));
   
   for(int b: baudartes_list)
     ui->cbBaudrate->addItem(QString::number(b), b);
@@ -35,7 +35,7 @@ SvSerialEditor::SvSerialEditor(SerialPortParams params, QWidget *parent) :
   for(QSerialPort::FlowControl f: flowcontrols_list.keys())
     ui->cbFlowControl->addItem(flowcontrols_list.value(f), f);    
   
-  ui->cbPortName->setCurrentIndex(ui->cbPortName->findText(params.name));
+  ui->cbPortName->setCurrentIndex(ui->cbPortName->findData(params.name));
   ui->cbBaudrate->setCurrentIndex(ui->cbBaudrate->findData(params.baudrate));
   ui->cbDataBits->setCurrentIndex(ui->cbDataBits->findData(params.databits));
   ui->cbFlowControl->setCurrentIndex(ui->cbFlowControl->findData(params.flowcontrol));
@@ -63,7 +63,8 @@ void SvSerialEditor::accept()
 {
   QSqlQuery *q = new QSqlQuery(SQLITE->db);
   
-  params.name = ui->cbPortName->currentText();
+  params.name = ui->cbPortName->currentData().toString();
+  params.description = ui->cbPortName->currentText();
   params.baudrate = ui->cbBaudrate->currentData().toUInt();
   params.databits = QSerialPort::DataBits(ui->cbDataBits->currentData().toInt());
   params.flowcontrol = QSerialPort::FlowControl(ui->cbFlowControl->currentData().toInt());
@@ -79,7 +80,7 @@ void SvSerialEditor::accept()
     q->next();
     if(q->value("count").toInt() == 0) {
       
-      err = SQLITE->execSQL(QString(SQL_INSERT_SERIAL).arg(params.dev_type));
+      err = SQLITE->execSQL(QString(SQL_INSERT_SERIAL).arg(int(params.dev_type)));
       if(QSqlError::NoError != err.type()) _exception.raise(err.databaseText());
       
     }
@@ -94,6 +95,7 @@ void SvSerialEditor::accept()
                           .arg(params.stopbits)
                           .arg(params.databits)
                           .arg(params.flowcontrol)
+                          .arg(params.description)
                           .arg(params.dev_type));
     
     if(QSqlError::NoError != err.type()) _exception.raise(err.databaseText());
@@ -103,17 +105,16 @@ void SvSerialEditor::accept()
   
   catch(SvException e) {
     
-    setResult(rcSqlError);
+    if(q) {
+      q->finish();
+      delete q;
+    }
+    
     _last_error = e.err;
-//    qDebug() << _last_error;
+//        qDebug() << _last_error;
+    QDialog::reject();
   }
   
-  if(q) {
-    q->finish();
-    delete q;
-  }
-  
-  if(result() == rcNoError) QDialog::accept();
-  else QDialog::reject();
+  QDialog::accept();
   
 }
