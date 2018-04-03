@@ -50,6 +50,16 @@ public:
   ais::SvAIS* ais() { return _ais; }
   lag::SvLAG* lag() { return _lag; }
   
+  
+  void setActive(bool isActive)
+  { 
+    _isActive = isActive;
+    _gps->setActive(_isActive);
+    _ais->setActive(_isActive);
+  }
+  
+  bool isActive() { return _isActive; }
+  
 //  geo::GEOPOSITION currentGeoPosition() const { return _current_geo_position; }
 //  void setGeoPosition(const geo::GEOPOSITION& current_geo_position) { _current_geo_position = current_geo_position; }
   
@@ -71,6 +81,8 @@ private:
   lag::SvLAG* _lag = nullptr;
   
   SvMapObjectVesselAbstract* _map_object = nullptr;
+  
+  bool _isActive = true;
   
 signals:
   void updateMapObjectPos(SvMapObject* mapObject, const geo::GEOPOSITION& geopos);

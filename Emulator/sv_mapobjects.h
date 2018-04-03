@@ -75,6 +75,7 @@ class SvMapObject : public QGraphicsItem
     virtual void setId(int id) { _id = id; }
   
     virtual void setOutdated(bool isOutdate) { }
+    virtual void setActive(bool isActive) { }
   
     geo::GEOPOSITION geoPosition() { return _geo_position; }
     void setGeoPosition(const geo::GEOPOSITION& geopos) { _geo_position = geopos; }
@@ -393,7 +394,17 @@ class SvMapObjectVessel : public SvMapObjectVesselAbstract
       setBrush(isOutdate ? QColor(QColor(0, 0, 0, 100)) : QColor(0x14c546));
       QPen p(Qt::DashLine);
       setPen(isOutdate ? p : pen());
-      this->update(this->boundingRect()); }
+      this->update(this->boundingRect());
+    }
+    
+    void setActive(bool isActive) 
+    { 
+      setBrush(!isActive ? QColor(QColor(255, 0, 0, 100)) : QColor(0x14c546));
+      QPen p(Qt::SolidLine);
+      p.setColor(QColor("darkred"));
+      setPen(isActive ? p : pen());
+      this->update(this->boundingRect());
+    }
     
     QAction *removeAction;
     QAction *editAction;

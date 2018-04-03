@@ -124,6 +124,8 @@ private slots:
   
   void on_listVessels_doubleClicked(const QModelIndex &index);
   
+  void on_bnSetActive_clicked();
+  
 signals:
   void newState(States state);
   

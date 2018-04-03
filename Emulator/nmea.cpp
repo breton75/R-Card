@@ -50,7 +50,7 @@ inline QByteArray nmea::str_to_6bit(const QString& str)
   
 }
 
-QString nmea::ais_message_1(quint8 repeat_indicator, quint32 mmsi, quint8 nav_status, qint8 rot, geo::GEOPOSITION &geopos) //, int true_heading, QDateTime utc,
+QString nmea::ais_message_1_2_3(quint8 message_id, quint32 mmsi, quint8 nav_status, qint8 rot, geo::GEOPOSITION &geopos) //, int true_heading, QDateTime utc,
 //                 int manouevre, int raim, int communication_state)
 {
   QString result = "";
@@ -59,10 +59,10 @@ QString nmea::ais_message_1(quint8 repeat_indicator, quint32 mmsi, quint8 nav_st
   memset(&b6, 0, 28);
   
   /// Message ID
-  b6[0] = 1;
+  b6[0] = message_id;
   
   /// Repeat indicator
-  b6[1] = (repeat_indicator & 0x03) << 4; // 2 значащих бита
+  b6[1] = (0 & 0x03) << 4; // 2 значащих бита
   
   /// User ID
   quint64 mmsi64 = mmsi & 0x3FFFFFFF; // 30 значащих бит
@@ -156,7 +156,7 @@ QString nmea::ais_message_1(quint8 repeat_indicator, quint32 mmsi, quint8 nav_st
     src = src ^ quint8(result. at(i).toLatin1());
   }
   
-  result.append(QString("%1%2%3").arg(src, 2, 16).arg(QChar(13)).arg(QChar(10)).replace(' ', '0').toUpper());
+  result.append(QString("%1\r\n").arg(src, 2, 16).replace(' ', '0').toUpper()); //.arg(QChar(10)).arg(QChar(10));
   
   return result;
   
@@ -298,11 +298,24 @@ QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData* sta
           src = src ^ quint8(s.at(j).toLatin1());
         }
           
-        result.append(QString("%1%2").arg(s).arg(QString("%1%2%3").arg(src, 2, 16).arg(QChar(13)).arg(QChar(10)).replace(' ', '0').toUpper()));
+        result.append(QString("%1%2").arg(s).arg(QString("%1\r\n").arg(src, 2, 16).replace(' ', '0').toUpper()));
   }
     
   return result;
   
+}
+
+QString nmea::ais_sentence_ABK(quint32 mmsi, quint32 message_id)
+{
+  QString result = QString("$AIABK,%1,A,%2,,3*").arg(mmsi).arg(message_id);
+  
+  quint8 src = 0;
+  for(int i = 1; i <= result.length() - 2; i++)
+    src = src ^ quint8(result.at(i).toLatin1());
+  
+  result.append(QString("%1\r\n").arg(src, 2, 16).replace(' ', '0').toUpper());
+  
+  return result;
 }
 
 
@@ -321,7 +334,7 @@ QString nmea::lag_VBW(const geo::GEOPOSITION& geopos)
     src = src ^ quint8(result.at(i).toLatin1());
   
   
-  result.append(QString("%1%2%3").arg(src, 2, 16).arg(QChar(13)).arg(QChar(10)).replace(' ', '0').toUpper());
+  result.append(QString("%1\r\n").arg(src, 2, 16).replace(' ', '0').toUpper()); //.arg(QChar(13)).arg(QChar(10)));
   
   
   return result;

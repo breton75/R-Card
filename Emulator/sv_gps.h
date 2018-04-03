@@ -57,7 +57,7 @@ public:
   idev::SvSimulatedDeviceTypes type() const { return idev::sdtGPS; }
     
   bool waitWhileRunned() { while(_gps_emitter != nullptr) qApp->processEvents();  }
-  
+
   
 private:
 //  geo::GEOPOSITION _current_geo_position;

@@ -45,6 +45,9 @@ void lag::SvLAG::close()
 
 bool lag::SvLAG::start(quint32 msecs)
 {
+  if(!_isActive)
+    return true;
+  
   _timer.start(msecs);
   
   return true;

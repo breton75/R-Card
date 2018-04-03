@@ -248,6 +248,13 @@ SV:
 //    udp->close();
 //    delete udp;
     
+    bool b = false;
+    QString s = "";
+    int i = -100;
+    i = s.toInt(&b);
+    
+    qDebug() << b << i << bool(!b && !s.isEmpty());
+    
     return true;
   }
   
@@ -738,10 +745,12 @@ vsl::SvVessel *MainWindow::createOtherVessel(QSqlQuery* q)
   // подключаем
   connect(newGPS, SIGNAL(newGPSData(const geo::GEOPOSITION&)), newAIS, SLOT(newGPSData(const geo::GEOPOSITION&)));
   
-  connect(newAIS, &ais::SvOtherAIS::broadcast_ais_data, _self_ais, &ais::SvSelfAIS::on_receive_ais_data);
+  connect(newAIS, &ais::SvOtherAIS::broadcast_message, _self_ais, &ais::SvSelfAIS::on_receive_message);
   
   connect(newVessel, &vsl::SvVessel::updateMapObjectPos, _area->scene, area::SvAreaScene::setMapObjectPos);
   connect(newVessel, &vsl::SvVessel::updateMapObjectPos, this, &updateMapObjectInfo);
+  
+  connect(_self_ais, &ais::SvSelfAIS::interrogateRequest, newAIS, &ais::SvOtherAIS::on_interrogate);
   
   connect(this, &MainWindow::setMultiplier, newGPS, &gps::SvGPS::set_multiplier);
   
@@ -764,7 +773,6 @@ void MainWindow::update_vessel_by_id(int id)
     
     if(vessel->id != id) continue;
     
-    qreal dst = _self_ais->distanceTo(vessel->ais());
     if(_self_ais->distanceTo(vessel->ais()) > _self_ais->receiveRange() * 1000) {
       
       ((SvMapObjectVessel*)(vessel->mapObject()))->setOutdated(true);
@@ -997,4 +1005,18 @@ void MainWindow::currentVesselListItemChanged(QListWidgetItem *current, QListWid
 void MainWindow::on_listVessels_doubleClicked(const QModelIndex &index)
 {
    editVessel(LISTITEMs.key(ui->listVessels->item(index.row())));
+}
+
+void MainWindow::on_bnSetActive_clicked()
+{
+//  if(_selected_vessel_id = _self_vessel->id)
+//    return;
+  
+  if(VESSELs.find(_selected_vessel_id) == VESSELs.end())
+    return;
+  
+  vsl::SvVessel* vessel = VESSELs.value(_selected_vessel_id);
+  vessel->setActive(!vessel->isActive());
+  vessel->mapObject()->setActive(vessel->isActive());
+//  update_vessel_by_id(_selected_vessel_id);
 }

@@ -171,21 +171,26 @@ private:
   
   QUdpSocket* udp = nullptr;
   
-//  QString _current_message = "";
+  QString _income_message = "";
+
   
 private slots:
   void write(const QString& message);
   void read();
+  void on_income_message(QString& msg);
   
 signals:
   void updateSelfVessel();
   void updateVesselById(int id);
   void write_message(const QString& message);
   
+  void newIncomeMessage(QString& msg);
+  void interrogateRequest(quint32 mmsi1, quint32 msg1num, quint32 msg2num, quint32 mmsi2, quint32 msg3num);
+  
 public slots:
   void newGPSData(const geo::GEOPOSITION& geopos);
-  void on_receive_ais_data(ais::SvAIS* otherAIS, ais::AISDataTypes type);
-  
+  void on_receive_message(ais::SvAIS* otherAIS, quint32 message_id);
+  void readPort();
 
   
 };
@@ -206,6 +211,7 @@ public:
   
   bool start(quint32 msecs);
   void stop();
+
   
 private:  
   QTimer _timer_static_voyage;
@@ -217,16 +223,17 @@ private:
   quint32 _dynamic_interval;
   
 signals:
-  void broadcast_ais_data(ais::SvAIS* ais, ais::AISDataTypes type);
+  void broadcast_message(ais::SvAIS* ais, quint32 message_id);
   
 public slots:
   void newGPSData(const geo::GEOPOSITION& geopos);
+  void on_interrogate(quint32 mmsi1, quint32 msg1num, quint32 msg2num, quint32 mmsi2, quint32 msg3num);
   
 private slots:
   void on_timer_static_voyage()  { _timer_static_voyage.setInterval(_static_voyage_interval);
-                                   emit broadcast_ais_data(this, ais::adtStaticVoyage); }
+                                   emit broadcast_message(this, 5); }
 //  void on_timer_voyage()  { emit broadcast_ais_data(this, ais::aisVoyage); }
-  void on_timer_dynamic() { emit broadcast_ais_data(this, ais::adtDynamic); }
+  void on_timer_dynamic() { emit broadcast_message(this, 1); }
 
   
 };

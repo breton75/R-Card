@@ -55,6 +55,9 @@ public:
   
   void setOpened(bool isOpened) { _isOpened = isOpened; }
   bool isOpened() { return _isOpened; }
+  
+  void setActive(bool isActive) { _isActive = isActive; }
+  bool isActive() { return _isActive; }
 
 protected:
   quint32 _id;
@@ -62,6 +65,8 @@ protected:
   
   bool _isOpened;
   QString _last_error;
+  
+  bool _isActive = true;
   
 public slots:
   virtual bool open() = 0;

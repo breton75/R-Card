@@ -30,6 +30,9 @@ void gps::SvGPS::close()
 
 bool gps::SvGPS::start(quint32 msecs)
 {
+  if(!_isActive)
+    return true;
+  
   if(_gps_emitter) 
     delete _gps_emitter;
   
