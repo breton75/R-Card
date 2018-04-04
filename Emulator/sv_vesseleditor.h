@@ -39,8 +39,12 @@ public:
   quint32 t_static_mmsi = 0;
   quint32 t_static_type_id;
   QString t_static_vessel_type_name = "";
-  quint32 t_static_length = 1;
-  quint32 t_static_width = 1;
+  quint32 t_static_pos_ref_A = 20;
+  quint32 t_static_pos_ref_B = 20;
+  quint32 t_static_pos_ref_C = 10;
+  quint32 t_static_pos_ref_D = 10;
+  quint8 t_static_DTE = 1;
+  QString t_static_talker_ID = "AI";
   
   QString t_voyage_destination = "";
   QDateTime t_voyage_eta = QDateTime::currentDateTime();

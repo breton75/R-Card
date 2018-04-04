@@ -39,8 +39,12 @@ SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId, bool self) :
       t_static_mmsi = q->value("static_mmsi").toUInt();
       t_static_type_id = q->value("static_type_ITU_id").toUInt();
       t_static_vessel_type_name = q->value("static_vessel_type_name").toString();
-      t_static_length = q->value("static_length").toUInt();
-      t_static_width = q->value("static_width").toUInt();
+      t_static_pos_ref_A = q->value("static_pos_ref_A").toUInt();
+      t_static_pos_ref_B = q->value("static_pos_ref_B").toUInt();
+      t_static_pos_ref_C = q->value("static_pos_ref_C").toUInt();
+      t_static_pos_ref_D = q->value("static_pos_ref_D").toUInt();
+      t_static_DTE = q->value("static_DTE").toUInt();
+      t_static_talker_ID = q->value("static_talker_id").toString();
                                  
       t_voyage_destination = q->value("voyage_destination").toString();
       t_voyage_eta = q->value("voyage_eta").toDateTime();
@@ -75,8 +79,12 @@ SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId, bool self) :
   
   ui->cbVesselType->setCurrentIndex(ui->cbVesselType->findData(t_static_type_id));
   
-  ui->spinLength->setValue(t_static_length);
-  ui->spinWidth->setValue(t_static_width);
+  ui->spinPosRefA->setValue(t_static_pos_ref_A);
+  ui->spinPosRefB->setValue(t_static_pos_ref_B);
+  ui->spinPosRefC->setValue(t_static_pos_ref_C);
+  ui->spinPosRefD->setValue(t_static_pos_ref_D);
+  ui->cbDTE->setCurrentIndex(t_static_DTE);
+  ui->editTalkerID->setText(t_static_talker_ID);
   
   ui->editDestination->setText(t_voyage_destination);
   ui->dateTimeEstimatedTimeOfArrival->setDateTime(t_voyage_eta);
@@ -179,8 +187,12 @@ void SvVesselEditor::accept()
   
   t_static_type_id = ui->cbVesselType->currentData().toUInt();
   
-  t_static_length = ui->spinLength->value();
-  t_static_width = ui->spinWidth->value();
+  t_static_pos_ref_A = ui->spinPosRefA->value();
+  t_static_pos_ref_B = ui->spinPosRefB->value();
+  t_static_pos_ref_C = ui->spinPosRefC->value();
+  t_static_pos_ref_D = ui->spinPosRefD->value();
+  t_static_DTE = ui->cbDTE->currentIndex();
+  t_static_talker_ID = ui->editTalkerID->text();
   
   t_voyage_destination = ui->editDestination->text();
   t_voyage_eta = ui->dateTimeEstimatedTimeOfArrival->dateTime();
@@ -218,8 +230,12 @@ void SvVesselEditor::accept()
                                 .arg(t_static_type_id)
                                 .arg(t_static_callsign)
                                 .arg(t_static_name)
-                                .arg(t_static_length)
-                                .arg(t_static_width)
+                                .arg(t_static_pos_ref_A)
+                                .arg(t_static_pos_ref_B)
+                                .arg(t_static_pos_ref_C)
+                                .arg(t_static_pos_ref_D)
+                                .arg(t_static_DTE)
+                                .arg(t_static_talker_ID)
                                 .arg(t_voyage_destination)
                                 .arg(t_voyage_eta.toString("yyyy/mm/dd hh:MM:ss"))
                                 .arg(t_voyage_draft)
@@ -269,8 +285,12 @@ void SvVesselEditor::accept()
                                         .arg(t_static_type_id)
                                         .arg(t_static_callsign)
                                         .arg(t_static_name)
-                                        .arg(t_static_length)
-                                        .arg(t_static_width)  
+                                        .arg(t_static_pos_ref_A)
+                                        .arg(t_static_pos_ref_B)
+                                        .arg(t_static_pos_ref_C)
+                                        .arg(t_static_pos_ref_D)
+                                        .arg(t_static_DTE)
+                                        .arg(t_static_talker_ID)
                                         .arg(t_voyage_destination)
                                         .arg(t_voyage_eta.toString("yyyy/mm/dd hh:MM:ss"))
                                         .arg(t_voyage_draft)

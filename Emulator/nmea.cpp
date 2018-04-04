@@ -50,7 +50,7 @@ inline QByteArray nmea::str_to_6bit(const QString& str)
   
 }
 
-QString nmea::ais_message_1_2_3(quint8 message_id, quint32 mmsi, quint8 nav_status, qint8 rot, geo::GEOPOSITION &geopos) //, int true_heading, QDateTime utc,
+QString nmea::ais_message_1_2_3(quint8 message_id, QString& talkerID, ais::aisStaticData* static_data, quint8 nav_status, geo::GEOPOSITION &geopos) //, int true_heading, QDateTime utc,
 //                 int manouevre, int raim, int communication_state)
 {
   QString result = "";
@@ -65,7 +65,7 @@ QString nmea::ais_message_1_2_3(quint8 message_id, quint32 mmsi, quint8 nav_stat
   b6[1] = (0 & 0x03) << 4; // 2 значащих бита
   
   /// User ID
-  quint64 mmsi64 = mmsi & 0x3FFFFFFF; // 30 значащих бит
+  quint64 mmsi64 = static_data->mmsi & 0x3FFFFFFF; // 30 значащих бит
   mmsi64 <<= 32; // << 32;
   
   for(int i = 0; i < 6; i++) {
@@ -78,8 +78,8 @@ QString nmea::ais_message_1_2_3(quint8 message_id, quint32 mmsi, quint8 nav_stat
   b6[6] += (nav_status & 0x0F); // 4 значащих бит
   
   /// Rate of turn
-  b6[7] = rot >> 2; // 8 значащих бит
-  b6[8] = (rot << 4) & 0x3F;
+  b6[7] = geopos.rate_of_turn >> 2; // 8 значащих бит
+  b6[8] = (geopos.rate_of_turn << 4) & 0x3F;
   
   ///  Speed over ground
   quint16 sog16 = quint16(trunc(geopos.speed * 10)) & 0x03FF; // 10 значащих бит
@@ -149,7 +149,7 @@ QString nmea::ais_message_1_2_3(quint8 message_id, quint32 mmsi, quint8 nav_stat
   for(int i = 0; i < 28; i++)
     msg.append(SIXBIT_SYMBOLS.value(b6[i]));  // message id
   
-  result = QString("!AIVDM,1,1,,A,%1,2*").arg(msg);
+  result = QString("!%1VDM,1,1,,A,%2,2*").arg(talkerID).arg(msg);
   
   quint8 src = 0;
   for(int i = 1; i <= result.length() - 2; i++) {
@@ -162,7 +162,7 @@ QString nmea::ais_message_1_2_3(quint8 message_id, quint32 mmsi, quint8 nav_stat
   
 }
 
-QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData* static_data, ais::aisVoyageData* voyage_data, ais::aisNavStat* navstat)
+QStringList nmea::ais_message_5(QString &talkerID, ais::aisStaticData* static_data, ais::aisVoyageData* voyage_data, ais::aisNavStat* navstat)
 {
   QStringList result = QStringList();
   
@@ -173,7 +173,7 @@ QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData* sta
   b6[0] = 5;
   
   /// Repeat indicator
-  b6[1] = (repeat_indicator & 0x03) << 4; // 2 значащих бита
+  b6[1] = (0 & 0x03) << 4; // 2 значащих бита
   
   /// User ID
   quint64 mmsi64 = static_data->mmsi & 0x3FFFFFFF; // 30 значащих бит
@@ -223,10 +223,10 @@ QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData* sta
 
   
   /// Overall dimension/ reference for position
-  quint16 B = static_data->length / 2 > 0x01FF ? 0x01FF : quint16(static_data->length / 2);
-  quint16 A = static_data->length - B > 0x01FF ? 0x01FF : quint16(static_data->length - B);
-  quint8 D = static_data->width / 2 > 0x3F ? 0x3F : quint8(static_data->width / 2);
-  quint8 C = static_data->width - D > 0x3F ? 0x3F : quint8(static_data->width - D);
+  quint16 A = static_data->pos_ref_A > 0x01FF ? 0x01FF : static_data->pos_ref_A;
+  quint16 B = static_data->pos_ref_B > 0x01FF ? 0x01FF : static_data->pos_ref_B;
+  quint8 C = static_data->pos_ref_C > 0x3F ? 0x3F : static_data->pos_ref_C;
+  quint8 D = static_data->pos_ref_D > 0x3F ? 0x3F : static_data->pos_ref_D;
 
   b6[40] += D;
   b6[41] += C;
@@ -288,7 +288,8 @@ QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData* sta
   for(int i = 0; i < total_count; i++) {
     
     
-    QString s = QString("!AIVDM,%1,%2,0,A,%3,2*")
+    QString s = QString("!%1VDM,%2,%3,0,A,%4,2*")
+                              .arg(talkerID)
                               .arg(total_count)
                               .arg(i + 1)
                               .arg(msg.mid(0 + 62 * i, 62));
@@ -305,9 +306,9 @@ QStringList nmea::ais_message_5(quint8 repeat_indicator, ais::aisStaticData* sta
   
 }
 
-QString nmea::ais_sentence_ABK(quint32 mmsi, quint32 message_id)
+QString nmea::ais_sentence_ABK(quint8 message_id, QString &talkerID, ais::aisStaticData* static_data)
 {
-  QString result = QString("$AIABK,%1,A,%2,,3*").arg(mmsi).arg(message_id);
+  QString result = QString("$%1ABK,%2,A,%3,,3*").arg(talkerID).arg(static_data->mmsi).arg(message_id);
   
   quint8 src = 0;
   for(int i = 1; i <= result.length() - 2; i++)

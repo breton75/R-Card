@@ -16,6 +16,10 @@
 #include "sv_idevice.h"
 #include "../../svlib/sv_log.h"
 #include "sv_serialeditor.h"
+#include "../../svlib/sv_sqlite.h"
+#include "sv_exception.h"
+
+#define DO_NOT_CHANGE "do not change"
 
 namespace ais {
 
@@ -33,12 +37,15 @@ namespace ais {
     quint32 imo;                          // Номер Международной морской организации (IMO)
     QString callsign;                     // Радиопозывной
     QString name;                         // Название плавучего средства
-    quint32 length;                       // Габариты
-    quint32 width;
+    quint32 pos_ref_A;                    // Данные о месте антенны (от ГНСС Глонасс или GPS)
+    quint32 pos_ref_B;                    // Габариты (A + B = длина; C + D = ширина)
+    quint32 pos_ref_C;
+    quint32 pos_ref_D;
     quint32 type_ITU_id;                  // Тип плавучего средства
     QString type_name;
-                                          // Данные о месте антенны (от ГНСС Глонасс или GPS)
-      
+    quint8  DTE;                          // флаг DTE
+    QString talkerID = "AI";              // идентификатор устройства для NMEA
+    
   };
   
   struct aisDynamicData {                    // Динамическая информация
@@ -173,6 +180,11 @@ private:
   
   QString _income_message = "";
 
+  SvException _exception;
+  
+  void parse_AIR(QString& msg);
+  void parse_SSD(QString& msg);
+  void parse_VSD(QString& msg);
   
 private slots:
   void write(const QString& message);
@@ -190,7 +202,6 @@ signals:
 public slots:
   void newGPSData(const geo::GEOPOSITION& geopos);
   void on_receive_message(ais::SvAIS* otherAIS, quint32 message_id);
-  void readPort();
 
   
 };

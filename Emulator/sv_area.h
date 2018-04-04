@@ -167,11 +167,18 @@ public:
 
     
     /* виджеты */
-    QHBoxLayout* hlayMain;
+    QVBoxLayout* vlayMain;
     QFrame* frameLeft;
     QVBoxLayout* vlayFrameLeft;
     QFrame* frameRight;
     QVBoxLayout* vlayFrameRight;
+    
+    QFrame* frameTop;
+    QHBoxLayout* hlayFrameTop;
+    QList<area::AreaButton*> buttonsTop;
+    QSplitter* splitter;
+    QTextEdit* textLog;
+    
     QVBoxLayout* vlayCenter;
     QWidget* widgetMap;
     QFrame* frameBottom;

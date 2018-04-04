@@ -33,100 +33,135 @@ area::SvArea::SvArea(QWidget *parent) :
   setParent(parent);
   setObjectName(QStringLiteral("widgetArea"));
     
-  hlayMain = new QHBoxLayout(this);
-  hlayMain->setSpacing(2);
-  hlayMain->setContentsMargins(11, 11, 11, 11);
-  hlayMain->setObjectName(QStringLiteral("hlayMain"));
-  hlayMain->setContentsMargins(2, 2, 2, 2);
+  vlayMain = new QVBoxLayout(this);
+  vlayMain->setSpacing(2);
+  vlayMain->setObjectName(QStringLiteral("vlayMain"));
+  vlayMain->setContentsMargins(2, 2, 2, 2);
   
+//  /* левая панель с кнопками */
+//  frameLeft = new QFrame(this);
+//  frameLeft->setObjectName(QStringLiteral("frameLeft"));
+//  frameLeft->setFrameShape(QFrame::Box);
+//  frameLeft->setFrameShadow(QFrame::Sunken);
+//  vlayFrameLeft = new QVBoxLayout(frameLeft);
+//  vlayFrameLeft->setSpacing(6);
+//  vlayFrameLeft->setContentsMargins(11, 11, 11, 11);
+//  vlayFrameLeft->setObjectName(QStringLiteral("vlayFrameLeft"));
+//  vlayFrameLeft->setContentsMargins(2, 2, 2, 2);
+
   /* левая панель с кнопками */
-  frameLeft = new QFrame(this);
-  frameLeft->setObjectName(QStringLiteral("frameLeft"));
-  frameLeft->setFrameShape(QFrame::Box);
-  frameLeft->setFrameShadow(QFrame::Sunken);
-  vlayFrameLeft = new QVBoxLayout(frameLeft);
-  vlayFrameLeft->setSpacing(6);
-  vlayFrameLeft->setContentsMargins(11, 11, 11, 11);
-  vlayFrameLeft->setObjectName(QStringLiteral("vlayFrameLeft"));
-  vlayFrameLeft->setContentsMargins(2, 2, 2, 2);
+  frameTop = new QFrame(this);
+  frameTop->setObjectName(QStringLiteral("frameTop"));
+  frameTop->setFrameShape(QFrame::Panel);
+  frameTop->setFrameShadow(QFrame::Raised);
+  hlayFrameTop = new QHBoxLayout(frameTop);
+  hlayFrameTop->setSpacing(6);
+  hlayFrameTop->setObjectName(QStringLiteral("hlayFrameTop"));
+  hlayFrameTop->setContentsMargins(2, 2, 2, 2);
   
-  buttonsLeft.append(new AreaButton(frameLeft, bntAlignToLeftTop, "", "bnAlignToLeftTop", QSize(40, 40), QIcon(":/buttons/Icons/Fullscreen.ico")));
-  buttonsLeft.append(new AreaButton(frameLeft, bntDropBeacon, "", "bnDropBeacon", QSize(40, 40), QIcon(":/buttons/Icons/Download.ico")));
-  buttonsLeft.append(new AreaButton(frameLeft, bntReadSocket, "", "bnReadSocket", QSize(40, 40), QIcon(":/buttons/Icons/Globe.ico")));
-  buttonsLeft.last()->setCheckable(true);
-  buttonsLeft.append(new AreaButton(frameLeft, bntAddBeacon, "", "bnAddBeacon", QSize(40, 40), QIcon(":/buttons/Icons/AddBeacon.ico")));
-  buttonsLeft.last()->setCheckable(true);
-  buttonsLeft.append(new AreaButton(frameLeft, bntTrackAirplane, "", "bnTrackAirplane", QSize(40, 40), QIcon(":/buttons/Icons/Link.ico")));
-  buttonsLeft.last()->setCheckable(true);
-  buttonsLeft.append(new AreaButton(frameLeft, bntCenterOnAirplane, "", "bnCenterOnAirplane", QSize(40, 40), QIcon(":/buttons/Icons/Plane.ico")));
-  buttonsLeft.append(new AreaButton(frameLeft, bntNone, "o", "bnLeft5", QSize(40, 25)));
+  buttonsTop.append(new AreaButton(frameLeft, bntAlignToLeftTop, "", "bnAlignToLeftTop", QSize(24, 24), QIcon(":/buttons/Icons/Fullscreen.ico")));
+  buttonsTop.append(new AreaButton(frameLeft, bntTrackAirplane, "", "bnTrackSelfVessel", QSize(24, 24), QIcon(":/buttons/Icons/Link.ico")));
+  buttonsTop.last()->setCheckable(true);
+  buttonsTop.append(new AreaButton(frameLeft, bntCenterOnAirplane, "", "bnCenterOnSelfVessel", QSize(24, 24), QIcon(":/buttons/Icons/Plane.ico")));
   
-  foreach (AreaButton* button, buttonsLeft) {
-    vlayFrameLeft->addWidget(button);
+  buttonsTop.append(new AreaButton(frameRight, bntZoomIn, "", "bnZoomIn", QSize(24, 24), QIcon(":/buttons/Icons/ZoomIn.ico")));
+  buttonsTop.append(new AreaButton(frameRight, bntZoomOriginal, "", "bnZoomOriginal", QSize(24, 24), QIcon(":/buttons/Icons/Search.ico")));
+  buttonsTop.append(new AreaButton(frameRight, bntZoomOut, "", "bnZoomOut", QSize(24, 24), QIcon(":/buttons/Icons/ZoomOut.ico")));
+  
+  
+  foreach (AreaButton* button, buttonsTop) {
+    hlayFrameTop->addWidget(button);
     connect(button, SIGNAL(pressed()), this, SLOT(buttonPressed()));
   }
   
-  /* правая панель с кнопками */
-  frameRight = new QFrame(this);
-  frameRight->setObjectName(QStringLiteral("frameRight"));
-  frameRight->setFrameShape(QFrame::Box);
-  frameRight->setFrameShadow(QFrame::Sunken);
-  vlayFrameRight = new QVBoxLayout(frameRight);
-  vlayFrameRight->setSpacing(6);
-  vlayFrameRight->setContentsMargins(11, 11, 11, 11);
-  vlayFrameRight->setObjectName(QStringLiteral("vlayFrameRight"));
-  vlayFrameRight->setContentsMargins(2, 2, 2, 2);
+//  buttonsLeft.append(new AreaButton(frameLeft, bntAlignToLeftTop, "", "bnAlignToLeftTop", QSize(40, 40), QIcon(":/buttons/Icons/Fullscreen.ico")));
+//  buttonsLeft.append(new AreaButton(frameLeft, bntDropBeacon, "", "bnDropBeacon", QSize(40, 40), QIcon(":/buttons/Icons/Download.ico")));
+//  buttonsLeft.append(new AreaButton(frameLeft, bntReadSocket, "", "bnReadSocket", QSize(40, 40), QIcon(":/buttons/Icons/Globe.ico")));
+//  buttonsLeft.last()->setCheckable(true);
+//  buttonsLeft.append(new AreaButton(frameLeft, bntAddBeacon, "", "bnAddBeacon", QSize(40, 40), QIcon(":/buttons/Icons/AddBeacon.ico")));
+//  buttonsLeft.last()->setCheckable(true);
+//  buttonsLeft.append(new AreaButton(frameLeft, bntTrackAirplane, "", "bnTrackAirplane", QSize(40, 40), QIcon(":/buttons/Icons/Link.ico")));
+//  buttonsLeft.last()->setCheckable(true);
+//  buttonsLeft.append(new AreaButton(frameLeft, bntCenterOnAirplane, "", "bnCenterOnAirplane", QSize(40, 40), QIcon(":/buttons/Icons/Plane.ico")));
+//  buttonsLeft.append(new AreaButton(frameLeft, bntNone, "o", "bnLeft5", QSize(40, 25)));
   
-  buttonsRight.append(new AreaButton(frameRight, bntZoomIn, "", "bnZoomIn", QSize(40, 40), QIcon(":/buttons/Icons/ZoomIn.ico")));
-  buttonsRight.append(new AreaButton(frameRight, bntZoomOriginal, "", "bnZoomOriginal", QSize(40, 40), QIcon(":/buttons/Icons/Search.ico")));
-  buttonsRight.append(new AreaButton(frameRight, bntZoomOut, "", "bnZoomOut", QSize(40, 40), QIcon(":/buttons/Icons/ZoomOut.ico")));
-  buttonsRight.append(new AreaButton(frameRight, bntMoveUp, "", "bnMoveUp", QSize(40, 40), QIcon(":/buttons/Icons/Up.ico")));
-  buttonsRight.append(new AreaButton(frameRight, bntMoveDown, "", "bnMoveDown", QSize(40, 40), QIcon(":/buttons/Icons/Down.ico")));
-  buttonsRight.append(new AreaButton(frameRight, bntMoveRight, "", "bnMoveRight", QSize(40, 40), QIcon(":/buttons/Icons/Right.ico")));
-  buttonsRight.append(new AreaButton(frameRight, bntMoveLeft, "", "bnMoveLeft", QSize(40, 40), QIcon(":/buttons/Icons/Left.ico")));
+//  foreach (AreaButton* button, buttonsLeft) {
+//    vlayFrameLeft->addWidget(button);
+//    connect(button, SIGNAL(pressed()), this, SLOT(buttonPressed()));
+//  }
+  
+//  /* правая панель с кнопками */
+//  frameRight = new QFrame(this);
+//  frameRight->setObjectName(QStringLiteral("frameRight"));
+//  frameRight->setFrameShape(QFrame::Box);
+//  frameRight->setFrameShadow(QFrame::Sunken);
+//  vlayFrameRight = new QVBoxLayout(frameRight);
+//  vlayFrameRight->setSpacing(6);
+//  vlayFrameRight->setContentsMargins(11, 11, 11, 11);
+//  vlayFrameRight->setObjectName(QStringLiteral("vlayFrameRight"));
+//  vlayFrameRight->setContentsMargins(2, 2, 2, 2);
+  
+//  buttonsRight.append(new AreaButton(frameRight, bntZoomIn, "", "bnZoomIn", QSize(40, 40), QIcon(":/buttons/Icons/ZoomIn.ico")));
+//  buttonsRight.append(new AreaButton(frameRight, bntZoomOriginal, "", "bnZoomOriginal", QSize(40, 40), QIcon(":/buttons/Icons/Search.ico")));
+//  buttonsRight.append(new AreaButton(frameRight, bntZoomOut, "", "bnZoomOut", QSize(40, 40), QIcon(":/buttons/Icons/ZoomOut.ico")));
+//  buttonsRight.append(new AreaButton(frameRight, bntMoveUp, "", "bnMoveUp", QSize(40, 40), QIcon(":/buttons/Icons/Up.ico")));
+//  buttonsRight.append(new AreaButton(frameRight, bntMoveDown, "", "bnMoveDown", QSize(40, 40), QIcon(":/buttons/Icons/Down.ico")));
+//  buttonsRight.append(new AreaButton(frameRight, bntMoveRight, "", "bnMoveRight", QSize(40, 40), QIcon(":/buttons/Icons/Right.ico")));
+//  buttonsRight.append(new AreaButton(frameRight, bntMoveLeft, "", "bnMoveLeft", QSize(40, 40), QIcon(":/buttons/Icons/Left.ico")));
   
   
-  foreach (AreaButton* button, buttonsRight) {
-    vlayFrameRight->addWidget(button);
-    connect(button, SIGNAL(pressed()), this, SLOT(buttonPressed()));
-  }
+//  foreach (AreaButton* button, buttonsRight) {
+//    vlayFrameRight->addWidget(button);
+//    connect(button, SIGNAL(pressed()), this, SLOT(buttonPressed()));
+//  }
  
   
   /* виджет карты */
   widgetMap = new QWidget(this);
   widgetMap->setObjectName(QStringLiteral("widgetMap"));
-  widgetMap->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+  widgetMap->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   widgetMap->setStyleSheet(QStringLiteral("background-color: rgb(255, 250, 255);"));
 
-  /* нижняя панель с информацией */
-  frameBottom = new QFrame(this);
-  frameBottom->setObjectName(QStringLiteral("frameBottom"));
-  frameBottom->setFrameShape(QFrame::NoFrame);
-//  frameBottom->setFrameShadow(QFrame::Sunken);
-  frameBottom->setGeometry(0, 0, 0, 10);
-  frameBottom->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+  /* лог */
+//  textLog = new QTextEdit(this);
+//  textLog->setObjectName(QStringLiteral("textLog"));
+//  textLog->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
   
-  vlayFrameBottom = new QVBoxLayout(frameBottom);
-  vlayFrameBottom->setSpacing(6);
-  vlayFrameBottom->setContentsMargins(11, 11, 11, 11);
-  vlayFrameBottom->setObjectName(QStringLiteral("vlayFrameBottom"));
-  vlayFrameBottom->setContentsMargins(2, 2, 2, 2);
+//  splitter = new QSplitter(Qt::Vertical, this);
+//  splitter->setGeometry(this->rect());
+//  splitter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+//  splitter->addWidget(widgetMap);
+//  splitter->addWidget(textLog);
   
-  lblCurrentInfo = new QLabel("");
-  vlayFrameBottom->addWidget(lblCurrentInfo);
+//  /* нижняя панель с информацией */
+//  frameBottom = new QFrame(this);
+//  frameBottom->setObjectName(QStringLiteral("frameBottom"));
+//  frameBottom->setFrameShape(QFrame::NoFrame);
+////  frameBottom->setFrameShadow(QFrame::Sunken);
+//  frameBottom->setGeometry(0, 0, 0, 10);
+//  frameBottom->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
   
-  vlayCenter = new QVBoxLayout();
-  vlayCenter->setSpacing(6);
-  vlayCenter->setContentsMargins(11, 11, 11, 11);
-  vlayCenter->setObjectName(QStringLiteral("vlayCenter"));
-  vlayCenter->setContentsMargins(2, 2, 2, 2);
+//  vlayFrameBottom = new QVBoxLayout(frameBottom);
+//  vlayFrameBottom->setSpacing(6);
+//  vlayFrameBottom->setContentsMargins(11, 11, 11, 11);
+//  vlayFrameBottom->setObjectName(QStringLiteral("vlayFrameBottom"));
+//  vlayFrameBottom->setContentsMargins(2, 2, 2, 2);
   
-  vlayCenter->addWidget(widgetMap);
-  vlayCenter->addWidget(frameBottom);
+//  lblCurrentInfo = new QLabel("");
+//  vlayFrameBottom->addWidget(lblCurrentInfo);
+  
+//  vlayCenter = new QVBoxLayout();
+//  vlayCenter->setSpacing(6);
+//  vlayCenter->setContentsMargins(11, 11, 11, 11);
+//  vlayCenter->setObjectName(QStringLiteral("vlayCenter"));
+//  vlayCenter->setContentsMargins(2, 2, 2, 2);
+  
+//  vlayCenter->addWidget(widgetMap);
+//  vlayCenter->addWidget(frameBottom);
  
-  hlayMain->addWidget(frameLeft);
-  hlayMain->addLayout(vlayCenter);
-  hlayMain->addWidget(frameRight);
+  vlayMain->addWidget(frameTop);
+  vlayMain->addWidget(widgetMap);
+//  vlayMain->addWidget(textLog);
 }
 
 void area::SvArea::setUp(QString areaName)

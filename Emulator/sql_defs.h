@@ -5,13 +5,18 @@
 
 #define SQL_SELECT_VESSELS "SELECT vessels.id AS id, " CR \
                            "       vessels.self AS self, " CR \
+                           "       vessels.is_active AS is_active, " CR \
                            "       ais.static_callsign AS static_callsign, " CR \
                            "       ais.static_name AS static_name, " CR \
                            "       ais.static_imo AS static_imo, " CR \
                            "       ais.static_mmsi AS static_mmsi, " CR \
                            "       ais.static_type_ITU_id AS static_type_ITU_id, " CR \
-                           "       ais.static_length AS static_length, " CR \
-                           "       ais.static_width AS static_width, " CR \
+                           "       ais.static_pos_ref_A AS static_pos_ref_A, " CR \
+                           "       ais.static_pos_ref_B AS static_pos_ref_B, " CR \
+                           "       ais.static_pos_ref_C AS static_pos_ref_C, " CR \
+                           "       ais.static_pos_ref_D AS static_pos_ref_D, " CR \
+                           "       ais.static_DTE AS static_DTE, " CR \
+                           "       ais.static_talker_id AS static_talker_id, " CR \
                            "       ais.voyage_destination AS voyage_destination, " CR \
                            "       ais.voyage_eta AS voyage_eta, " CR \
                            "       ais.voyage_draft AS voyage_draft, " CR \
@@ -53,7 +58,7 @@
 #define SQL_ORDER_BY_VESSELS_ID_DESC "ORDER BY vessels.id DESC;"
 
 
-#define SQL_SELECT_VESSELS_WHERE_SELF (SQL_SELECT_VESSELS SQL_WHERE_SELF SQL_ORDER_BY_VESSELS_ID_ASC)
+#define SQL_SELECT_VESSELS_WHERE_SELF (SQL_SELECT_VESSELS SQL_WHERE_SELF)
 
 #define SQL_SELECT_VESSEL_WHERE_ID (SQL_SELECT_VESSELS SQL_WHERE_ID)
 
@@ -68,15 +73,19 @@
                            "                 static_type_ITU_id, " CR \
                            "                 static_callsign, " CR \
                            "                 static_name, " CR \
-                           "                 static_length, " CR \
-                           "                 static_width, " CR \
+                           "                 static_pos_ref_A, " CR \
+                           "                 static_pos_ref_B, " CR \
+                           "                 static_pos_ref_C, " CR \
+                           "                 static_pos_ref_D, " CR \
+                           "                 static_DTE, " CR \
+                           "                 static_talker_id, " CR \
                            "                 voyage_destination, " CR \
                            "                 voyage_eta, " CR \
                            "                 voyage_draft, " CR \
                            "                 voyage_cargo_type_id, " CR \
                            "                 voyage_team)  " CR \
                            "VALUES ((select id from vessels order by id desc limit 1), " CR \
-                           "        %1, %2, %3, '%4', '%5', %6, %7, '%8', '%9', %10, %11, %12);"
+                           "        %1, %2, %3, '%4', '%5', %6, %7, %8, %9, %10, '%11', '%12', '%13', %14, %15, %16);"
 
 #define SQL_INSERT_NEW_GPS "INSERT INTO gps (vessel_id," CR \
                            "                 timeout," CR \
@@ -98,14 +107,19 @@
                        "               static_type_ITU_id = %3, " CR \
                        "               static_callsign = '%4', " CR \
                        "               static_name = '%5', " CR \
-                       "               static_length = %6, " CR \
-                       "               static_width = %7, " CR \
-                       "               voyage_destination = '%8', " CR \
-                       "               voyage_eta = '%9', " CR \
-                       "               voyage_draft = %10, " CR \
-                       "               voyage_cargo_type_id = %11, " CR \
-                       "               voyage_team = %12  " CR \
-                       "WHERE vessel_id = %13 "
+                       "               static_pos_ref_A = %6, " CR \
+                       "               static_pos_ref_B = %7, " CR \
+                       "               static_pos_ref_C = %8, " CR \
+                       "               static_pos_ref_D = %9, " CR \
+                       "               static_DTE = %10, " CR \
+                       "               static_talker_id = '%11', " CR \
+                       "               voyage_destination = '%12', " CR \
+                       "               voyage_eta = '%13', " CR \
+                       "               voyage_draft = %14, " CR \
+                       "               voyage_cargo_type_id = %15, " CR \
+                       "               voyage_team = %16  " CR \
+                       "WHERE vessel_id = %17 "
+
 
 
 #define SQL_UPDATE_GPS "UPDATE gps SET timeout = %1," CR \

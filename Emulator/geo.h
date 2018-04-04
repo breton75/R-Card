@@ -46,6 +46,9 @@ namespace geo {
     qreal speed = -1.0;
     QDateTime utc = QDateTime::currentDateTimeUtc();
     quint8 accuracy = 1;
+    quint8 rate_of_turn = 0;
+    qreal drift = 0.0;
+    
     
     bool isValid() { return ((longtitude != -1.0) && (latitude != -1.0) && (course != -1) && (speed != -1.0)); }
     bool isValidCoordinates() { return ((longtitude != -1.0) && (latitude != -1.0)); }

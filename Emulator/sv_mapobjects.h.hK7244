@@ -384,7 +384,7 @@ class SvMapObjectOtherVessel : public SvMapObjectVesselAbstract
     QPointF(5.0, -3.0)    // 6
   } ;
   
-  QPen _default_pen = QPen(QBrush(QColor("darkslategrey")), 2, Qt::SolidLine);
+  QPen _default_pen = QPen(QBrush(QColor("slategrey")), 2, Qt::SolidLine);
   QBrush _default_brush = QBrush(QColor("mediumturquoise"), Qt::SolidPattern);
   
   public:
@@ -394,7 +394,7 @@ class SvMapObjectOtherVessel : public SvMapObjectVesselAbstract
     
     void setOutdated(bool isOutdate) 
     { 
-      QPen p(QBrush(QColor("darkslategrey")), 1, Qt::SolidLine);
+      QPen p(QBrush(QColor("black")), 1, Qt::DotLine);
       QBrush b(QColor(0, 0, 0, 50), Qt::SolidPattern);
       
       setBrush(isOutdate ? b : _default_brush);
@@ -434,8 +434,8 @@ class SvMapObjectSelfVessel : public SvMapObjectVesselAbstract
     QPointF(5.0, -3.0)    // 6
   } ;
   
-  QPen _default_pen = QPen(QBrush(QColor("darkslategrey")), 1, Qt::SolidLine);
-  QBrush _default_brush = QBrush(QColor("orangered"), Qt::SolidPattern);
+  QPen _default_pen = QPen(QBrush(QColor("slategrey")), 2, Qt::SolidLine);
+  QBrush _default_brush = QBrush(QColor("mediumturquoise"), Qt::SolidPattern);
   
   public:
     explicit SvMapObjectSelfVessel(QWidget* parent, int id);

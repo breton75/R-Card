@@ -4,6 +4,8 @@
 //ais::SvAIS* SELF_AIS;
 QMap<quint32, ais::aisNavStat> NAVSTATs;
 
+extern SvSQLITE* SQLITE;
+
 /** --------- Self AIS --------- **/
 ais::SvSelfAIS::SvSelfAIS(int vessel_id, const ais::aisStaticData& sdata, const ais::aisVoyageData& vdata, const ais::aisDynamicData& ddata, svlog::SvLog &log)
 //  ais::SvAIS(vessel_id, sdata, vdata, ddata)
@@ -40,7 +42,7 @@ bool ais::SvSelfAIS::open()
   _isOpened = _port.isOpen();
   
   connect(this, &ais::SvSelfAIS::write_message, this, &ais::SvSelfAIS::write);
-  connect(&_port, &QSerialPort::readyRead, this, &SvSelfAIS::readPort);
+  connect(&_port, &QSerialPort::readyRead, this, &SvSelfAIS::read);
   connect(this, &ais::SvSelfAIS::newIncomeMessage, this, &ais::SvSelfAIS::on_income_message);
   
 //  qDebug() << _port.baudRate() << _port.
@@ -52,7 +54,7 @@ void ais::SvSelfAIS::close()
 {
   _port.close();
   disconnect(this, &ais::SvSelfAIS::write_message, this, &ais::SvSelfAIS::write);
-  disconnect(&_port, &QSerialPort::readyRead, this, &SvSelfAIS::readPort);
+  disconnect(&_port, &QSerialPort::readyRead, this, &SvSelfAIS::read);
   _isOpened = false;
 }
 
@@ -84,7 +86,7 @@ void ais::SvSelfAIS::on_receive_message(ais::SvAIS* otherAIS, quint32 message_id
       case 5:
       {
        
-//        QStringList l = nmea::ais_message_5(0, otherAIS->getStaticData(), otherAIS->getVoyageData(), otherAIS->navStatus());
+//        QStringList l = nmea::ais_message_5(_static_data.talkerID, otherAIS->getStaticData(), otherAIS->getVoyageData(), otherAIS->navStatus());
 //        emit write_message(l.first());
 //        for(int i = 0; i < 100000; i++) ;
 //        emit write_message(l.last());
@@ -94,7 +96,7 @@ void ais::SvSelfAIS::on_receive_message(ais::SvAIS* otherAIS, quint32 message_id
       
       case 73: {  // Binary acknowledgement of message 3
         
-        QString abk = nmea::ais_sentence_ABK(otherAIS->getStaticData()->mmsi, 3);
+        QString abk = nmea::ais_sentence_ABK(3, _static_data.talkerID, otherAIS->getStaticData());
         emit write_message(abk);
         
         break;
@@ -102,7 +104,7 @@ void ais::SvSelfAIS::on_receive_message(ais::SvAIS* otherAIS, quint32 message_id
 
       case 75: {  // Binary acknowledgement of message 5
         
-        QString abk = nmea::ais_sentence_ABK(otherAIS->getStaticData()->mmsi, 5);
+        QString abk = nmea::ais_sentence_ABK(5, _static_data.talkerID, otherAIS->getStaticData());
         emit write_message(abk);
         
         break;
@@ -111,7 +113,7 @@ void ais::SvSelfAIS::on_receive_message(ais::SvAIS* otherAIS, quint32 message_id
       case 1:
       {
         
-        QString msg = nmea::ais_message_1_2_3(1, otherAIS->getStaticData()->mmsi, otherAIS->navStatus()->ITU_id, 10, otherAIS->getDynamicData()->geoposition);
+        QString msg = nmea::ais_message_1_2_3(1, _static_data.talkerID, otherAIS->getStaticData(), otherAIS->navStatus()->ITU_id, otherAIS->getDynamicData()->geoposition);
         emit write_message(msg);
         
         break;
@@ -121,7 +123,7 @@ void ais::SvSelfAIS::on_receive_message(ais::SvAIS* otherAIS, quint32 message_id
       case 3:
       {
         
-        QString msg = nmea::ais_message_1_2_3(3, otherAIS->getStaticData()->mmsi, otherAIS->navStatus()->ITU_id, 10, otherAIS->getDynamicData()->geoposition);
+        QString msg = nmea::ais_message_1_2_3(3, _static_data.talkerID, otherAIS->getStaticData(), otherAIS->navStatus()->ITU_id, otherAIS->getDynamicData()->geoposition);
         emit write_message(msg);
         
         break;
@@ -164,7 +166,7 @@ void ais::SvSelfAIS::write(const QString &message)
   
 }
 
-void ais::SvSelfAIS::readPort()
+void ais::SvSelfAIS::read()
 {
  QByteArray b = _port.readAll();
 
@@ -204,46 +206,8 @@ void ais::SvSelfAIS::on_income_message(QString &msg)
   
   switch (sentences.key(snt)) {
     case 0: {
-      QStringList l = msg.split(',');
-      bool ok = true;
-      QString s;
-      quint32 mmsi1 = 0;
-      quint32 msg1num = 0;
-      qint32 msg2num = 0;
-      quint32 mmsi2 = 0;
-      qint32 msg3num = 0;
       
-      // mmsi запрашиваемого судна. если пусто, то запрашиваем все суда
-      s = QString(l.at(1));
-      mmsi1 = s.toUInt(&ok);
-      if(!ok && !s.isEmpty()) return;
-      
-      // номер 1го запрашиваемого сообщения
-      s = QString(l.at(2));
-      if(s.isEmpty()) return;
-      
-      msg1num = QString(s.split('.').first()).toUInt(&ok);
-      if(!ok) return;
-      
-      // номер 2го запрашиваемого сообщения
-      s = QString(l.at(4));
-      if(!s.isEmpty()) {
-        msg2num = QString(s.split('.').first()).toUInt(&ok);
-        if(!ok) return;      
-      }
-      
-      // mmsi 2го запрашиваемого судна
-      s = QString(l.at(6));
-      mmsi2 = s.toUInt(&ok);
-      if(!ok && !s.isEmpty()) return;
-      
-      // номер 3го запрашиваемого сообщения
-      s = QString(l.at(7));
-      msg3num = QString(s.split('.').first()).toUInt(&ok);
-      if(!ok && !s.isEmpty()) return;
-      
-      emit interrogateRequest(mmsi1, msg1num, msg2num, mmsi2, msg3num);
-      
+      parse_AIR(msg);
       break;
       
     }
@@ -253,11 +217,11 @@ void ais::SvSelfAIS::on_income_message(QString &msg)
       break;
       
     case 2:
-      
+      parse_SSD(msg);
       break;
       
     case 3:
-      
+      parse_VSD(msg);
       break;
       
   }
@@ -276,13 +240,159 @@ void ais::SvSelfAIS::setSerialPortParams(const SerialPortParams& params)
   _port.setStopBits(params.stopbits);
 }
 
-void ais::SvSelfAIS::read()
+void ais::SvSelfAIS::parse_AIR(QString& msg)
 {
+  QStringList l = msg.split(',');
+  bool ok = true;
+  QString s;
+  quint32 mmsi1 = 0;
+  quint32 msg1num = 0;
+  qint32 msg2num = 0;
+  quint32 mmsi2 = 0;
+  qint32 msg3num = 0;
+  
+  // mmsi запрашиваемого судна. если пусто, то запрашиваем все суда
+  s = QString(l.at(1));
+  mmsi1 = s.toUInt(&ok);
+  if(!ok && !s.isEmpty()) return;
+  
+  // номер 1го запрашиваемого сообщения
+  s = QString(l.at(2));
+  if(s.isEmpty()) return;
+  
+  msg1num = QString(s.split('.').first()).toUInt(&ok);
+  if(!ok) return;
+  
+  // номер 2го запрашиваемого сообщения
+  s = QString(l.at(4));
+  if(!s.isEmpty()) {
+    msg2num = QString(s.split('.').first()).toUInt(&ok);
+    if(!ok) return;      
+  }
+  
+  // mmsi 2го запрашиваемого судна
+  s = QString(l.at(6));
+  mmsi2 = s.toUInt(&ok);
+  if(!ok && !s.isEmpty()) return;
+  
+  // номер 3го запрашиваемого сообщения
+  s = QString(l.at(7));
+  msg3num = QString(s.split('.').first()).toUInt(&ok);
+  if(!ok && !s.isEmpty()) return;
+  
+  emit interrogateRequest(mmsi1, msg1num, msg2num, mmsi2, msg3num);
   
 }
 
+void ais::SvSelfAIS::parse_SSD(QString& msg)
+{
+  try {
+    
+    QStringList l = msg.split(',');
+    bool ok = true;
+    
+    if(l.count() != 9) _exception.raise(QString("Неверное предложение: %1").arg(msg));
+    
+    QString callsign = QString(l.at(1)).isEmpty() ? DO_NOT_CHANGE : l.at(1);
+    
+    QString name = QString(l.at(2)).isEmpty() ? DO_NOT_CHANGE : l.at(2);
+    
+    int pos_ref_A = QString(l.at(3)).isEmpty() ? -1 : QString(l.at(3)).toInt(&ok);
+    if(!ok)  _exception.raise(QString("Неверное предложение: %1").arg(msg));
+    
+    int pos_ref_B = QString(l.at(4)).isEmpty() ? -1 : QString(l.at(4)).toInt(&ok);
+    if(!ok)  _exception.raise(QString("Неверное предложение: %1").arg(msg));
+    
+    int pos_ref_C = QString(l.at(5)).isEmpty() ? -1 : QString(l.at(5)).toInt(&ok);
+    if(!ok)  _exception.raise(QString("Неверное предложение: %1").arg(msg));
+    
+    int pos_ref_D = QString(l.at(6)).isEmpty() ? -1 : QString(l.at(6)).toInt(&ok);
+    if(!ok)  _exception.raise(QString("Неверное предложение: %1").arg(msg));
+    
+    int DTE_flag = QString(l.at(7)).isEmpty() ? -1 : QString(l.at(7)).toInt(&ok);
+    
+    QString talkerID = QString(QString(l.at(8)).split('*').first()).isEmpty() ? DO_NOT_CHANGE : QString(l.at(8)).split('*').first();
+    if((talkerID != DO_NOT_CHANGE) && (talkerID.length() != 2)) _exception.raise(QString("Неверное предложение: %1").arg(msg));
+    
+    /// пишем в базу
+    quint16 flags = 0;
+    flags |= (callsign == DO_NOT_CHANGE ? 0 : 0x01);
+    flags |= (name == DO_NOT_CHANGE ? 0 : 0x02);
+    flags |= (pos_ref_A == -1 ? 0 : 0x04);
+    flags |= (pos_ref_B == -1 ? 0 : 0x08);
+    flags |= (pos_ref_C == -1 ? 0 : 0x10);
+    flags |= (pos_ref_D == -1 ? 0 : 0x20);
+    flags |= (DTE_flag == -1 ? 0 : 0x40);
+    flags |= (talkerID == DO_NOT_CHANGE ? 0 : 0x80);  
+    
+    if(flags == 0) return;
+    qDebug() << flags;
+    QString query = QString("update ais set %1%2%3%4%5%6%7%8")
+                    .arg((flags & 0x01) == 0 ? "" : QString("static_callsign = '%1', ").arg(callsign))
+                    .arg((flags & 0x02) == 0 ? "" : QString("static_name = '%1', ").arg(name))
+                    .arg((flags & 0x04) == 0 ? "" : QString("static_pos_ref_A = %1, ").arg(pos_ref_A))
+                    .arg((flags & 0x08) == 0 ? "" : QString("static_pos_ref_B = %1, ").arg(pos_ref_B))
+                    .arg((flags & 0x10) == 0 ? "" : QString("static_pos_ref_C = %1, ").arg(pos_ref_C))
+                    .arg((flags & 0x20) == 0 ? "" : QString("static_pos_ref_D = %1, ").arg(pos_ref_D))
+                    .arg((flags & 0x40) == 0 ? "" : QString("static_DTE = %1, ").arg(DTE_flag))
+                    .arg((flags & 0x80) == 0 ? "" : QString("static_talker_id = '%1', ").arg(talkerID))
+                    ;
+    // убираем последнюю запятую
+    if(query.right(2) == ", ") query.chop(2);
+    
+    query.append(QString(" where vessel_id = %1").arg(_vessel_id));
+    
+    /// пытаемся записать в базу
+    QSqlError err = SQLITE->execSQL(query);
+    if(err.type() != QSqlError::NoError) _exception.raise(QString("Ошибка при попытке изменить статическую информацию судна: %1").arg(err.text()));
+    
+    
+    
+    _log << svlog::Success << svlog::Time 
+         << QString("Обновлена статическая информация:\n%1%2%3%4%5%6%7%8")
+                            .arg((flags & 0x01) == 0 ? "" : QString("\tCallsign = '%1'\n").arg(callsign))
+                            .arg((flags & 0x02) == 0 ? "" : QString("\tName = '%1'\n").arg(name))
+                            .arg((flags & 0x04) == 0 ? "" : QString("\tPos_ref_A = %1\n").arg(pos_ref_A))
+                            .arg((flags & 0x08) == 0 ? "" : QString("\tPos_ref_B = %1\n").arg(pos_ref_B))
+                            .arg((flags & 0x10) == 0 ? "" : QString("\tPos_ref_C = %1\n").arg(pos_ref_C))
+                            .arg((flags & 0x20) == 0 ? "" : QString("\tPos_ref_D = %1\n").arg(pos_ref_D))
+                            .arg((flags & 0x40) == 0 ? "" : QString("\tDTE = %1\n").arg(DTE_flag))
+                            .arg((flags & 0x80) == 0 ? "" : QString("\tTalkerId = '%1'\n").arg(talkerID))
+         << svlog::endl;
+    
+        
+    /// если записали в БД, то меняем парметры
+    ais::aisStaticData sd;
+    if(flags & 0x01) sd.callsign = callsign;
+    if(flags & 0x02) sd.name = name;
+    if(flags & 0x04) sd.pos_ref_A = pos_ref_A;
+    if(flags & 0x08) sd.pos_ref_B = pos_ref_B;
+    if(flags & 0x10) sd.pos_ref_C = pos_ref_C;
+    if(flags & 0x20) sd.pos_ref_D = pos_ref_D;
+    if(flags & 0x40) sd.DTE = DTE_flag;
+    if(flags & 0x80) sd.talkerID = talkerID;
+    
+    setStaticData(sd);
+    
+  }
 
-/** ----- Vessel AIS ------- **/
+  catch(SvException &e) {
+    
+    _log << svlog::Error << svlog::Time 
+         << e.err
+         << svlog::endl;
+    
+  }
+    
+}
+
+void ais::SvSelfAIS::parse_VSD(QString& msg)
+{
+  QStringList l = msg.split(',');
+  bool ok = true;
+}
+
+/** ----- Other AIS ------- **/
 ais::SvOtherAIS::SvOtherAIS(int vessel_id, const ais::aisStaticData& sdata, const ais::aisVoyageData& vdata, const ais::aisDynamicData& ddata)
 {
   _vessel_id = vessel_id;
@@ -302,6 +412,7 @@ bool ais::SvOtherAIS::open()
 {
   _isOpened = true; 
 }
+
 void ais::SvOtherAIS::close()
 {
   _isOpened = false;
@@ -393,48 +504,3 @@ void ais::SvOtherAIS::on_interrogate(quint32 mmsi1, quint32 msg1num, quint32 msg
   }
   
 }
-
-//void ais::SvAIS::receivedGeoPosition(SvAIS* ais)
-//{
-//  if(distanceTo(ais) < _receive_range) {
-    
-//    _dynamic_data.geoposition = ais;
-//    emit ais->
-//    emit updateVessel(); 
-//  }
-    
-//}
-
-
-
-///** ******  EMITTER  ****** **/
-//ais::SvAISEmitter::SvAISEmitter(aisStaticData *sdata, aisVoyageData *vdata, aisDynamicData *ddata, QMutex *mutex)
-//{
-//  _static_data = sdata;
-//  _voyage_data = vdata;
-//  _dynamic_data = ddata;
-  
-//  _mutex = mutex;
-//}
-  
-//ais::SvAISEmitter::~SvAISEmitter()
-//{ 
-//  stop();
-//  deleteLater();
-//}
-
-//void ais::SvAISEmitter::stop()
-//{
-  
-//}
-
-//void ais::SvAISEmitter::run()
-//{
-//  while(_started) {
-    
-//    QTime t = QTime::currentTime();
-    
-////    if()
-    
-//  }
-//}

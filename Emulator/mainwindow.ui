@@ -55,8 +55,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>386</width>
-               <height>270</height>
+               <width>384</width>
+               <height>268</height>
               </rect>
              </property>
              <attribute name="label">
@@ -214,8 +214,8 @@ color: rgb(0, 0, 127);</string>
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>386</width>
-               <height>270</height>
+               <width>384</width>
+               <height>268</height>
               </rect>
              </property>
              <attribute name="label">
@@ -327,6 +327,21 @@ color: rgb(0, 0, 127);</string>
               <string>Параметры судов для имитации</string>
              </attribute>
              <layout class="QVBoxLayout" name="verticalLayout_5">
+              <property name="spacing">
+               <number>2</number>
+              </property>
+              <property name="leftMargin">
+               <number>2</number>
+              </property>
+              <property name="topMargin">
+               <number>2</number>
+              </property>
+              <property name="rightMargin">
+               <number>2</number>
+              </property>
+              <property name="bottomMargin">
+               <number>2</number>
+              </property>
               <item>
                <widget class="QFrame" name="graphControlFrame_2">
                 <property name="frameShape">
@@ -459,6 +474,16 @@ color: rgb(0, 0, 127);</string>
                   <weight>50</weight>
                   <bold>false</bold>
                  </font>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTextEdit" name="textMapObjectInfo">
+                <property name="styleSheet">
+                 <string notr="true">background-color: rgb(240, 240, 240);</string>
+                </property>
+                <property name="readOnly">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -1272,7 +1297,7 @@ color: rgb(0, 0, 127);</string>
   </widget>
   <widget class="QDockWidget" name="dockCarrentInfo">
    <property name="floating">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
    <property name="windowTitle">
     <string>Информация о судне</string>
@@ -1281,18 +1306,7 @@ color: rgb(0, 0, 127);</string>
     <number>8</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_3">
-    <layout class="QVBoxLayout" name="verticalLayout_13">
-     <item>
-      <widget class="QTextEdit" name="textMapObjectInfo">
-       <property name="styleSheet">
-        <string notr="true">background-color: rgb(240, 240, 240);</string>
-       </property>
-       <property name="readOnly">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-    </layout>
+    <layout class="QVBoxLayout" name="verticalLayout_13"/>
    </widget>
   </widget>
   <action name="actionNewVessel">

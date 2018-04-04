@@ -369,11 +369,14 @@ ais::aisStaticData  MainWindow::getAISStaticData(QSqlQuery* q)
   result.imo = q->value("static_imo").toUInt();
   result.callsign = q->value("static_callsign").toString();
   result.name = q->value("static_name").toString();
-  result.length = q->value("static_length").isNull() ? 20 : q->value("static_length").toUInt();
-  result.width = q->value("static_width").isNull() ? 20 : q->value("static_width").toUInt();
+  result.pos_ref_A = q->value("static_pos_ref_A").isNull() ? 20 : q->value("static_pos_ref_A").toUInt();
+  result.pos_ref_B = q->value("static_pos_ref_B").isNull() ? 20 : q->value("static_pos_ref_B").toUInt();
+  result.pos_ref_C = q->value("static_pos_ref_C").isNull() ? 10 : q->value("static_pos_ref_C").toUInt();
+  result.pos_ref_D = q->value("static_pos_ref_D").isNull() ? 10 : q->value("static_pos_ref_D").toUInt();
   result.type_ITU_id = q->value("static_type_ITU_id").toUInt();
   result.type_name = q->value("static_vessel_type_name").toString();
-  
+  result.DTE = q->value("static_DTE").toUInt();
+  result.talkerID = q->value("static_talker_id").toString();
   return result;
 }
 
@@ -703,6 +706,7 @@ vsl::SvVessel *MainWindow::createOtherVessel(QSqlQuery* q)
   
   // читаем информацию из БД  
   int vessel_id = q->value("id").toUInt();
+  bool is_active = q->value("is_active").toBool();
   
   ais::aisStaticData static_data = getAISStaticData(q); 
   ais::aisVoyageData voyage_data = getAISVoyageData(q);
@@ -730,7 +734,9 @@ vsl::SvVessel *MainWindow::createOtherVessel(QSqlQuery* q)
   newVessel->mountAIS(newAIS);
 //  newVessel->mountLAG(SELF_LAG);
   
-  newVessel->assignMapObject(new SvMapObjectVessel(_area, vessel_id));
+  newVessel->assignMapObject(new SvMapObjectOtherVessel(_area, vessel_id));
+  
+  newVessel->setActive(is_active);
     
   _area->scene->addMapObject(newVessel->mapObject());
   newVessel->mapObject()->setVisible(true);
@@ -741,7 +747,9 @@ vsl::SvVessel *MainWindow::createOtherVessel(QSqlQuery* q)
   _area->scene->addMapObject(newVessel->mapObject()->identifier());
   newVessel->mapObject()->identifier()->setVisible(true);
   newVessel->mapObject()->identifier()->setZValue(1);
+  newVessel->mapObject()->setActive(is_active);
       
+  
   // подключаем
   connect(newGPS, SIGNAL(newGPSData(const geo::GEOPOSITION&)), newAIS, SLOT(newGPSData(const geo::GEOPOSITION&)));
   
@@ -775,11 +783,11 @@ void MainWindow::update_vessel_by_id(int id)
     
     if(_self_ais->distanceTo(vessel->ais()) > _self_ais->receiveRange() * 1000) {
       
-      ((SvMapObjectVessel*)(vessel->mapObject()))->setOutdated(true);
+      ((SvMapObjectOtherVessel*)(vessel->mapObject()))->setOutdated(true);
     }
     else {
       
-      ((SvMapObjectVessel*)(vessel->mapObject()))->setOutdated(false);
+      ((SvMapObjectOtherVessel*)(vessel->mapObject()))->setOutdated(false);
       vessel->updateVessel();
       
     }  
@@ -1009,8 +1017,8 @@ void MainWindow::on_listVessels_doubleClicked(const QModelIndex &index)
 
 void MainWindow::on_bnSetActive_clicked()
 {
-//  if(_selected_vessel_id = _self_vessel->id)
-//    return;
+  if(_selected_vessel_id == _self_vessel->id)
+    return;
   
   if(VESSELs.find(_selected_vessel_id) == VESSELs.end())
     return;
