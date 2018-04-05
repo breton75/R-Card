@@ -50,7 +50,7 @@ inline QByteArray nmea::str_to_6bit(const QString& str)
   
 }
 
-QString nmea::ais_message_1_2_3(quint8 message_id, QString& talkerID, ais::aisStaticData* static_data, quint8 nav_status, geo::GEOPOSITION &geopos) //, int true_heading, QDateTime utc,
+QString nmea::ais_message_1_2_3(quint8 message_id, QString& talkerID, ais::aisStaticVoyageData* static_voyage_data, quint8 nav_status, geo::GEOPOSITION &geopos) //, int true_heading, QDateTime utc,
 //                 int manouevre, int raim, int communication_state)
 {
   QString result = "";
@@ -65,7 +65,7 @@ QString nmea::ais_message_1_2_3(quint8 message_id, QString& talkerID, ais::aisSt
   b6[1] = (0 & 0x03) << 4; // 2 значащих бита
   
   /// User ID
-  quint64 mmsi64 = static_data->mmsi & 0x3FFFFFFF; // 30 значащих бит
+  quint64 mmsi64 = static_voyage_data->mmsi & 0x3FFFFFFF; // 30 значащих бит
   mmsi64 <<= 32; // << 32;
   
   for(int i = 0; i < 6; i++) {
@@ -162,7 +162,7 @@ QString nmea::ais_message_1_2_3(quint8 message_id, QString& talkerID, ais::aisSt
   
 }
 
-QStringList nmea::ais_message_5(QString &talkerID, ais::aisStaticData* static_data, ais::aisVoyageData* voyage_data, ais::aisNavStat* navstat)
+QStringList nmea::ais_message_5(QString &talkerID, ais::aisStaticVoyageData* static_voyage_data, ais::aisNavStat* navstat)
 {
   QStringList result = QStringList();
   
@@ -176,7 +176,7 @@ QStringList nmea::ais_message_5(QString &talkerID, ais::aisStaticData* static_da
   b6[1] = (0 & 0x03) << 4; // 2 значащих бита
   
   /// User ID
-  quint64 mmsi64 = static_data->mmsi & 0x3FFFFFFF; // 30 значащих бит
+  quint64 mmsi64 = static_voyage_data->mmsi & 0x3FFFFFFF; // 30 значащих бит
   mmsi64 <<= 32; // << 32;
   
   for(int i = 0; i < 6; i++) {
@@ -190,7 +190,7 @@ QStringList nmea::ais_message_5(QString &talkerID, ais::aisStaticData* static_da
 
   
   /// IMO number
-  quint64 imo64 = static_data->imo & 0x3FFFFFFF; // 30 значащих бит
+  quint64 imo64 = static_voyage_data->imo & 0x3FFFFFFF; // 30 значащих бит
   imo64 <<= 28; // << 28;
   
   for(int i = 0; i < 6; i++) {
@@ -200,33 +200,33 @@ QStringList nmea::ais_message_5(QString &talkerID, ais::aisStaticData* static_da
   }
   
   /// Callsign
-  for(int i = 0; i < static_data->callsign.left(7).length(); i++) {  // static_data->callsign.length()
+  for(int i = 0; i < static_voyage_data->callsign.left(7).length(); i++) {  // static_voyage_data->callsign.length()
 
-    quint8 c = quint8(static_data->callsign.at(i).toLatin1()) & 0x3F; //str6bit.at(i) & 0x3F;  //  
+    quint8 c = quint8(static_voyage_data->callsign.at(i).toLatin1()) & 0x3F; //str6bit.at(i) & 0x3F;  //  
     b6[11 + i] += c >> 4;
     b6[12 + i] += (c & 0x0F) << 2;
     
   }
 
   /// Name
-  for(int i = 0; i < static_data->name.left(20).length(); i++) {
+  for(int i = 0; i < static_voyage_data->name.left(20).length(); i++) {
     
-    quint8 c = quint8(static_data->name.at(i).toLatin1()) &0x3F;
+    quint8 c = quint8(static_voyage_data->name.at(i).toLatin1()) &0x3F;
     b6[18 + i] += c >> 4;
     b6[19 + i] += (c & 0x0F) << 2;
     
   }
 
   /// Type of ship and cargo type
-  b6[38] += static_data->type_ITU_id >> 6;
-  b6[39] += static_data->type_ITU_id & 0x3F;
+  b6[38] += static_voyage_data->vessel_ITU_id >> 6;
+  b6[39] += static_voyage_data->vessel_ITU_id & 0x3F;
 
   
   /// Overall dimension/ reference for position
-  quint16 A = static_data->pos_ref_A > 0x01FF ? 0x01FF : static_data->pos_ref_A;
-  quint16 B = static_data->pos_ref_B > 0x01FF ? 0x01FF : static_data->pos_ref_B;
-  quint8 C = static_data->pos_ref_C > 0x3F ? 0x3F : static_data->pos_ref_C;
-  quint8 D = static_data->pos_ref_D > 0x3F ? 0x3F : static_data->pos_ref_D;
+  quint16 A = static_voyage_data->pos_ref_A > 0x01FF ? 0x01FF : static_voyage_data->pos_ref_A;
+  quint16 B = static_voyage_data->pos_ref_B > 0x01FF ? 0x01FF : static_voyage_data->pos_ref_B;
+  quint8 C = static_voyage_data->pos_ref_C > 0x3F ? 0x3F : static_voyage_data->pos_ref_C;
+  quint8 D = static_voyage_data->pos_ref_D > 0x3F ? 0x3F : static_voyage_data->pos_ref_D;
 
   b6[40] += D;
   b6[41] += C;
@@ -240,10 +240,10 @@ QStringList nmea::ais_message_5(QString &talkerID, ais::aisStaticData* static_da
   
   
   /// Estimated time of arrival
-  quint8 minute = voyage_data->eta.time().minute() & 0x3F;  // 6 bits
-  quint8 hour = voyage_data->eta.time().hour() & 0x1F;      // 5 bits
-  quint8 day = voyage_data->eta.date().day() & 0x1F;        // 5 bits
-  quint8 month = voyage_data->eta.date().month() & 0x0F;    // 4 bits
+  quint8 minute = static_voyage_data->ETA_utc.minute() & 0x3F;  // 6 bits
+  quint8 hour = static_voyage_data->ETA_utc.hour() & 0x1F;      // 5 bits
+  quint8 day = static_voyage_data->ETA_day & 0x1F;              // 5 bits
+  quint8 month = static_voyage_data->ETA_month & 0x0F;          // 4 bits
   
   b6[45] += minute >> 4;
   b6[46] += (minute & 0x0F) << 2;
@@ -258,15 +258,15 @@ QStringList nmea::ais_message_5(QString &talkerID, ais::aisStaticData* static_da
   
   
   /// Maximum present static draught
-  quint8 draft = voyage_data->draft * 10 > 255 ? 255 : quint8(trunc(voyage_data->draft * 10));
+  quint8 draft = static_voyage_data->draft * 10 > 255 ? 255 : quint8(trunc(static_voyage_data->draft * 10));
   
   b6[49] += draft >> 2;
   b6[50] += (draft & 0x03) << 4;
   
   /// Destination
-  for(int i = 0; i < voyage_data->destination.left(20).length(); i++) {
+  for(int i = 0; i < static_voyage_data->destination.left(20).length(); i++) {
     
-    quint8 c = quint8(voyage_data->destination.at(i).toLatin1()) & 0x3F;
+    quint8 c = quint8(static_voyage_data->destination.at(i).toLatin1()) & 0x3F;
     b6[50 + i] += c >> 2;
     b6[51 + i] += (c & 0x03) << 4;
     
@@ -306,9 +306,9 @@ QStringList nmea::ais_message_5(QString &talkerID, ais::aisStaticData* static_da
   
 }
 
-QString nmea::ais_sentence_ABK(quint8 message_id, QString &talkerID, ais::aisStaticData* static_data)
+QString nmea::ais_sentence_ABK(quint8 message_id, QString &talkerID, ais::aisStaticVoyageData *static_voyage_data)
 {
-  QString result = QString("$%1ABK,%2,A,%3,,3*").arg(talkerID).arg(static_data->mmsi).arg(message_id);
+  QString result = QString("$%1ABK,%2,A,%3,,3*").arg(talkerID).arg(static_voyage_data->mmsi).arg(message_id);
   
   quint8 src = 0;
   for(int i = 1; i <= result.length() - 2; i++)

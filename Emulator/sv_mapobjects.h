@@ -38,10 +38,12 @@ enum SvMapObjectTypes
 };
 
 #define DEFAULT_SELECTION_COLOR 0xffef0b
-//namespace MapO {
-//QColor defaultSelectionColor = QColor(0xffef0b);
-//}
 
+#define INACTIVE_VESSEL_COLOR "firebrick"   // QColor("firebrick")
+#define OUTDATED_VESSEL_COLOR "lightgrey"
+#define OUTDATED_VESSEL_PEN_COLOR "darkslategrey"
+#define DEFAULT_VESSEL_COLOR "mediumturquoise"
+#define DEFAULT_VESSEL_PEN_COLOR "darkslategrey"
 
 class SvSignalHandler : public QObject
 {
@@ -384,8 +386,8 @@ class SvMapObjectOtherVessel : public SvMapObjectVesselAbstract
     QPointF(5.0, -3.0)    // 6
   } ;
   
-  QPen _default_pen = QPen(QBrush(QColor("darkslategrey")), 2, Qt::SolidLine);
-  QBrush _default_brush = QBrush(QColor("mediumturquoise"), Qt::SolidPattern);
+  QPen _default_pen = QPen(QBrush(QColor(DEFAULT_VESSEL_PEN_COLOR)), 2, Qt::SolidLine);
+  QBrush _default_brush = QBrush(QColor(DEFAULT_VESSEL_COLOR), Qt::SolidPattern);
   
   public:
     explicit SvMapObjectOtherVessel(QWidget* parent, int id);
@@ -394,8 +396,8 @@ class SvMapObjectOtherVessel : public SvMapObjectVesselAbstract
     
     void setOutdated(bool isOutdate) 
     { 
-      QPen p(QBrush(QColor("darkslategrey")), 1, Qt::SolidLine);
-      QBrush b(QColor(0, 0, 0, 50), Qt::SolidPattern);
+      QPen p(QBrush(QColor(OUTDATED_VESSEL_PEN_COLOR)), 1, Qt::SolidLine);
+      QBrush b(QColor(OUTDATED_VESSEL_COLOR), Qt::SolidPattern);
       
       setBrush(isOutdate ? b : _default_brush);
       setPen(isOutdate ? p : _default_pen);
@@ -404,7 +406,7 @@ class SvMapObjectOtherVessel : public SvMapObjectVesselAbstract
     
     void setActive(bool isActive) 
     { 
-      QPen p(QBrush(QColor("firebrick")), 2);
+      QPen p(QBrush(QColor(INACTIVE_VESSEL_COLOR)), 2);
       QBrush b(Qt::NoBrush);
       
       setBrush(isActive ? brush() : b);

@@ -24,4 +24,15 @@
     <file>Icons/Link.ico</file>
     <file>Icons/Search.ico</file>
   </qresource>
+  <qresource prefix="icons">
+    <file>Icons/bullet_black.png</file>
+    <file>Icons/bullet_blue.png</file>
+    <file>Icons/bullet_green.png</file>
+    <file>Icons/bullet_red.png</file>
+    <file>Icons/bullet_toggle_minus.png</file>
+    <file>Icons/bullet_white.png</file>
+    <file>Icons/link_break.png</file>
+    <file>Icons/lock.png</file>
+    <file>Icons/Anchor.ico</file>
+  </qresource>
 </RCC>

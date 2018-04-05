@@ -44,15 +44,10 @@ public:
   svlog::SvLog log;
   
 public slots:
-//  void on_bnStart_clicked();
- 
-//  gps::GPSParams fillVesselInitParams(QSqlQuery* q) const;
-//  vsl:: setVesselData(QSqlQuery* q);
-  gps::gpsInitParams getGPSInitParams(QSqlQuery* q, ais::aisDynamicData &dynamic_data, int vessel_id);
-  ais::aisStaticData getAISStaticData(QSqlQuery* q);
-  ais::aisVoyageData getAISVoyageData(QSqlQuery* q);
-  ais::aisDynamicData getAISDynamicData(QSqlQuery* q);
-  ais::aisNavStat getNavStat(QSqlQuery* q);
+  gps::gpsInitParams readGPSInitParams(QSqlQuery* q, ais::aisDynamicData &dynamic_data, int vessel_id);
+  ais::aisStaticVoyageData readAISStaticVoyageData(QSqlQuery* q);
+  ais::aisDynamicData readAISDynamicData(QSqlQuery* q);
+  ais::aisNavStat readNavStat(QSqlQuery* q);
   
   void updateMapObjectInfo(SvMapObject* mapObject);
   
@@ -92,6 +87,10 @@ private:
 //  QSerialPort _echo_serial;
   
   int _selected_vessel_id = -1;
+  
+  QFont _font_default;
+  QFont _font_inactive;
+  QFont _font_nolink;
   
 public slots:
   void update_vessel_by_id(int id);

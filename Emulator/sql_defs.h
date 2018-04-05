@@ -18,9 +18,11 @@
                            "       ais.static_DTE AS static_DTE, " CR \
                            "       ais.static_talker_id AS static_talker_id, " CR \
                            "       ais.voyage_destination AS voyage_destination, " CR \
-                           "       ais.voyage_eta AS voyage_eta, " CR \
+                           "       ais.voyage_ETA_utc AS voyage_ETA_utc, " CR \
+                           "       ais.voyage_ETA_day AS voyage_ETA_day, " CR \
+                           "       ais.voyage_ETA_month AS voyage_ETA_month, " CR \
                            "       ais.voyage_draft AS voyage_draft, " CR \
-                           "       ais.voyage_cargo_type_id AS voyage_cargo_type_id, " CR \
+                           "       ais.voyage_cargo_ITU_id AS voyage_cargo_ITU_id, " CR \
                            "       ais.voyage_team AS voyage_team, " CR \
                            "       ais.dynamic_course AS dynamic_course, " CR \
                            "       ais.dynamic_latitude AS dynamic_latitude, " CR \
@@ -45,7 +47,7 @@
                            "FROM vessels " CR \
                            "LEFT JOIN gps ON vessels.id = gps.vessel_id " CR \
                            "LEFT JOIN ais ON vessels.id = ais.vessel_id " CR \
-                           "LEFT JOIN cargo_types ON ais.voyage_cargo_type_id = cargo_types.id " CR \
+                           "LEFT JOIN cargo_types ON ais.voyage_cargo_ITU_id = cargo_types.ITU_id " CR \
                            "LEFT JOIN vessel_types ON ais.static_type_ITU_id = vessel_types.ITU_id " CR \
                            "LEFT JOIN nav_statuses ON ais.nav_status_ITU_id = nav_statuses.ITU_id  "
 
@@ -80,12 +82,14 @@
                            "                 static_DTE, " CR \
                            "                 static_talker_id, " CR \
                            "                 voyage_destination, " CR \
-                           "                 voyage_eta, " CR \
+                           "                 voyage_ETA_utc, " CR \
+                           "                 voyage_ETA_day, " CR \
+                           "                 voyage_ETA_month, " CR \
                            "                 voyage_draft, " CR \
-                           "                 voyage_cargo_type_id, " CR \
+                           "                 voyage_cargo_ITU_id, " CR \
                            "                 voyage_team)  " CR \
                            "VALUES ((select id from vessels order by id desc limit 1), " CR \
-                           "        %1, %2, %3, '%4', '%5', %6, %7, %8, %9, %10, '%11', '%12', '%13', %14, %15, %16);"
+                           "        %1, %2, %3, '%4', '%5', %6, %7, %8, %9, %10, '%11', '%12', '%13', %14, %15, %16, %17, %18);"
 
 #define SQL_INSERT_NEW_GPS "INSERT INTO gps (vessel_id," CR \
                            "                 timeout," CR \
@@ -114,11 +118,13 @@
                        "               static_DTE = %10, " CR \
                        "               static_talker_id = '%11', " CR \
                        "               voyage_destination = '%12', " CR \
-                       "               voyage_eta = '%13', " CR \
-                       "               voyage_draft = %14, " CR \
-                       "               voyage_cargo_type_id = %15, " CR \
-                       "               voyage_team = %16  " CR \
-                       "WHERE vessel_id = %17 "
+                       "               voyage_ETA_utc = '%13', " CR \
+                       "               voyage_ETA_day = %14, " CR \
+                       "               voyage_ETA_month = %15, " CR \
+                       "               voyage_draft = %16, " CR \
+                       "               voyage_cargo_ITU_id = %17, " CR \
+                       "               voyage_team = %18  " CR \
+                       "WHERE vessel_id = %19 "
 
 
 
@@ -135,7 +141,7 @@
 
 
 #define SQL_SELECT_VESSEL_TYPES "SELECT ITU_id, type_name FROM vessel_types;"
-#define SQL_SELECT_CARGO_TYPES "SELECT id, type_name FROM cargo_types;"
+#define SQL_SELECT_CARGO_TYPES "SELECT ITU_id, type_name FROM cargo_types;"
 #define SQL_SELECT_NAV_STATS "select ITU_id, status_name, static_voyage_interval, dynamic_interval from nav_statuses"
 #define SQL_SELECT_LAG_TYPES "select id, type_name from lag_types"
 

@@ -55,8 +55,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>384</width>
-               <height>268</height>
+               <width>383</width>
+               <height>270</height>
               </rect>
              </property>
              <attribute name="label">
@@ -214,8 +214,8 @@ color: rgb(0, 0, 127);</string>
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>384</width>
-               <height>268</height>
+               <width>383</width>
+               <height>270</height>
               </rect>
              </property>
              <attribute name="label">
@@ -319,7 +319,7 @@ color: rgb(0, 0, 127);</string>
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>386</width>
+               <width>383</width>
                <height>270</height>
               </rect>
              </property>

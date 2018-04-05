@@ -27,12 +27,8 @@ vsl::SvVessel::~SvVessel()
 
 void vsl::SvVessel::updateVessel()
 {
-////  if(_self_vessel) qDebug() << _self_vessel->ais()->receiveRange();
-  
-//  if(!_self_vessel || (_self_vessel && (distanceToSelfVessel() < _self_vessel->ais()->receiveRange() * 1000))) {
-    _map_object->setGeoPosition(_ais->getDynamicData()->geoposition);
-    emit updateMapObjectPos(_map_object, _ais->getDynamicData()->geoposition);
-//  }
+    _map_object->setGeoPosition(_ais->dynamicData()->geoposition);
+    emit updateMapObjectPos(_map_object, _ais->dynamicData()->geoposition);
 }
 
 void vsl::SvVessel::start()

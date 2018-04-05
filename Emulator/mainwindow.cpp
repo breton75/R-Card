@@ -61,6 +61,9 @@ MainWindow::MainWindow(QWidget *parent) :
 //    ui->cbNAVTEKSelectInterface->addItem(spinf.portName());
 //  }
 
+  _font_default.setItalic(false);
+  _font_inactive.setItalic(true);
+  _font_nolink.setItalic(true);
   
 }
 
@@ -305,7 +308,7 @@ MainWindow::~MainWindow()
   delete ui;
 }
 
-gps::gpsInitParams MainWindow::getGPSInitParams(QSqlQuery* q, ais::aisDynamicData& dynamic_data, int vessel_id)
+gps::gpsInitParams MainWindow::readGPSInitParams(QSqlQuery* q, ais::aisDynamicData& dynamic_data, int vessel_id)
 {
   gps::gpsInitParams result;
   QDateTime dt = q->value("gps_last_update").toDateTime(); // для нормальной генерации случайных чисел
@@ -361,9 +364,9 @@ gps::gpsInitParams MainWindow::getGPSInitParams(QSqlQuery* q, ais::aisDynamicDat
   return result;
 }
 
-ais::aisStaticData  MainWindow::getAISStaticData(QSqlQuery* q)
+ais::aisStaticVoyageData  MainWindow::readAISStaticVoyageData(QSqlQuery* q)
 {
-  ais::aisStaticData result;
+  ais::aisStaticVoyageData result;
   result.id = q->value("id").toUInt();
   result.mmsi = q->value("static_mmsi").toUInt();
   result.imo = q->value("static_imo").toUInt();
@@ -373,26 +376,24 @@ ais::aisStaticData  MainWindow::getAISStaticData(QSqlQuery* q)
   result.pos_ref_B = q->value("static_pos_ref_B").isNull() ? 20 : q->value("static_pos_ref_B").toUInt();
   result.pos_ref_C = q->value("static_pos_ref_C").isNull() ? 10 : q->value("static_pos_ref_C").toUInt();
   result.pos_ref_D = q->value("static_pos_ref_D").isNull() ? 10 : q->value("static_pos_ref_D").toUInt();
-  result.type_ITU_id = q->value("static_type_ITU_id").toUInt();
-  result.type_name = q->value("static_vessel_type_name").toString();
+  result.vessel_ITU_id = q->value("static_type_ITU_id").toUInt();
+//  result.vessel_type_name = q->value("static_vessel_type_name").toString();
   result.DTE = q->value("static_DTE").toUInt();
   result.talkerID = q->value("static_talker_id").toString();
-  return result;
-}
-
-ais::aisVoyageData MainWindow::getAISVoyageData(QSqlQuery* q)
-{
-  ais::aisVoyageData result;
-  result.cargo = q->value("voyage_cargo_type_name").toString();
+  
+  result.cargo_ITU_id = q->value("voyage_cargo_ITU_id").toUInt();
+//  result.cargo_type_name = q->value("voyage_cargo_type_name").toString();
   result.destination = q->value("voyage_destination").toString();
-  result.eta = q->value("voyage_eta").toDateTime();  
+  result.ETA_utc = q->value("voyage_ETA_utc").toTime();
+  result.ETA_day = q->value("voyage_ETA_day").toUInt();
+  result.ETA_month = q->value("voyage_ETA_month").toUInt();
   result.draft = q->value("voyage_draft").toReal();
   result.team = q->value("voyage_team").toUInt();
   
   return result;
 }
 
-ais::aisDynamicData MainWindow::getAISDynamicData(QSqlQuery* q)
+ais::aisDynamicData MainWindow::readAISDynamicData(QSqlQuery* q)
 {
   ais::aisDynamicData result;
   result.geoposition.latitude = q->value("dynamic_latitude").isNull() ? -1.0 : q->value("dynamic_latitude").toReal();
@@ -403,7 +404,7 @@ ais::aisDynamicData MainWindow::getAISDynamicData(QSqlQuery* q)
   return result;
 }
 
-ais::aisNavStat MainWindow::getNavStat(QSqlQuery* q)
+ais::aisNavStat MainWindow::readNavStat(QSqlQuery* q)
 {
   ais::aisNavStat result;
   result.ITU_id = q->value("nav_status_ITU_id").toUInt(); 
@@ -419,7 +420,7 @@ void MainWindow::stateChanged(States state)
     
     case sRunned:
     {
-      ui->tabWidget->setEnabled(false);
+      ui->tabWidget->setEnabled(true);
       ui->bnCycle->setEnabled(true);
       ui->bnCycle->setText("Стоп");
       ui->bnCycle->setStyleSheet("background-color: tomato");
@@ -570,7 +571,7 @@ void MainWindow::area_selection_changed()
   /// выделяем судно в списке  
   disconnect(ui->listVessels, &QListWidget::currentItemChanged, this, &MainWindow::currentVesselListItemChanged);
   
-  if((_selected_vessel_id == -1) || (_self_vessel->id == _selected_vessel_id)) {\
+  if((_selected_vessel_id == -1) /*|| (_self_vessel->id == _selected_vessel_id)*/) {\
     ui->listVessels->setCurrentRow(-1);
     ui->textMapObjectInfo->setText("");
   }
@@ -601,20 +602,20 @@ void MainWindow::updateMapObjectInfo(SvMapObject* mapObject)
         
         ais::SvAIS* a = AISs.value(mapObject->id());
       
-        ui->textMapObjectInfo->setText(QString("Текущий объект:\nID:\t%1\nCallsign:\t%2\nMMSI:\t%3\nIMO:\t%4\nDest:\t%5\nDraft:\t%6\nTeam:\t%7\n\n"
+        ui->textMapObjectInfo->setText(QString("Текущее судно:\nID:\t%1\nCallsign:\t%2\nMMSI:\t%3\nIMO:\t%4\nDest:\t%5\nDraft:\t%6\nTeam:\t%7\n\n"
                                         "Текущая геопозиция:\nШирота:\t%8\nДолгота:\t%9\nКурс:\t%10%11\nСкорость:\t%12 км/ч\nСтатус:\t%13")
                             .arg(a->vesselId())
-                            .arg(a->getStaticData()->callsign)
-                            .arg(a->getStaticData()->mmsi)
-                            .arg(a->getStaticData()->imo)
-                            .arg(a->getVoyageData()->destination)
-                            .arg(a->getVoyageData()->draft)
-                            .arg(a->getVoyageData()->team)
-                            .arg(a->getDynamicData()->geoposition.latitude, 0, 'g', 4)
-                            .arg(a->getDynamicData()->geoposition.longtitude, 0, 'g', 4)
-                            .arg(a->getDynamicData()->geoposition.course)
+                            .arg(a->staticVoyageData()->callsign)
+                            .arg(a->staticVoyageData()->mmsi)
+                            .arg(a->staticVoyageData()->imo)
+                            .arg(a->staticVoyageData()->destination)
+                            .arg(a->staticVoyageData()->draft)
+                            .arg(a->staticVoyageData()->team)
+                            .arg(a->dynamicData()->geoposition.latitude, 0, 'g', 4)
+                            .arg(a->dynamicData()->geoposition.longtitude, 0, 'g', 4)
+                            .arg(a->dynamicData()->geoposition.course)
                             .arg(QChar(176))
-                            .arg(a->getDynamicData()->geoposition.speed, 0, 'g', 2)
+                            .arg(a->dynamicData()->geoposition.speed, 0, 'g', 2)
                             .arg(a->navStatus()->name));
         
       }
@@ -628,18 +629,17 @@ void MainWindow::updateMapObjectInfo(SvMapObject* mapObject)
   }
 }
 
-vsl::SvVessel *MainWindow::createSelfVessel(QSqlQuery* q)
+vsl::SvVessel* MainWindow::createSelfVessel(QSqlQuery* q)
 {  
   /*! _area должна уже быть проинициализирована !! */
   
   // читаем информацию из БД  
   int vessel_id = q->value("id").toUInt();
   
-  ais::aisStaticData static_data = getAISStaticData(q); 
-  ais::aisVoyageData voyage_data = getAISVoyageData(q);
-  ais::aisDynamicData dynamic_data = getAISDynamicData(q);
-  gps::gpsInitParams gps_params = getGPSInitParams(q, dynamic_data, vessel_id);
-  ais::aisNavStat nav_stat = getNavStat(q);
+  ais::aisStaticVoyageData static_voyage_data = readAISStaticVoyageData(q); 
+  ais::aisDynamicData dynamic_data = readAISDynamicData(q);
+  gps::gpsInitParams gps_params = readGPSInitParams(q, dynamic_data, vessel_id);
+  ais::aisNavStat nav_stat = readNavStat(q);
   
   
   /** ----- создаем устройства ------ **/
@@ -648,7 +648,7 @@ vsl::SvVessel *MainWindow::createSelfVessel(QSqlQuery* q)
   GPSs.insert(vessel_id, _self_gps);
   
   // АИС
-  _self_ais = new ais::SvSelfAIS(vessel_id, static_data, voyage_data, dynamic_data, log);
+  _self_ais = new ais::SvSelfAIS(vessel_id, static_voyage_data, dynamic_data, log);
   _self_ais->setReceiveRange(ui->dspinAISRadius->value()); /** надо переделать */
   AISs.insert(vessel_id, _self_ais);
   _self_ais->setNavStatus(nav_stat);
@@ -687,20 +687,16 @@ vsl::SvVessel *MainWindow::createSelfVessel(QSqlQuery* q)
   connect(this, &MainWindow::startLAGEmulation, _self_lag, &lag::SvLAG::start);
   connect(this, &MainWindow::stopLAGEmulation, _self_lag, &lag::SvLAG::stop);
   
-  ui->textEdit->setText(QString("ID:\t%1\nCallsign:\t%2\nMMSI:\t%3\nIMO:\t\t%4\nDest:\t%5\nDraft:\t%6\nTeam:\t%7")
-                        .arg(vessel_id)
-                        .arg(static_data.callsign)
-                        .arg(static_data.mmsi)
-                        .arg(static_data.imo)
-                        .arg(voyage_data.destination)
-                        .arg(voyage_data.draft)
-                        .arg(voyage_data.team));
+  
+  LISTITEMs.insert(vessel_id, new QListWidgetItem(QIcon(":/icons/Icons/lock.png"), QString("%1\t%2 [Собственный]").arg(vessel_id).arg(static_voyage_data.name)));
+  ui->listVessels->addItem(LISTITEMs.value(vessel_id));
+     
   
   return _self_vessel;
   
 }
 
-vsl::SvVessel *MainWindow::createOtherVessel(QSqlQuery* q)
+vsl::SvVessel* MainWindow::createOtherVessel(QSqlQuery* q)
 {  
   /*! _area должна уже быть проинициализирована !! */
   
@@ -708,11 +704,10 @@ vsl::SvVessel *MainWindow::createOtherVessel(QSqlQuery* q)
   int vessel_id = q->value("id").toUInt();
   bool is_active = q->value("is_active").toBool();
   
-  ais::aisStaticData static_data = getAISStaticData(q); 
-  ais::aisVoyageData voyage_data = getAISVoyageData(q);
-  ais::aisDynamicData dynamic_data = getAISDynamicData(q);
-  gps::gpsInitParams gps_params = getGPSInitParams(q, dynamic_data, vessel_id);
-  ais::aisNavStat nav_stat = getNavStat(q);                     
+  ais::aisStaticVoyageData static_voyage_data = readAISStaticVoyageData(q); 
+  ais::aisDynamicData dynamic_data = readAISDynamicData(q);
+  gps::gpsInitParams gps_params = readGPSInitParams(q, dynamic_data, vessel_id);
+  ais::aisNavStat nav_stat = readNavStat(q);                     
   
   /** ----- создаем устройства ------ **/
   // GPS
@@ -722,7 +717,7 @@ vsl::SvVessel *MainWindow::createOtherVessel(QSqlQuery* q)
   
   // АИС
   ais::SvOtherAIS* newAIS;
-  newAIS = new ais::SvOtherAIS(vessel_id, static_data, voyage_data, dynamic_data);
+  newAIS = new ais::SvOtherAIS(vessel_id, static_voyage_data, dynamic_data);
   AISs.insert(vessel_id, newAIS);
   newAIS->setNavStatus(nav_stat);
   
@@ -768,8 +763,12 @@ vsl::SvVessel *MainWindow::createOtherVessel(QSqlQuery* q)
   connect(this, &MainWindow::startAISEmulation, newAIS, &ais::SvOtherAIS::start);
   connect(this, &MainWindow::stopAISEmulation, newAIS, &ais::SvOtherAIS::stop);
   
-  LISTITEMs.insert(vessel_id, new QListWidgetItem(QString("%1 %2").arg(vessel_id).arg(static_data.callsign)));
+  LISTITEMs.insert(vessel_id, new QListWidgetItem(QIcon(), QString("%1\t%2").arg(vessel_id).arg(static_voyage_data.name)));
   ui->listVessels->addItem(LISTITEMs.value(vessel_id));
+  
+  LISTITEMs.value(vessel_id)->setTextColor(newVessel->isActive() ? QColor(DEFAULT_VESSEL_PEN_COLOR) : QColor(INACTIVE_VESSEL_COLOR));
+  LISTITEMs.value(vessel_id)->setFont(newVessel->isActive() ? _font_default : _font_inactive);
+  LISTITEMs.value(vessel_id)->setIcon(newVessel->isActive() ? QIcon(":/icons/Icons/bullet_white.png") : QIcon(":/icons/Icons/bullet_red.png"));
   
   return newVessel;
   
@@ -784,13 +783,23 @@ void MainWindow::update_vessel_by_id(int id)
     if(_self_ais->distanceTo(vessel->ais()) > _self_ais->receiveRange() * 1000) {
       
       ((SvMapObjectOtherVessel*)(vessel->mapObject()))->setOutdated(true);
+  
+      LISTITEMs.value(id)->setIcon(QIcon(":/icons/Icons/link_break.png"));
+      LISTITEMs.value(id)->setFont(_font_nolink);
+      LISTITEMs.value(id)->setTextColor(QColor(OUTDATED_VESSEL_COLOR));
+      
     }
     else {
       
       ((SvMapObjectOtherVessel*)(vessel->mapObject()))->setOutdated(false);
-      vessel->updateVessel();
+      
+      LISTITEMs.value(id)->setIcon(QIcon(":/icons/Icons/bullet_green.png"));
+      LISTITEMs.value(id)->setFont(_font_default);
+      LISTITEMs.value(id)->setTextColor(QColor(DEFAULT_VESSEL_PEN_COLOR));
       
     }  
+    
+    vessel->updateVessel();
     
   }
 }
@@ -850,6 +859,9 @@ void MainWindow::on_actionEditVessel_triggered()
 
 void MainWindow::editVessel(int id)
 {
+  if(_current_state != sStopped)
+    return;
+  
   VESSELEDITOR_UI = new SvVesselEditor(0, id);
   if(VESSELEDITOR_UI->exec() != QDialog::Accepted) {
     
@@ -889,47 +901,24 @@ void MainWindow::editVessel(int id)
       
     /** --------- изменяем данные судна ----------- **/
     
-    ais::aisStaticData static_data = getAISStaticData(q); 
-    ais::aisVoyageData voyage_data = getAISVoyageData(q);
-    ais::aisDynamicData *dynamic_data = VESSELs.value(id)->ais()->getDynamicData();
-    gps::gpsInitParams gps_params = getGPSInitParams(q, *dynamic_data, id);
+    ais::aisStaticVoyageData static_voyage_data = readAISStaticVoyageData(q); 
+    ais::aisDynamicData *dynamic_data = VESSELs.value(id)->ais()->dynamicData();
+    gps::gpsInitParams gps_params = readGPSInitParams(q, *dynamic_data, id);
     q->finish();
     
 //    dynamic_data.geoposition = VESSELs.value(id)->ais()->getDynamicData()->geoposition;
     
     vsl::SvVessel* vessel = VESSELs.value(id);
     
-    vessel->ais()->setStaticData(static_data);
-    vessel->ais()->setVoyageData(voyage_data);
-//    vessel->ais()->setDynamicData(dynamic_data);
+    vessel->ais()->setStaticVoyageData(static_voyage_data);
     vessel->gps()->setInitParams(gps_params);
     
     vessel->updateVessel();
     
-    LISTITEMs.value(id)->setText(QString("%1 %2").arg(id).arg(static_data.callsign));
+    LISTITEMs.value(id)->setText(QString("%1\t%2").arg(id).arg(static_voyage_data.name));
   }
 }
 
-//void MainWindow::on_listVessels_currentRowChanged(int currentRow)
-//{
-//  QStringList lst = ui->listVessels->currentItem()->text().split(" ");
-//  int id = QString(lst.first()).toInt();
-  
-  
-//  if(VESSELs.find(id) != VESSELs.end()) {
-    
-//    foreach (QGraphicsItem* item, _area->scene->selectedItems()) {
-//      item->setSelected(false);
-//    } 
-    
-        
-//    vsl::SvVessel* v = VESSELs.value(id);
-    
-//    v->mapObject()->setSelected(true);
-  
-//  }
-  
-//}
 
 void MainWindow::on_bnAISEditSerialParams_clicked()
 {
@@ -1026,5 +1015,10 @@ void MainWindow::on_bnSetActive_clicked()
   vsl::SvVessel* vessel = VESSELs.value(_selected_vessel_id);
   vessel->setActive(!vessel->isActive());
   vessel->mapObject()->setActive(vessel->isActive());
+
+  LISTITEMs.value(_selected_vessel_id)->setTextColor(vessel->isActive() ? QColor(DEFAULT_VESSEL_COLOR) : QColor(INACTIVE_VESSEL_COLOR));
+  LISTITEMs.value(_selected_vessel_id)->setFont(vessel->isActive() ? _font_default : _font_inactive);
+  LISTITEMs.value(_selected_vessel_id)->setIcon(vessel->isActive() ? QIcon(":/icons/Icons/bullet_white.png") : QIcon(":/icons/Icons/bullet_red.png"));
+  
 //  update_vessel_by_id(_selected_vessel_id);
 }

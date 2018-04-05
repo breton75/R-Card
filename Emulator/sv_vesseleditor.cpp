@@ -37,8 +37,8 @@ SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId, bool self) :
       t_static_name = q->value("static_name").toString();
       t_static_imo = q->value("static_imo").toUInt();
       t_static_mmsi = q->value("static_mmsi").toUInt();
-      t_static_type_id = q->value("static_type_ITU_id").toUInt();
-      t_static_vessel_type_name = q->value("static_vessel_type_name").toString();
+      t_static_vessel_ITU_id = q->value("static_type_ITU_id").toUInt();
+//      t_static_vessel_type_name = q->value("static_vessel_type_name").toString();
       t_static_pos_ref_A = q->value("static_pos_ref_A").toUInt();
       t_static_pos_ref_B = q->value("static_pos_ref_B").toUInt();
       t_static_pos_ref_C = q->value("static_pos_ref_C").toUInt();
@@ -47,10 +47,12 @@ SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId, bool self) :
       t_static_talker_ID = q->value("static_talker_id").toString();
                                  
       t_voyage_destination = q->value("voyage_destination").toString();
-      t_voyage_eta = q->value("voyage_eta").toDateTime();
+      t_voyage_ETA_utc = q->value("voyage_ETA_utc").toTime();
+      t_voyage_ETA_day = q->value("voyage_ETA_day").toUInt();
+      t_voyage_ETA_month = q->value("voyage_ETA_month").toUInt();
       t_voyage_draft = q->value("voyage_draft").toReal();
-      t_voyage_cargo_type_id = q->value("voyage_cargo_type_id").toUInt();
-      t_voyage_cargo_type_name = q->value("voyage_cargo_type_name").toString();
+      t_voyage_cargo_ITU_id = q->value("voyage_cargo_ITU_id").toUInt();
+//      t_voyage_cargo_type_name = q->value("voyage_cargo_type_name").toString();
       t_voyage_team = q->value("voyage_team").toUInt();
                                  
       t_gps_timeout = q->value("gps_timeout").toUInt();
@@ -77,7 +79,7 @@ SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId, bool self) :
   ui->spinIMO->setValue(t_static_imo);
   ui->spinMMSI->setValue(t_static_mmsi);
   
-  ui->cbVesselType->setCurrentIndex(ui->cbVesselType->findData(t_static_type_id));
+  ui->cbVesselType->setCurrentIndex(ui->cbVesselType->findData(t_static_vessel_ITU_id));
   
   ui->spinPosRefA->setValue(t_static_pos_ref_A);
   ui->spinPosRefB->setValue(t_static_pos_ref_B);
@@ -87,10 +89,12 @@ SvVesselEditor::SvVesselEditor(QWidget *parent, int vesselId, bool self) :
   ui->editTalkerID->setText(t_static_talker_ID);
   
   ui->editDestination->setText(t_voyage_destination);
-  ui->dateTimeEstimatedTimeOfArrival->setDateTime(t_voyage_eta);
+  ui->timeETAutc->setTime(t_voyage_ETA_utc);
+  ui->spinETAday->setValue(t_voyage_ETA_day);
+  ui->spinETAmonth->setValue(t_voyage_ETA_month);
   ui->dspinDraft->setValue(t_voyage_draft);
       
-  ui->cbCargoType->setCurrentIndex(ui->cbCargoType->findData(t_voyage_cargo_type_id));
+  ui->cbCargoType->setCurrentIndex(ui->cbCargoType->findData(t_voyage_cargo_ITU_id));
   
   ui->spinTeam->setValue(t_voyage_team);
   
@@ -151,7 +155,7 @@ void SvVesselEditor::loadCargoTypes()
   
   while(q->next())
     ui->cbCargoType->addItem(q->value("type_name").toString(),
-                              q->value("id").toInt());
+                              q->value("ITU_id").toUInt());
 
   q->finish();
   delete q;
@@ -185,7 +189,7 @@ void SvVesselEditor::accept()
   t_static_imo = ui->spinIMO->value();
   t_static_mmsi = ui->spinMMSI->value();
   
-  t_static_type_id = ui->cbVesselType->currentData().toUInt();
+  t_static_vessel_ITU_id = ui->cbVesselType->currentData().toUInt();
   
   t_static_pos_ref_A = ui->spinPosRefA->value();
   t_static_pos_ref_B = ui->spinPosRefB->value();
@@ -195,10 +199,12 @@ void SvVesselEditor::accept()
   t_static_talker_ID = ui->editTalkerID->text();
   
   t_voyage_destination = ui->editDestination->text();
-  t_voyage_eta = ui->dateTimeEstimatedTimeOfArrival->dateTime();
+  t_voyage_ETA_utc = ui->timeETAutc->time();
+  t_voyage_ETA_day = ui->spinETAday->value();
+  t_voyage_ETA_month = ui->spinETAmonth->value();
   t_voyage_draft = ui->dspinDraft->value();
       
-  t_voyage_cargo_type_id = ui->cbCargoType->currentData().toUInt();
+  t_voyage_cargo_ITU_id = ui->cbCargoType->currentData().toUInt();
   
   t_voyage_team = ui->spinTeam-> value();
   
@@ -227,7 +233,7 @@ void SvVesselEditor::accept()
           sql = SQLITE->execSQL(QString(SQL_INSERT_NEW_AIS)
                                 .arg(t_static_mmsi)
                                 .arg(t_static_imo)
-                                .arg(t_static_type_id)
+                                .arg(t_static_vessel_ITU_id)
                                 .arg(t_static_callsign)
                                 .arg(t_static_name)
                                 .arg(t_static_pos_ref_A)
@@ -237,9 +243,11 @@ void SvVesselEditor::accept()
                                 .arg(t_static_DTE)
                                 .arg(t_static_talker_ID)
                                 .arg(t_voyage_destination)
-                                .arg(t_voyage_eta.toString("yyyy/mm/dd hh:MM:ss"))
+                                .arg(t_voyage_ETA_utc.toString("hh:mm:ss"))
+                                .arg(t_voyage_ETA_day)
+                                .arg(t_voyage_ETA_month)
                                 .arg(t_voyage_draft)
-                                .arg(t_voyage_cargo_type_id)
+                                .arg(t_voyage_cargo_ITU_id)
                                 .arg(t_voyage_team));
                 
           if(QSqlError::NoError != sql.type()) _exception.raise(sql.databaseText());
@@ -282,7 +290,7 @@ void SvVesselEditor::accept()
         QSqlError sql = SQLITE->execSQL(QString(SQL_UPDATE_AIS)
                                         .arg(t_static_mmsi)
                                         .arg(t_static_imo)
-                                        .arg(t_static_type_id)
+                                        .arg(t_static_vessel_ITU_id)
                                         .arg(t_static_callsign)
                                         .arg(t_static_name)
                                         .arg(t_static_pos_ref_A)
@@ -292,9 +300,11 @@ void SvVesselEditor::accept()
                                         .arg(t_static_DTE)
                                         .arg(t_static_talker_ID)
                                         .arg(t_voyage_destination)
-                                        .arg(t_voyage_eta.toString("yyyy/mm/dd hh:MM:ss"))
+                                        .arg(t_voyage_ETA_utc.toString("hh:mm:ss"))
+                                        .arg(t_voyage_ETA_day)
+                                        .arg(t_voyage_ETA_month)
                                         .arg(t_voyage_draft)
-                                        .arg(t_voyage_cargo_type_id)
+                                        .arg(t_voyage_cargo_ITU_id)
                                         .arg(t_voyage_team)
                                         .arg(t_vessel_id));
       

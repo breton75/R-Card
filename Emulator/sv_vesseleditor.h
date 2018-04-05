@@ -37,8 +37,8 @@ public:
   QString t_static_name = "";
   quint32 t_static_imo = 0;
   quint32 t_static_mmsi = 0;
-  quint32 t_static_type_id;
-  QString t_static_vessel_type_name = "";
+  quint32 t_static_vessel_ITU_id;
+//  QString t_static_vessel_type_name = "";
   quint32 t_static_pos_ref_A = 20;
   quint32 t_static_pos_ref_B = 20;
   quint32 t_static_pos_ref_C = 10;
@@ -47,10 +47,12 @@ public:
   QString t_static_talker_ID = "AI";
   
   QString t_voyage_destination = "";
-  QDateTime t_voyage_eta = QDateTime::currentDateTime();
+  QTime t_voyage_ETA_utc = QTime::currentTime();
+  quint8 t_voyage_ETA_day = 1;
+  quint8 t_voyage_ETA_month = 1;
   qreal   t_voyage_draft = 1.0;
-  quint32 t_voyage_cargo_type_id = 0;
-  QString t_voyage_cargo_type_name = "";
+  quint32 t_voyage_cargo_ITU_id = 0;
+//  QString t_voyage_cargo_type_name = "";
   quint32 t_voyage_team = 1;
   
   quint32 t_gps_timeout = 1000;

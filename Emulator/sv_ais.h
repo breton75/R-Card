@@ -19,7 +19,8 @@
 #include "../../svlib/sv_sqlite.h"
 #include "sv_exception.h"
 
-#define DO_NOT_CHANGE "do not change"
+#define DO_NOT_CHANGE_s "do not change"
+#define DO_NOT_CHANGE_i -1
 
 namespace ais {
 
@@ -30,7 +31,7 @@ namespace ais {
     adtDynamic
   };
   
-  struct aisStaticData {                     // Информация о судне. Данные передаются каждые 6 минут
+  struct aisStaticVoyageData {        // Информация о судне. Данные передаются каждые 6 минут
     
     quint32 id;                           // id судна в БД
     quint32 mmsi;                         // Номер MMSI
@@ -41,10 +42,20 @@ namespace ais {
     quint32 pos_ref_B;                    // Габариты (A + B = длина; C + D = ширина)
     quint32 pos_ref_C;
     quint32 pos_ref_D;
-    quint32 type_ITU_id;                  // Тип плавучего средства
-    QString type_name;
+    quint32 vessel_ITU_id;                // Тип плавучего средства
+//    QString type_name;
     quint8  DTE;                          // флаг DTE
     QString talkerID = "AI";              // идентификатор устройства для NMEA
+    
+    QString destination;                  // Пункт назначения
+    QTime ETA_utc;                        // Время прибытия (ЕТА)
+    quint8 ETA_day;
+    quint8 ETA_month;
+    qreal draft;                          // Осадка судна
+    quint32 cargo_ITU_id;                 // тип опасности груза
+//    QString cargo_type_name;              // Информация о грузе (класс/категория груза)
+    quint32 team;
+    quint8  navstat_ITU_id;               // Навигационный статус
     
   };
   
@@ -62,15 +73,16 @@ namespace ais {
   
   };
   
-  struct aisVoyageData {                     // Рейсовая информация
+//  struct aisStaticVoyageData {                     // Рейсовая информация
   
-    QString destination;                  // Пункт назначения
-    QDateTime eta;                        // Время прибытия (ЕТА)
-    qreal draft;                          // Осадка судна
-    QString cargo;                        // Информация о грузе (класс/категория груза)
-    quint32 team;                         // Количество людей на борту
-                                          // Сообщения для предупреждения и обеспечения безопасности грузоперевозки
-  };
+//    QString destination;                  // Пункт назначения
+//    QDateTime eta;                        // Время прибытия (ЕТА)
+//    qreal draft;                          // Осадка судна
+//    quint32 cargo_type_ITU_id;            // тип опасности груза
+//    QString cargo_type_name;              // Информация о грузе (класс/категория груза)
+//    quint32 team;                         // Количество людей на борту
+//                                          // Сообщения для предупреждения и обеспечения безопасности грузоперевозки
+//  };
   
   struct aisNavStat {
     int ITU_id;
@@ -92,14 +104,13 @@ class ais::SvAIS : public idev::SvIDevice
   Q_OBJECT
   
 public:
-//  SvAIS(int vessel_id, const ais::aisStaticData& sdata, const ais::aisVoyageData& vdata, const ais::aisDynamicData& ddata);
+//  SvAIS(int vessel_id, const ais::aisStaticVoyageData& sdata, const ais::aisStaticVoyageData& vdata, const ais::aisDynamicData& ddata);
 //  ~SvAIS(); 
   
   void setVesselId(int id) { _vessel_id = id; }
   int vesselId() { return _vessel_id; }
   
-  void setStaticData(const ais::aisStaticData& sdata) { _static_data = sdata; }
-  void setVoyageData(const ais::aisVoyageData& vdata) { _voyage_data = vdata; }
+  void setStaticVoyageData(const ais::aisStaticVoyageData& svdata) { _static_voyage_data = svdata; }
   void setDynamicData(const ais::aisDynamicData& ddata) { _dynamic_data = ddata; }
   
   void setGeoPosition(const geo::GEOPOSITION& geopos) { _dynamic_data.geoposition = geopos; }
@@ -107,9 +118,8 @@ public:
   ais::aisNavStat* navStatus() { return &_nav_status; }
   void setNavStatus(const ais::aisNavStat status) { _nav_status = status; }
   
-  ais::aisStaticData  *getStaticData() { return &_static_data; }
-  ais::aisVoyageData  *getVoyageData() { return &_voyage_data; }
-  ais::aisDynamicData *getDynamicData() { return &_dynamic_data; }
+  ais::aisStaticVoyageData  *staticVoyageData() { return &_static_voyage_data; }
+  ais::aisDynamicData *dynamicData() { return &_dynamic_data; }
   
 //  idev::SvSimulatedDeviceTypes type();
     
@@ -123,8 +133,7 @@ public:
   friend class ais::SvOtherAIS;
   
 private:
-  ais::aisStaticData _static_data;
-  ais::aisVoyageData _voyage_data;
+  ais::aisStaticVoyageData _static_voyage_data;
   ais::aisDynamicData _dynamic_data;
   
   int _vessel_id = -1;
@@ -142,7 +151,7 @@ class ais::SvSelfAIS : public ais::SvAIS
   Q_OBJECT
   
 public:
-  SvSelfAIS(int vessel_id, const ais::aisStaticData& sdata, const ais::aisVoyageData& vdata, const ais::aisDynamicData& ddata, svlog::SvLog& log);
+  SvSelfAIS(int vessel_id, const ais::aisStaticVoyageData& svdata, const ais::aisDynamicData& ddata, svlog::SvLog& log);
   ~SvSelfAIS(); 
   
   void setSerialPortParams(const SerialPortParams& params);
@@ -158,8 +167,8 @@ public:
                                           
   idev::SvSimulatedDeviceTypes type() const { return idev::sdtSelfAIS; }
   
-//  ais::aisStaticData *aisStaticData() { return &_static_data; }
-//  ais::aisVoyageData *aisVoyageData() { return &_voyage_data; }
+//  ais::aisStaticVoyageData *aisStaticVoyageData() { return &_static_data; }
+//  ais::aisStaticVoyageData *aisStaticVoyageData() { return &_voyage_data; }
 //  ais::aisDynamicData *aisDynamicData() { return &_dynamic_data; }
   
   bool open();
@@ -185,6 +194,7 @@ private:
   void parse_AIR(QString& msg);
   void parse_SSD(QString& msg);
   void parse_VSD(QString& msg);
+  void parse_Q(QString& msg);
   
 private slots:
   void write(const QString& message);
@@ -212,7 +222,7 @@ class ais::SvOtherAIS : public ais::SvAIS
   Q_OBJECT
   
 public:
-  SvOtherAIS(int vessel_id, const ais::aisStaticData& sdata, const ais::aisVoyageData& vdata, const ais::aisDynamicData& ddata);
+  SvOtherAIS(int vessel_id, const ais::aisStaticVoyageData& svdata, const ais::aisDynamicData& ddata);
   ~SvOtherAIS(); 
   
   idev::SvSimulatedDeviceTypes type() const { return idev::sdtOtherAIS; }
@@ -243,6 +253,7 @@ public slots:
 private slots:
   void on_timer_static_voyage()  { _timer_static_voyage.setInterval(_static_voyage_interval);
                                    emit broadcast_message(this, 5); }
+  
 //  void on_timer_voyage()  { emit broadcast_ais_data(this, ais::aisVoyage); }
   void on_timer_dynamic() { emit broadcast_message(this, 1); }
 
@@ -255,7 +266,7 @@ private slots:
 //  Q_OBJECT
   
 //public:
-//  SvAISEmitter(ais::aisStaticData *sdata, ais::aisVoyageData *vdata, ais::aisDynamicData *ddata, QMutex *mutex);
+//  SvAISEmitter(ais::aisStaticVoyageData *sdata, ais::aisStaticVoyageData *vdata, ais::aisDynamicData *ddata, QMutex *mutex);
 //  ~SvAISEmitter();
   
 //  void stop();
@@ -268,15 +279,15 @@ private slots:
 //  bool _started = false;
 //  bool _finished = false;
   
-//  ais::aisStaticData *_static_data = nullptr;
-//  ais::aisVoyageData *_voyage_data = nullptr;
+//  ais::aisStaticVoyageData *_static_data = nullptr;
+//  ais::aisStaticVoyageData *_voyage_data = nullptr;
 //  ais::aisDynamicData *_dynamic_data = nullptr;
   
 //  QMutex *_mutex = nullptr;
   
 //signals:
-//  void ais_static_data(ais::aisStaticData *data);
-//  void ais_voyage_data(ais::aisVoyageData *data);
+//  void ais_static_data(ais::aisStaticVoyageData *data);
+//  void ais_voyage_data(ais::aisStaticVoyageData *data);
 //  void ais_dynamic_data(ais::aisDynamicData *data);
   
 //};
