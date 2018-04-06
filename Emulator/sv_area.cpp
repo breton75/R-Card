@@ -59,14 +59,14 @@ area::SvArea::SvArea(QWidget *parent) :
   hlayFrameTop->setObjectName(QStringLiteral("hlayFrameTop"));
   hlayFrameTop->setContentsMargins(2, 2, 2, 2);
   
-  buttonsTop.append(new AreaButton(frameLeft, bntAlignToLeftTop, "", "bnAlignToLeftTop", QSize(24, 24), QIcon(":/buttons/Icons/Fullscreen.ico")));
-  buttonsTop.append(new AreaButton(frameLeft, bntTrackAirplane, "", "bnTrackSelfVessel", QSize(24, 24), QIcon(":/buttons/Icons/Link.ico")));
+  buttonsTop.append(new AreaButton(frameTop, bntAlignToLeftTop, "", "bnAlignToLeftTop", QSize(24, 24), QIcon(":/buttons/Icons/Fullscreen.ico")));
+  buttonsTop.append(new AreaButton(frameTop, bntTrackAirplane, "", "bnTrackSelfVessel", QSize(24, 24), QIcon(":/buttons/Icons/Link.ico")));
   buttonsTop.last()->setCheckable(true);
-  buttonsTop.append(new AreaButton(frameLeft, bntCenterOnAirplane, "", "bnCenterOnSelfVessel", QSize(24, 24), QIcon(":/buttons/Icons/Plane.ico")));
+  buttonsTop.append(new AreaButton(frameTop, bntCenterOnAirplane, "", "bnCenterOnSelfVessel", QSize(24, 24), QIcon(":/buttons/Icons/Plane.ico")));
   
-  buttonsTop.append(new AreaButton(frameRight, bntZoomIn, "", "bnZoomIn", QSize(24, 24), QIcon(":/buttons/Icons/ZoomIn.ico")));
-  buttonsTop.append(new AreaButton(frameRight, bntZoomOriginal, "", "bnZoomOriginal", QSize(24, 24), QIcon(":/buttons/Icons/Search.ico")));
-  buttonsTop.append(new AreaButton(frameRight, bntZoomOut, "", "bnZoomOut", QSize(24, 24), QIcon(":/buttons/Icons/ZoomOut.ico")));
+  buttonsTop.append(new AreaButton(frameTop, bntZoomIn, "", "bnZoomIn", QSize(24, 24), QIcon(":/buttons/Icons/ZoomIn.ico")));
+  buttonsTop.append(new AreaButton(frameTop, bntZoomOriginal, "", "bnZoomOriginal", QSize(24, 24), QIcon(":/buttons/Icons/Search.ico")));
+  buttonsTop.append(new AreaButton(frameTop, bntZoomOut, "", "bnZoomOut", QSize(24, 24), QIcon(":/buttons/Icons/ZoomOut.ico")));
   
   
   foreach (AreaButton* button, buttonsTop) {
@@ -305,7 +305,7 @@ void area::SvArea::trackAirplane(qreal lon, qreal lat, int angle)
     }
   }
   
-  if(_trackAirplane)
+  if(_trackSelfVessel)
     centerAirplane();
   **/
   scene->update();
@@ -501,27 +501,27 @@ void area::SvArea::buttonPressed()
       
     case bntAddBeacon:
     {
-      foreach (AreaButton *btn, buttonsLeft) {
-        btn->setEnabled(_editMode || (btn == button));
-      }
+//      foreach (AreaButton *btn, buttonsLeft) {
+//        btn->setEnabled(_editMode || (btn == button));
+//      }
       
-      button->setChecked(_editMode);
-      button->setIcon(!_editMode ? QIcon(":/buttons/Icons/Save.ico") : QIcon(":/buttons/Icons/Pen.ico"));
+//      button->setChecked(_editMode);
+//      button->setIcon(!_editMode ? QIcon(":/buttons/Icons/Save.ico") : QIcon(":/buttons/Icons/Pen.ico"));
       
-      _editMode = !_editMode;
-//      qDebug() << hint;
-      if(hint) {
-        hint->deleteLater();
-        hint = nullptr;
-      }
-      else {
-        hint = new QLabel("Щелкните на карте для добавления нового буя", nullptr, Qt::ToolTip);
-        hint->move(QApplication::activeWindow()->pos() + QPoint(QApplication::activeWindow()->width() / 2 - 150, 100));
-        hint->resize(300, 30);
-        hint->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-        hint->setStyleSheet("background-color: rgb(255, 255, 127);");
-        hint->setVisible(true);
-      }
+//      _editMode = !_editMode;
+////      qDebug() << hint;
+//      if(hint) {
+//        hint->deleteLater();
+//        hint = nullptr;
+//      }
+//      else {
+//        hint = new QLabel("Щелкните на карте для добавления нового буя", nullptr, Qt::ToolTip);
+//        hint->move(QApplication::activeWindow()->pos() + QPoint(QApplication::activeWindow()->width() / 2 - 150, 100));
+//        hint->resize(300, 30);
+//        hint->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+//        hint->setStyleSheet("background-color: rgb(255, 255, 127);");
+//        hint->setVisible(true);
+//      }
       
       break;
      }
@@ -545,12 +545,12 @@ void area::SvArea::buttonPressed()
       break;
       
     case bntCenterOnAirplane:
-      centerAirplane();
+      centerSelfVessel();
       break;
       
     case bntTrackAirplane:
-      button->setChecked(_trackAirplane);
-      _trackAirplane = !_trackAirplane;
+      button->setChecked(_trackSelfVessel);
+      _trackSelfVessel = !_trackSelfVessel;
       break;
       
      
@@ -639,8 +639,8 @@ void area::SvArea::scaleInc()
   _area_data.scale *= 1.25;
   setScale(_area_data.scale);
   
-  if(_trackAirplane)
-    centerAirplane();
+  if(_trackSelfVessel)
+    centerSelfVessel();
 }
 
 void area::SvArea::scaleDec()
@@ -651,8 +651,8 @@ void area::SvArea::scaleDec()
   _area_data.scale /= 1.25;
   setScale(_area_data.scale);
 
-  if(_trackAirplane)
-    centerAirplane();
+  if(_trackSelfVessel)
+    centerSelfVessel();
 }
 
 void area::SvArea::setScale(qreal scale)
@@ -698,22 +698,49 @@ void area::SvArea::setScale(qreal scale)
   
 }
 
-void area::SvArea::centerAirplane()
+void area::SvArea::centerSelfVessel()
 {
   /* центруем экран на свое судно */
-  QPointF self_pos;
+  SvMapObject* found = nullptr;
   foreach (SvMapObject* item, scene->mapObjects()) {
-    if(item->type() == motSelfVessel) {
-      self_pos = item->pos();
-      break;
-    }
+    
+    if(item->type() != motSelfVessel)
+      continue;
+
+    found = item;
+    break;
   }
   
-  /* находим середину виджета */
-  qreal xc = this->parentWidget()->width() / 2;
-  qreal yc = this->parentWidget()->height() / 2;
+  if(found)
+    centerTo(found->pos());
   
-  view->move(xc - self_pos.x(), yc - self_pos.y());
+}
+
+void area::SvArea::centerSelected()
+{
+  /* центруем экран на выделенный объект */
+  SvMapObject* found = nullptr;
+  foreach (SvMapObject* item, scene->mapObjects()) {
+    
+    if(!item->selection())
+      continue;
+
+    found = item;
+    break;
+  }
+  
+  if(found)
+    centerTo(found->pos());
+  
+}
+
+void area::SvArea::centerTo(QPointF pos)
+{
+  /* находим середину виджета */
+  qreal xc = parentWidget()->width() / 2;
+  qreal yc = parentWidget()->height() / 2;
+  
+  view->move(xc - pos.x(), yc - pos.y());
 }
 
 void area::SvArea::updateGridStep()
@@ -739,8 +766,8 @@ area::SvAreaScene::SvAreaScene(AREA_DATA *area_data)
   _area_data = area_data;
   
   qreal cs = _area_data->gridCellStep;
- 
-//  lttxt = addText("1");
+
+  //  lttxt = addText("1");
 //  rttxt = addText("2");
 //  lbtxt = addText("3");
 //  rbtxt = addText("4");
@@ -782,11 +809,12 @@ area::SvAreaView::SvAreaView(QWidget *parent, AREA_DATA *area_data) :
 //  this->setAlignment(Qt::AlignCenter | Qt::AlignHCenter);
     
   setRenderHint(QPainter::Antialiasing, true);
-//  this->setDragMode(QGraphicsView::ScrollHandDrag); //  ScrollHandDrag RubberBandDrag  NoDrag);
+  setDragMode(QGraphicsView::ScrollHandDrag); // RubberBandDrag  NoDrag  );
   setOptimizationFlags(QGraphicsView::DontSavePainterState);
   setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
-  setStyleSheet("background-color: rgb(255, 255, 250)");
-  setFocusPolicy(Qt::ClickFocus);
+  setStyleSheet("background-color: rgb(255, 255, 245)");
+  setFocusPolicy(Qt::NoFocus);
+  setCursor(Qt::ArrowCursor);
   
   _gridBorderColor = QColor(0x5672d8); // 0, 0, 255, 255);
   _gridMinorColor = QColor(0, 0, 255, 30);

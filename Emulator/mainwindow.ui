@@ -38,7 +38,7 @@
          <enum>QTabWidget::Triangular</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>2</number>
         </property>
         <widget class="QWidget" name="tabAIS">
          <attribute name="title">
@@ -320,7 +320,7 @@ color: rgb(0, 0, 127);</string>
                <x>0</x>
                <y>0</y>
                <width>383</width>
-               <height>270</height>
+               <height>276</height>
               </rect>
              </property>
              <attribute name="label">
@@ -682,9 +682,9 @@ color: rgb(0, 0, 127);</string>
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="tabNAVTEK">
+        <widget class="QWidget" name="tabNAVTEX">
          <attribute name="title">
-          <string>Имитатор НАВТЭК</string>
+          <string>Имитатор НАВТЭКС</string>
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_10">
           <item>
@@ -752,69 +752,6 @@ color: rgb(0, 0, 127);</string>
            </widget>
           </item>
           <item>
-           <widget class="QGroupBox" name="gbNAVTEKAutomaticUploadData">
-            <property name="title">
-             <string>Антенна</string>
-            </property>
-            <property name="flat">
-             <bool>false</bool>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_15">
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_20">
-               <item>
-                <widget class="QLabel" name="label_19">
-                 <property name="minimumSize">
-                  <size>
-                   <width>130</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>130</width>
-                   <height>16777215</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <weight>50</weight>
-                   <bold>false</bold>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>Дальность приема</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QSpinBox" name="spinNAVTEKUploadDataRadius">
-                 <property name="font">
-                  <font>
-                   <weight>50</weight>
-                   <bold>false</bold>
-                  </font>
-                 </property>
-                 <property name="suffix">
-                  <string> мили</string>
-                 </property>
-                 <property name="maximum">
-                  <number>100000</number>
-                 </property>
-                 <property name="value">
-                  <number>1</number>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
            <widget class="QGroupBox" name="gbVessels_3">
             <property name="font">
              <font>
@@ -857,68 +794,7 @@ color: rgb(0, 0, 127);</string>
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="editNAVTEKStationName">
-                 <property name="font">
-                  <font>
-                   <weight>50</weight>
-                   <bold>false</bold>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>ROGER</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_18">
-               <item>
-                <widget class="QLabel" name="label_16">
-                 <property name="minimumSize">
-                  <size>
-                   <width>90</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>90</width>
-                   <height>16777215</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <weight>50</weight>
-                   <bold>false</bold>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>Номер</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QSpinBox" name="spinNAVTEKStationNumber">
-                 <property name="font">
-                  <font>
-                   <weight>50</weight>
-                   <bold>false</bold>
-                  </font>
-                 </property>
-                 <property name="suffix">
-                  <string/>
-                 </property>
-                 <property name="maximum">
-                  <number>10000</number>
-                 </property>
-                 <property name="value">
-                  <number>24</number>
-                 </property>
-                </widget>
+                <widget class="QComboBox" name="comboBox_2"/>
                </item>
               </layout>
              </item>

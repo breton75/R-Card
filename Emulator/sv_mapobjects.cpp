@@ -350,6 +350,8 @@ SvMapObjectOtherVessel::SvMapObjectOtherVessel(QWidget* parent, int id):
   editAction = new QAction(QIcon(":/Icons/Pen.ico"), QString("Редактировать"), 0);
   removeAction = new QAction(QIcon(":/Icons/Cancel.ico"), QString("Удалить"), 0);
   
+  setCursor(Qt::ArrowCursor);
+  
 }
 
 void SvMapObjectOtherVessel::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
@@ -384,6 +386,8 @@ SvMapObjectSelfVessel::SvMapObjectSelfVessel(QWidget* parent, int id):
   
   editAction = new QAction(QIcon(":/Icons/Pen.ico"), QString("Редактировать"), 0);
   removeAction = new QAction(QIcon(":/Icons/Cancel.ico"), QString("Удалить"), 0);
+  
+  setCursor(Qt::ArrowCursor);
   
 }
 

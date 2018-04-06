@@ -18,7 +18,7 @@ namespace idev {
     sdtSelfAIS,
     sdtOtherAIS,
     sdtLAG,
-    sdtNavteks,
+    sdtNavtex,
     sdtEcho,
     sdtVessel
   };

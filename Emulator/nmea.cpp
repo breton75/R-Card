@@ -340,3 +340,41 @@ QString nmea::lag_VBW(const geo::GEOPOSITION& geopos)
   
   return result;
 }
+
+
+QStringList nmea::navtex_NRX(const QString& text)
+{
+  QStringList result = QStringList();
+  
+//  quint8 b6[71];
+//  memset(&b6, 0, 71);
+
+
+  
+  
+//  /// формируем сообщение
+//  QString msg = "";
+//  for(int i = 0; i < 71; i++)
+//    msg.append(SIXBIT_SYMBOLS.value(b6[i]));  // message id
+  
+//  int total_count = int(ceil(qreal(msg.length()) / 62.0));
+//  for(int i = 0; i < total_count; i++) {
+    
+    
+//    QString s = QString("!%1NRX,%2,%3,0,A,%4,2*")
+//                              .arg(talkerID)
+//                              .arg(total_count)
+//                              .arg(i + 1)
+//                              .arg(msg.mid(0 + 62 * i, 62));
+    
+//        quint8 src = 0;
+//        for(int j = 1; j <= s.length() - 2; j++) {
+//          src = src ^ quint8(s.at(j).toLatin1());
+//        }
+          
+//        result.append(QString("%1%2").arg(s).arg(QString("%1\r\n").arg(src, 2, 16).replace(' ', '0').toUpper()));
+//  }
+    
+  return result;
+  
+}

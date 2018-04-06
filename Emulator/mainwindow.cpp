@@ -16,7 +16,7 @@ QMap<int, QListWidgetItem*> LISTITEMs;
 //extern gps::SvGPS* SELF_GPS;
 //extern QMap<int, vsl::SvVessel*> VESSELS;
 extern SvVesselEditor* VESSELEDITOR_UI;
-
+extern SvNavtexEditor* NAVTEXEDITOR_UI; 
 extern QMap<quint32, ais::aisNavStat> NAVSTATs;
 
 
@@ -146,14 +146,14 @@ bool MainWindow::init()
           _ais_serial_params.stopbits =     QSerialPort::StopBits(_query->value("stop_bits").toInt());
           ui->editAISSerialInterface->setText(_ais_serial_params.description);
           
-        case idev::sdtNavteks:
-          
-//          _navteks_serial_params.name =        _query->value("port_name").toString();                          
-//          _navteks_serial_params.baudrate =    _query->value("baudrate").toInt();                              
-//          _navteks_serial_params.databits =    QSerialPort::DataBits(_query->value("data_bits").toInt());      
-//          _navteks_serial_params.flowcontrol = QSerialPort::FlowControl(_query->value("flow_control").toInt());
-//          _navteks_serial_params.parity =      QSerialPort::Parity(_query->value("parity").toInt());           
-//          _navteks_serial_params.stopbits =    QSerialPort::StopBits(_query->value("stop_bits").toInt());      
+        case idev::sdtNavtex:
+           
+          _navtex_serial_params.name =        _query->value("port_name").toString();                          
+          _navtex_serial_params.baudrate =    _query->value("baudrate").toInt();                              
+          _navtex_serial_params.databits =    QSerialPort::DataBits(_query->value("data_bits").toInt());      
+          _navtex_serial_params.flowcontrol = QSerialPort::FlowControl(_query->value("flow_control").toInt());
+          _navtex_serial_params.parity =      QSerialPort::Parity(_query->value("parity").toInt());           
+          _navtex_serial_params.stopbits =    QSerialPort::StopBits(_query->value("stop_bits").toInt());      
           
         case idev::sdtEcho:
           
@@ -175,7 +175,7 @@ bool MainWindow::init()
     
     
     
-    qInfo() << 1;
+    qInfo() << "init 1";
     
     
     /*! необходима проверка, что в таблице vessels существует запись с флагом sef == true !*/
@@ -207,7 +207,7 @@ SV:
     }
   
     
-    qInfo() << 2;
+    qInfo() << "init 2";
     
     /** --------- создаем собственное судно ----------- **/
     createSelfVessel(_query);
@@ -216,7 +216,7 @@ SV:
 
     _self_vessel->updateVessel();
   
-    qInfo() << 3;
+    qInfo() << "init 3";
    
     
     /** ------ читаем список судов --------- **/
@@ -231,7 +231,42 @@ SV:
     }
     _query->finish();
   
-  qInfo() << 4;
+    qInfo() << "init 4";
+  
+    
+    /*! необходима проверка, что в таблице navtex существует запись  !*/
+NX:
+    /** ------ читаем данные станции НАВТЕКС --------- **/
+    if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELECT_NAVTEX), _query).type())
+      _exception.raise(_query->lastError().databaseText());
+    
+    if(!_query->next()) {
+      
+      QMessageBox::warning(this, "", "В БД нет сведений о станции NAVTEX", QMessageBox::Ok);
+      _query->finish();
+      
+      NAVTEXEDITOR_UI = new SvNavtexEditor(this, -1);
+      if(QDialog::Accepted == NAVTEXEDITOR_UI->exec()) {
+        
+        goto NX;    
+              
+      }
+      else {
+        
+        if(!NAVTEXEDITOR_UI->last_error().isEmpty())
+          _exception.raise(NAVTEXEDITOR_UI->last_error());
+      }
+        
+      delete NAVTEXEDITOR_UI;
+      
+    }
+    
+    /** --------- создаем станцию НАВТЕКС ----------- **/
+    createNavtex(_query);
+    
+    
+    _query->finish();
+    
     
     connect(_area->scene, SIGNAL(selectionChanged()), this, SLOT(area_selection_changed()));
     connect(ui->listVessels, &QListWidget::currentItemChanged, this, &MainWindow::currentVesselListItemChanged);
@@ -299,6 +334,12 @@ SV:
 
 MainWindow::~MainWindow()
 {
+  if(_current_state == sRunned)
+    on_bnCycle_clicked();
+  
+  while(_current_state != sStopped)
+    qApp->processEvents();
+  
   AppParams::saveWindowParams(this, this->size(), this->pos(), this->windowState());
   AppParams::saveWindowParams(ui->dockGraphics, ui->dockGraphics->size(), ui->dockGraphics->pos(), ui->dockGraphics->windowState(), "AREA WINDOW");
   AppParams::saveWindowParams(ui->dockCarrentInfo, ui->dockCarrentInfo->size(), ui->dockCarrentInfo->pos(), ui->dockCarrentInfo->windowState(), "INFO WINDOW");
@@ -555,7 +596,7 @@ void MainWindow::area_selection_changed()
   /// если ничего не  выделено, то сбрасываем
   if(_area->scene->selectedItems().isEmpty()) {
     _selected_vessel_id = -1;
-    _area->setLabelInfo("");
+//    _area->setLabelInfo("");
   }
   else {
     /// создаем новое выделение
@@ -571,12 +612,12 @@ void MainWindow::area_selection_changed()
   /// выделяем судно в списке  
   disconnect(ui->listVessels, &QListWidget::currentItemChanged, this, &MainWindow::currentVesselListItemChanged);
   
-  if((_selected_vessel_id == -1) /*|| (_self_vessel->id == _selected_vessel_id)*/) {\
+  if((_selected_vessel_id == -1) || (_self_vessel->id == _selected_vessel_id)) {\
     ui->listVessels->setCurrentRow(-1);
     ui->textMapObjectInfo->setText("");
   }
   else ui->listVessels->setCurrentItem(LISTITEMs.value(_selected_vessel_id));
-
+  
   bool b = ui->listVessels->currentRow() > -1;
   ui->actionEditVessel->setEnabled(b); 
   ui->actionRemoveVessel->setEnabled(b); 
@@ -771,6 +812,23 @@ vsl::SvVessel* MainWindow::createOtherVessel(QSqlQuery* q)
   LISTITEMs.value(vessel_id)->setIcon(newVessel->isActive() ? QIcon(":/icons/Icons/bullet_white.png") : QIcon(":/icons/Icons/bullet_red.png"));
   
   return newVessel;
+  
+}
+
+nav::SvNAVTEX* MainWindow::createNavtex(QSqlQuery* q)
+{  
+  /*! _area должна уже быть проинициализирована !! */
+  
+  // читаем информацию из БД  
+  int vessel_id = q->value("id").toUInt();
+  
+  /** ----- создаем устройство ------ **/
+  _navtex = new nav::SvNAVTEX(log);
+  
+  connect(this, &MainWindow::startNAVEmulation, _navtex, &nav::SvNAVTEX::start);
+  connect(this, &MainWindow::stopNAVEmulation, _navtex, &nav::SvNAVTEX::stop);
+  
+  return _navtex;
   
 }
 
@@ -989,11 +1047,12 @@ void MainWindow::on_bnNAVTEKEditSerialParams_clicked()
 void MainWindow::currentVesselListItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
 {
   disconnect(_area->scene, SIGNAL(selectionChanged()), this, SLOT(area_selection_changed()));
-  
+
   foreach (SvMapObject* obj, _area->scene->mapObjects()) 
     obj->setSelected(obj->id() == LISTITEMs.key(current)); 
   
   area_selection_changed();
+  
   
   connect(_area->scene, SIGNAL(selectionChanged()), this, SLOT(area_selection_changed()));
   
@@ -1001,7 +1060,30 @@ void MainWindow::currentVesselListItemChanged(QListWidgetItem *current, QListWid
 
 void MainWindow::on_listVessels_doubleClicked(const QModelIndex &index)
 {
-   editVessel(LISTITEMs.key(ui->listVessels->item(index.row())));
+  switch (_current_state) {
+    case sStopped:
+      
+      editVessel(LISTITEMs.key(ui->listVessels->item(index.row())));
+      break;
+      
+    case sRunned: {
+      
+      SvMapObject* selobj = nullptr;
+      foreach (SvMapObject* obj, _area->scene->mapObjects()) {
+        if(obj->id() != LISTITEMs.key(ui->listVessels->item(index.row())))
+          continue;
+        
+        selobj = obj;
+        break;
+      }
+      
+      if(selobj)      
+        _area->centerSelected();
+      
+      break;
+      
+    }
+  }
 }
 
 void MainWindow::on_bnSetActive_clicked()

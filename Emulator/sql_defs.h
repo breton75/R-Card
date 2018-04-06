@@ -158,4 +158,36 @@
 #define SQL_UPDATE_SERIAL_WHERE  "UPDATE serial_port_params SET port_name='%1', baudrate=%2, "\
                                  "parity=%3, stop_bits=%4, data_bits=%5, flow_control=%6, description='%7' WHERE device_type = %8"
 
+
+#define SQL_SELECT_NAVTEX "SELECT navtex.id, " CR \
+                           "      navtex.station_region _id, " CR \
+                           "      navtex.station_message_id, " CR \
+                           "      navtex.is_active, " CR \
+                           "      navtex.last_message, " CR \
+                           "      navtex_messages.letter_id, " CR \
+                           "      navtex_messages.designation, " CR \
+                           "      navtex_messages.simple_message, " CR \
+                           "      navtex_regions.letter_id, " CR \
+                           "      navtex_regions.station_name, " CR \
+                           "      navtex_regions.country " CR \
+                           "FROM navtex " CR \
+                           "LEFT JOIN navtex_regions on navtex.station_region_id = navtex_regions.id " CR \
+                           "LEFT JOIN navtex_messages on navtex.station_message_id = navtex_messages.id  "
+
+#define SQL_SELECT_NAVTEX_MESSAGES "SELECT id, " CR \
+                                   "       letter_id, " CR \
+                                   "       designation, " CR \
+                                   "       simple_message " CR \
+                                   "FROM navtex_messages " CR \
+                                   "ORDER BY letter_id ASC"
+
+#define SQL_SELECT_NAVTEX_REGIONS "SELECT id, " CR \
+                                  "       letter_id, " CR \
+                                  "       station_name, " CR \
+                                  "       is_active, " CR \
+                                  "       country " CR \
+                                  "FROM navtex_regions " CR \
+                                  "ORDER BY letter_id ASC"
+
+
 #endif // SQL_DEFS_H

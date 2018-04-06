@@ -168,10 +168,10 @@ public:
     
     /* виджеты */
     QVBoxLayout* vlayMain;
-    QFrame* frameLeft;
-    QVBoxLayout* vlayFrameLeft;
-    QFrame* frameRight;
-    QVBoxLayout* vlayFrameRight;
+//    QFrame* frameLeft;
+//    QVBoxLayout* vlayFrameLeft;
+//    QFrame* frameRight;
+//    QVBoxLayout* vlayFrameRight;
     
     QFrame* frameTop;
     QHBoxLayout* hlayFrameTop;
@@ -179,20 +179,17 @@ public:
     QSplitter* splitter;
     QTextEdit* textLog;
     
-    QVBoxLayout* vlayCenter;
+//    QVBoxLayout* vlayCenter;
     QWidget* widgetMap;
-    QFrame* frameBottom;
-    QVBoxLayout* vlayFrameBottom;
-    QLabel* lblCurrentInfo;
-    QList<area::AreaButton*> buttonsLeft;
-    QList<area::AreaButton*> buttonsRight;
+//    QFrame* frameBottom;
+//    QVBoxLayout* vlayFrameBottom;
+//    QList<area::AreaButton*> buttonsLeft;
+//    QList<area::AreaButton*> buttonsRight;
     
     QLabel* hint = nullptr;
 
     void updateGridStep();
     
-    QString labelInfo() { return _labelInfo; }
-    void setLabelInfo(const QString& lbl) { _labelInfo = lbl; lblCurrentInfo->setText(lbl); }
     
 private:
   area::AREA_DATA _area_data;  
@@ -217,7 +214,7 @@ private:
   
   bool _editMode = false;
   
-  bool _trackAirplane = false;
+  bool _trackSelfVessel = false;
   
   bool _socketIsActive = false;
   
@@ -232,7 +229,9 @@ signals:
 public slots:
   void scaleInc();
   void scaleDec();
-  void centerAirplane();
+  void centerSelfVessel();
+  void centerSelected();
+  void centerTo(QPointF pos);
 //  void dropBeacon();
   
   void moveHorizontal(int val);

@@ -40,6 +40,8 @@ namespace nmea {
   
   QString lag_VBW(const geo::GEOPOSITION &geopos);
   
+  QStringList navtex_NRX(const QString& text);
+  
 }
 
 

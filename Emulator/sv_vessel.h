@@ -31,8 +31,6 @@ public:
     
   ~SvVessel(); 
 
-  void start();
-
 //  bool isSelf() { return (_self_vessel == nullptr); }
   
 //  void setSelfVessel(SvVessel* vsl) { _self_vessel = vsl; }
@@ -60,22 +58,9 @@ public:
   
   bool isActive() { return _isActive; }
   
-//  geo::GEOPOSITION currentGeoPosition() const { return _current_geo_position; }
-//  void setGeoPosition(const geo::GEOPOSITION& current_geo_position) { _current_geo_position = current_geo_position; }
-  
-//  qreal distanceTo(geo::GEOPOSITION& geopos) { 
-//    return geo::geo2geo_distance(ais()->aisDynamicData()->geoposition, geopos); }
-  
-//  qreal distanceToSelfVessel() { if(!_self_vessel) return 0.0; 
-//    else 
-//      return geo::geo2geo_distance(ais()->aisDynamicData()->geoposition, _self_vessel->ais()->aisDynamicData()->geoposition); }
-  
+
 private:
-//  bool _self;
-//  geo::GEOPOSITION _current_geo_position;
-  
-//  SvVessel* _self_vessel = nullptr;
-  
+
   gps::SvGPS* _gps = nullptr;
   ais::SvAIS* _ais = nullptr;
   lag::SvLAG* _lag = nullptr;

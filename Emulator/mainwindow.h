@@ -20,12 +20,15 @@
 #include "sv_lag.h"
 #include "sv_mapobjects.h"
 #include "sv_vesseleditor.h"
+#include "sv_navtex.h"
+#include "sv_navtexeditor.h"
 
 #include "sql_defs.h"
 #include "../../svlib/sv_log.h"
 #include "sv_exception.h"
 #include "nmea.h"
 #include "sv_serialeditor.h"
+
 
 namespace Ui {
 class MainWindow;
@@ -71,6 +74,8 @@ private:
   vsl::SvVessel* _self_vessel = nullptr;
   lag::SvLAG* _self_lag = nullptr;
   
+  nav::SvNAVTEX* _navtex = nullptr;
+  
 //  SvMapObjectSelfVessel* _self_map_obj;
   QMap<int, SvMapObjectSelfVessel*> _vessels_map_obj;
   
@@ -83,7 +88,7 @@ private:
   
   SerialPortParams _lag_serial_params = SerialPortParams(idev::sdtLAG);
   SerialPortParams _ais_serial_params = SerialPortParams(idev::sdtSelfAIS);
-//  QSerialPort _navteks_serial;
+  SerialPortParams _navtex_serial_params = SerialPortParams(idev::sdtNavtex);
 //  QSerialPort _echo_serial;
   
   int _selected_vessel_id = -1;
@@ -100,11 +105,13 @@ private slots:
   void on_bnCycle_clicked();
   
   void area_selection_changed();
-  
-//  void initGeposition(gps::gpsInitParams& gpsParams, const ais::aisDynamicData& dynamicData);
+
+  //  void initGeposition(gps::gpsInitParams& gpsParams, const ais::aisDynamicData& dynamicData);
   
   vsl::SvVessel* createSelfVessel(QSqlQuery* q);
   vsl::SvVessel* createOtherVessel(QSqlQuery* q);
+  
+  nav::SvNAVTEX* createNavtex(QSqlQuery* q);
   
   void on_actionNewVessel_triggered();
   void on_actionEditVessel_triggered();
@@ -133,12 +140,12 @@ signals:
   void startGPSEmulation(quint32 msecs);
   void startAISEmulation(quint32 msecs);
   void startLAGEmulation(quint32 msecs);
-//  void startNAVEmulation(quint32 msecs);
+  void startNAVEmulation(quint32 msecs);
   
   void stopGPSEmulation();
   void stopAISEmulation();
   void stopLAGEmulation();
-//  void stopNAVEmulation();
+  void stopNAVEmulation();
   
 };
 
