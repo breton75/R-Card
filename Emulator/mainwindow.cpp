@@ -116,7 +116,7 @@ bool MainWindow::init()
     
     
     /// параметры COM портов
-    if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELECT_FROM_SERIAL_PARAMS), _query).type()) 
+    if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELECT_FROM_DEVICE_PARAMS), _query).type()) 
       _exception.raise(_query->lastError().databaseText());
 
     while(_query->next()) {    
@@ -134,6 +134,21 @@ bool MainWindow::init()
           _lag_serial_params.parity =       QSerialPort::Parity(_query->value("parity").toInt());           
           _lag_serial_params.stopbits =     QSerialPort::StopBits(_query->value("stop_bits").toInt());  
           ui->editLAGSerialInterface->setText(_lag_serial_params.description);
+          
+          ui->checkLAGEnabled->setChecked(_query->value("is_active").toBool());
+          
+          QStringList arg_list = _query->value("args").toString().split(";");
+          for(QString arg: arg_list) {
+            if
+            if(arg.split("=").first() == "msgtype") {
+              bool ok;
+              arg.split("=").
+              
+            }
+            .first()
+                
+          }
+          
           break;
           
         case idev::sdtSelfAIS:
@@ -154,6 +169,7 @@ bool MainWindow::init()
           _navtex_serial_params.flowcontrol = QSerialPort::FlowControl(_query->value("flow_control").toInt());
           _navtex_serial_params.parity =      QSerialPort::Parity(_query->value("parity").toInt());           
           _navtex_serial_params.stopbits =    QSerialPort::StopBits(_query->value("stop_bits").toInt());      
+          ui->editNAVTEXSerialInterface->setText(_navtex_serial_params.description);
           
         case idev::sdtEcho:
           
@@ -191,18 +207,21 @@ SV:
       _query->finish();
       
       VESSELEDITOR_UI = new SvVesselEditor(this, -1, true);
-      if(QDialog::Accepted == VESSELEDITOR_UI->exec()) {
+      
+      int result = VESSELEDITOR_UI->exec();
+
+      if(QDialog::Accepted == result && 
+         !VESSELEDITOR_UI->last_error().isEmpty()) {
         
-        goto SV;    
+        _exception.raise(VESSELEDITOR_UI->last_error());
               
       }
-      else {
+      else if(QDialog::Accepted == result) {
         
-        if(!VESSELEDITOR_UI->last_error().isEmpty())
-          _exception.raise(VESSELEDITOR_UI->last_error());
+        goto SV;    
       }
         
-      delete VESSELEDITOR_UI;
+      _exception.raise("Невозможно продолжить без собственного судна");
       
     }
   
@@ -251,19 +270,18 @@ NX:
         goto NX;    
               
       }
-      else {
+      else if(!NAVTEXEDITOR_UI->last_error().isEmpty()) {
         
-        if(!NAVTEXEDITOR_UI->last_error().isEmpty())
-          _exception.raise(NAVTEXEDITOR_UI->last_error());
+        _exception.raise(NAVTEXEDITOR_UI->last_error());
+
       }
-        
-      delete NAVTEXEDITOR_UI;
+      
+      _exception.raise("Невозможно продолжить работу без станции НАВТЕКС");
       
     }
     
     /** --------- создаем станцию НАВТЕКС ----------- **/
     createNavtex(_query);
-    
     
     _query->finish();
     
@@ -297,34 +315,19 @@ NX:
   }
   
   catch(SvException &exception) {
-    qInfo() << 5;
+    qInfo() << exception.err;
     if(_query) delete _query;
     if(_area) delete _area;
-    if(_self_gps) delete _self_gps;    
-    if(_self_ais) delete _self_ais;
-    if(_self_vessel) delete _self_vessel;
-    if(_self_lag) delete _self_lag;
     
     if(VESSELEDITOR_UI) delete VESSELEDITOR_UI;
-    
+    if(NAVTEXEDITOR_UI) delete NAVTEXEDITOR_UI;
+
+    // удаляются также все устройства ais, gps и lag
     if(VESSELs.count()) {
       foreach (int key, VESSELs.keys()) {
         delete VESSELs.take(key);
       }
     }
-    
-    
-    if(AISs.count()) {
-      foreach (int key, AISs.keys()) {
-        delete AISs.take(key);
-      }
-    }
-
-    if(GPSs.count()) {
-      foreach (int key, GPSs.keys()) {
-        delete GPSs.take(key);
-      }
-    }    
     
     QMessageBox::critical(this, "Ошибка", QString("Ошибка инициализации:\n%1").arg(exception.err), QMessageBox::Ok);
     
@@ -817,13 +820,28 @@ vsl::SvVessel* MainWindow::createOtherVessel(QSqlQuery* q)
 
 nav::SvNAVTEX* MainWindow::createNavtex(QSqlQuery* q)
 {  
-  /*! _area должна уже быть проинициализирована !! */
-  
-  // читаем информацию из БД  
-  int vessel_id = q->value("id").toUInt();
-  
   /** ----- создаем устройство ------ **/
   _navtex = new nav::SvNAVTEX(log);
+  
+  nav::navtexData ndata;
+  ndata.id = q->value("id").toUInt();
+  ndata.station_region_id = q->value("station_region_id").toUInt();
+  ndata.station_message_id = q->value("station_message_id").toUInt();
+  ndata.message_designation = q->value("message_designation").toString();
+  ndata.region_station_name = q->value("region_station_name").toString();
+  ndata.last_message = q->value("last_message").toString();
+  ndata.is_active = q->value("is_active").toBool();
+  ndata.region_country = q->value("region_country").toString();
+  ndata.message_letter_id = q->value("message_letter_id").toString();
+  ndata.region_letter_id = q->value("region_letter_id").toString();
+  ndata.message_last_number = q->value("message_last_number").toUInt();
+  
+  _navtex->setData(ndata);
+  
+  update_NAVTEX_data();
+  
+  ui->spinNAVTEXUploadPeriod->setValue(q->value("interval").toUInt());
+  ui->checkNAVTEKEnabled->setEnabled(q->value("is_active").toBool());
   
   connect(this, &MainWindow::startNAVEmulation, _navtex, &nav::SvNAVTEX::start);
   connect(this, &MainWindow::stopNAVEmulation, _navtex, &nav::SvNAVTEX::stop);
@@ -977,18 +995,34 @@ void MainWindow::editVessel(int id)
   }
 }
 
+void MainWindow::update_NAVTEX_data()
+{
+  ui->textNAVTEXParams->setHtml(QString("<!DOCTYPE html><p><strong>Станция:</strong>\t%1</p>" \
+                                        "<p><strong>Тип сообщения:</strong>\t%2</p>" \
+                                        "<p><strong>Заголовок сообщения:</strong>\t%3%4%5</p>" \
+                                        "<p><strong>Сообщение:</strong></p>" \
+                                        "<p>%6</p>")
+                                .arg(_navtex->data()->region_station_name)
+                                .arg(_navtex->data()->message_designation)
+                                .arg(_navtex->data()->region_letter_id)
+                                .arg(_navtex->data()->message_letter_id)
+                                .arg(QString("%1").arg(_navtex->data()->message_last_number, 2, 10).replace(" ", "0"))
+                                .arg(_navtex->data()->last_message));
+  
+}
 
 void MainWindow::on_bnAISEditSerialParams_clicked()
 {
   SERIALEDITOR_UI = new SvSerialEditor(_ais_serial_params, this);
   if(SERIALEDITOR_UI->exec() != QDialog::Accepted) {
 
-    if(!SERIALEDITOR_UI->last_error().isEmpty())
+    if(!SERIALEDITOR_UI->last_error().isEmpty()) {
       QMessageBox::critical(this, "Ошибка", QString("Ошибка при изменении параметров:\n%1").arg(SERIALEDITOR_UI->last_error()), QMessageBox::Ok);
     
-    delete SERIALEDITOR_UI;
+      delete SERIALEDITOR_UI;
     
-    return;
+      return;
+    }
     
   }
   
@@ -1011,12 +1045,13 @@ void MainWindow::on_bnLAGEditSerialParams_clicked()
   SERIALEDITOR_UI = new SvSerialEditor(_lag_serial_params, this);
   if(SERIALEDITOR_UI->exec() != QDialog::Accepted) {
 
-    if(SERIALEDITOR_UI->result() != SvSerialEditor::rcNoError)
+    if(!SERIALEDITOR_UI->last_error().isEmpty()) {
       QMessageBox::critical(this, "Ошибка", QString("Ошибка при изменении параметров:\n%1").arg(SERIALEDITOR_UI->last_error()), QMessageBox::Ok);
     
-    delete SERIALEDITOR_UI;
+      delete SERIALEDITOR_UI;
     
-    return;
+      return;
+    }
     
   }
   
@@ -1035,12 +1070,30 @@ void MainWindow::on_bnLAGEditSerialParams_clicked()
 
 void MainWindow::on_bnNAVTEKEditSerialParams_clicked()
 {
-//  SERIALEDITOR_UI = new SvSerialEditor(_navtek_serial, this);
-//  if(SERIALEDITOR_UI->exec() != QDialog::Accepted) {
+  SERIALEDITOR_UI = new SvSerialEditor(_navtex_serial_params, this);
+  if(SERIALEDITOR_UI->exec() != QDialog::Accepted) {
 
-//  }
+    if(!SERIALEDITOR_UI->last_error().isEmpty()) {
+      QMessageBox::critical(this, "Ошибка", QString("Ошибка при изменении параметров:\n%1").arg(SERIALEDITOR_UI->last_error()), QMessageBox::Ok);
+    
+      delete SERIALEDITOR_UI;
+        
+      return;
+    }
+    
+  }
   
-//  delete SERIALEDITOR_UI;
+  _navtex_serial_params.name = SERIALEDITOR_UI->params.name;
+  _navtex_serial_params.description = SERIALEDITOR_UI->params.description;
+  _navtex_serial_params.baudrate = SERIALEDITOR_UI->params.baudrate;
+  _navtex_serial_params.databits = SERIALEDITOR_UI->params.databits;
+  _navtex_serial_params.flowcontrol = SERIALEDITOR_UI->params.flowcontrol;
+  _navtex_serial_params.parity = SERIALEDITOR_UI->params.parity;
+  _navtex_serial_params.stopbits = SERIALEDITOR_UI->params.stopbits;
+  
+  delete SERIALEDITOR_UI;
+
+  ui->editNAVTEXSerialInterface->setText(_navtex_serial_params.description);
 
 }
 

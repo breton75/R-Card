@@ -57,7 +57,14 @@
          </widget>
         </item>
         <item>
-         <widget class="QComboBox" name="cbNAVTEXStation"/>
+         <widget class="QComboBox" name="cbNAVTEXStation">
+          <property name="font">
+           <font>
+            <weight>50</weight>
+            <bold>false</bold>
+           </font>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -245,7 +252,14 @@
          </layout>
         </item>
         <item>
-         <widget class="QTextEdit" name="textNAVTEXMessageText"/>
+         <widget class="QTextEdit" name="textNAVTEXMessageText">
+          <property name="font">
+           <font>
+            <weight>50</weight>
+            <bold>false</bold>
+           </font>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>

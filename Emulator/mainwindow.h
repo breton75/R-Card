@@ -132,6 +132,8 @@ private slots:
   
   void on_bnSetActive_clicked();
   
+  void update_NAVTEX_data();
+  
 signals:
   void newState(States state);
   

@@ -19,17 +19,20 @@
 
 namespace nav {
 
-  struct navtexData {                     // Информация о судне. Данные передаются каждые 6 минут
+  struct navtexData {
     
-    quint32 id;                           // id судна в БД
-    QString mmsi;                         // Номер MMSI
-    QString imo;                          // Номер Международной морской организации (IMO)
-    QString callsign;                     // Радиопозывной и название плавучего средства
-    quint32 length;                       // Габариты
-    quint32 width;
-    QString type;                         // Тип плавучего средства
-                                          // Данные о месте антенны (от ГНСС Глонасс или GPS)
-      
+    quint32 id;
+    quint32 station_region_id;
+    quint32 station_message_id;
+    QString region_station_name;
+    QString message_designation;
+    QString last_message;
+    bool is_active = true;
+    QString message_letter_id;
+    QString region_letter_id;
+    QString region_country;
+    qint32 message_last_number;
+    
   };
   
   
@@ -49,7 +52,7 @@ public:
   
   void setSerialPortParams(const SerialPortParams& params);
   
-  nav::navtexData  *getData() { return &_data; }
+  nav::navtexData  *data() { return &_data; }
     
   bool open();
   void close();

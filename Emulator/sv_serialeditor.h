@@ -41,8 +41,7 @@ class SvSerialEditor : public QDialog
   Q_OBJECT
   
 public:
-  enum ResultCode { rcSqlError = -1, rcNoError };
-  
+
   explicit SvSerialEditor(SerialPortParams params, QWidget *parent = 0);
   ~SvSerialEditor();
   

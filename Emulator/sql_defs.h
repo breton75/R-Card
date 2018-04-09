@@ -146,33 +146,38 @@
 #define SQL_SELECT_LAG_TYPES "select id, type_name from lag_types"
 
 
-#define SQL_SELECT_FROM_SERIAL_PARAMS  "SELECT id, device_type, vessel_id, port_name, baudrate, parity, stop_bits, " \
-                                       "data_bits, flow_control, description " \
-                                       "FROM serial_port_params"
+#define SQL_SELECT_FROM_DEVICE_PARAMS  "SELECT id, device_type, vessel_id, port_name, baudrate, parity, stop_bits, " \
+                                       "data_bits, flow_control, description, is_active, upload_interval, args " \
+                                       "FROM device_params"
 
-#define SQL_SELECT_COUNT_FROM_SERIAL_WHERE  "SELECT count() as count " \
-                                      "FROM serial_port_params WHERE device_type = %1"
+#define SQL_SELECT_COUNT_DEVICE_PARAMS_WHERE  "SELECT count() as count " \
+                                              "FROM device_params WHERE device_type = %1"
 
-#define SQL_INSERT_SERIAL  "INSERT INTO serial_port_params (device_type) VALUES(%1)"
+#define SQL_INSERT_DEVICE_PARAMS  "INSERT INTO device_params (device_type) VALUES(%1)"
 
-#define SQL_UPDATE_SERIAL_WHERE  "UPDATE serial_port_params SET port_name='%1', baudrate=%2, "\
-                                 "parity=%3, stop_bits=%4, data_bits=%5, flow_control=%6, description='%7' WHERE device_type = %8"
+#define SQL_UPDATE_DEVICE_SERIAL_PARAMS_WHERE  "UPDATE serial_port_params SET port_name='%1', baudrate=%2, "\
+                                               "parity=%3, stop_bits=%4, data_bits=%5, flow_control=%6, description='%7' "\
+                                               "WHERE device_type = %8"
 
 
-#define SQL_SELECT_NAVTEX "SELECT navtex.id, " CR \
-                           "      navtex.station_region _id, " CR \
-                           "      navtex.station_message_id, " CR \
-                           "      navtex.is_active, " CR \
-                           "      navtex.last_message, " CR \
-                           "      navtex_messages.letter_id, " CR \
-                           "      navtex_messages.designation, " CR \
-                           "      navtex_messages.simple_message, " CR \
-                           "      navtex_regions.letter_id, " CR \
-                           "      navtex_regions.station_name, " CR \
-                           "      navtex_regions.country " CR \
+#define SQL_SELECT_NAVTEX "SELECT navtex.id as id, " CR \
+                           "      navtex.station_region_id as station_region_id, " CR \
+                           "      navtex.station_message_id as station_message_id, " CR \
+                           "      navtex.is_active as is_active, " CR \
+                           "      navtex.interval as interval, " CR \
+                           "      navtex.last_message as last_message, " CR \
+                           "      navtex_messages.letter_id as message_letter_id, " CR \
+                           "      navtex_messages.designation as message_designation, " CR \
+                           "      navtex_messages.simple_message as message_simple_message, " CR \
+                           "      navtex_messages.last_number as message_last_number, " CR \  
+                           "      navtex_regions.letter_id as region_letter_id, " CR \
+                           "      navtex_regions.station_name as region_station_name, " CR \
+                           "      navtex_regions.country as region_country" CR \
                            "FROM navtex " CR \
                            "LEFT JOIN navtex_regions on navtex.station_region_id = navtex_regions.id " CR \
                            "LEFT JOIN navtex_messages on navtex.station_message_id = navtex_messages.id  "
+
+#define SQL_SELECT_NAVTEX_WHERE_ID (SQL_SELECT_NAVTEX " WHERE id = %1")
 
 #define SQL_SELECT_NAVTEX_MESSAGES "SELECT id, " CR \
                                    "       letter_id, " CR \
@@ -188,6 +193,18 @@
                                   "       country " CR \
                                   "FROM navtex_regions " CR \
                                   "ORDER BY letter_id ASC"
+
+#define SQL_UPDATE_NAVTEX "UPDATE navtex SET station_region_id = %1, " CR \
+                          "                  station_message_id = %2, " CR \
+                          "                  last_message = '%3' " CR \
+                          "WHERE id = %4 "  
+
+#define SQL_INSERT_NAVTEX "INSERT INTO navtex (station_region_id, station_message_id, last_message) " CR \
+                          "VALUES(%1, %2, '%3')"
+
+#define SQL_SELECT_NAVTEX_SIMPLE_MESSAGE "SELECT simple_message " CR \
+                                         "FROM navtex_messages " CR \
+                                         "WHERE id = %1"
 
 
 #endif // SQL_DEFS_H

@@ -9,6 +9,7 @@
 #include "../../svlib/sv_sqlite.h"
 #include "sql_defs.h"
 #include "sv_exception.h"
+#include "../../svlib/sv_sqlite.h"
 
 namespace Ui {
 class SvNavtexEditorDialog;
@@ -21,7 +22,7 @@ class SvNavtexEditor : public QDialog
   enum ShowMode { smNew = 0, smEdit = 1 };
   
 public:
-  explicit SvNavtexEditor(QWidget *parent, int navtexId);
+  explicit SvNavtexEditor(QWidget *parent, int navtexId = -1);
   ~SvNavtexEditor();
   
   int showMode;
@@ -37,16 +38,16 @@ public:
 private:
   Ui::SvNavtexEditorDialog *ui;
   
-  
-public slots:
-  void accept() Q_DECL_OVERRIDE;
-  
   QString _last_error = "";
   SvException _exception;
+ 
+private slots:
+  void accept() Q_DECL_OVERRIDE;
   
   void loadMessages();
   void loadRegions(); 
   
+  void on_bnSimpleMessage_clicked();
 };
 
 #endif // SV_NAVTEXEDITOR_H

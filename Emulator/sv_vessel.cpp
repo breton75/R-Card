@@ -17,9 +17,9 @@ vsl::SvVessel::SvVessel(QObject *parent, quint32 id/*, bool self*/) :
 
 vsl::SvVessel::~SvVessel()
 {
-  delete _gps;
-  delete _ais;
-  delete _lag;
+  if(_gps) delete _gps;
+  if(_ais) delete _ais;
+  if(_lag) delete _lag;
   
   deleteLater();
   
