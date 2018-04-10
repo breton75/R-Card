@@ -9,6 +9,7 @@
 #include <QSqlQuery>
 #include <QSerialPort>
 #include <QSerialPortInfo>
+#include <QCommandLineParser>
 
 #include "sv_area.h"
 #include "../../svlib/sv_settings.h"
@@ -37,6 +38,9 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
   Q_OBJECT
+  
+  QString ARG_LAG_MSGTYPE = "msgtype";
+  QString ARG_AIS_RECEIVERANGE = "receive_range";
   
 public:
   explicit MainWindow(QWidget *parent = 0);
@@ -97,6 +101,8 @@ private:
   QFont _font_inactive;
   QFont _font_nolink;
   
+  QVariant parse_args(QString args, QString arg);
+  
 public slots:
   void update_vessel_by_id(int id);
   
@@ -133,6 +139,9 @@ private slots:
   void on_bnSetActive_clicked();
   
   void update_NAVTEX_data();
+  
+  void read_devices_params();
+  void save_devices_params();
   
 signals:
   void newState(States state);

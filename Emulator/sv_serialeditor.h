@@ -36,6 +36,8 @@ struct SerialPortParams {
   QSerialPort::FlowControl flowcontrol = QSerialPort::NoFlowControl;
 };
 
+QSqlError check_params_exists(idev::SvSimulatedDeviceTypes dev_type);
+
 class SvSerialEditor : public QDialog
 {
   Q_OBJECT
@@ -78,6 +80,7 @@ private:
   QString _last_error = "";
   
   void accept();
+
  
 };
 

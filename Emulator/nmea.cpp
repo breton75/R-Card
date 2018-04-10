@@ -357,23 +357,32 @@ QStringList nmea::navtex_NRX(const QString& text)
 //  for(int i = 0; i < 71; i++)
 //    msg.append(SIXBIT_SYMBOLS.value(b6[i]));  // message id
   
-//  int total_count = int(ceil(qreal(msg.length()) / 62.0));
-//  for(int i = 0; i < total_count; i++) {
+  QString new_text = "";
+  for(int i = 0; i < text.length(); i++) {
+    if(text.at(i) == QChar(0x0D) || text.at(i) == QChar(0x0A))
+      new_text.append('^');
+    
+    new_text.append(text.at(i));
+    
+  }
+  
+  int total_count = int(ceil(qreal(new_text.length()) / 62.0));
+  for(int i = 0; i < total_count; i++) {
     
     
-//    QString s = QString("!%1NRX,%2,%3,0,A,%4,2*")
-//                              .arg(talkerID)
-//                              .arg(total_count)
-//                              .arg(i + 1)
-//                              .arg(msg.mid(0 + 62 * i, 62));
+    QString s = QString("!%1NRX,%2,%3,0,A,%4,2*")
+                              .arg("CR")
+                              .arg(total_count)
+                              .arg(i + 1)
+                              .arg(new_text.mid(0 + 62 * i, 62));
     
-//        quint8 src = 0;
-//        for(int j = 1; j <= s.length() - 2; j++) {
-//          src = src ^ quint8(s.at(j).toLatin1());
-//        }
+        quint8 src = 0;
+        for(int j = 1; j <= s.length() - 2; j++) {
+          src = src ^ quint8(s.at(j).toLatin1());
+        }
           
-//        result.append(QString("%1%2").arg(s).arg(QString("%1\r\n").arg(src, 2, 16).replace(' ', '0').toUpper()));
-//  }
+        result.append(QString("%1%2").arg(s).arg(QString("%1\r\n").arg(src, 2, 16).replace(' ', '0').toUpper()));
+  }
     
   return result;
   

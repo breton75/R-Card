@@ -61,8 +61,6 @@ SvSerialEditor::~SvSerialEditor()
 
 void SvSerialEditor::accept()
 {
-  QSqlQuery *q = new QSqlQuery(SQLITE->db);
-  
   params.name = ui->cbPortName->currentData().toString();
   params.description = ui->cbPortName->currentText();
   params.baudrate = ui->cbBaudrate->currentData().toUInt();
@@ -73,22 +71,10 @@ void SvSerialEditor::accept()
   
   try {
     
-    QSqlError err = SQLITE->execSQL(QString(SQL_SELECT_COUNT_FROM_SERIAL_WHERE).arg(params.dev_type), q);
-    
+    QSqlError err = check_params_exists(params.dev_type);
     if(QSqlError::NoError != err.type()) _exception.raise(err.databaseText());
-    
-    q->next();
-    if(q->value("count").toInt() == 0) {
-      
-      err = SQLITE->execSQL(QString(SQL_INSERT_SERIAL).arg(int(params.dev_type)));
-      if(QSqlError::NoError != err.type()) _exception.raise(err.databaseText());
-      
-    }
-    
-    q->finish();
-//    delete q;
-    
-    err = SQLITE->execSQL(QString(SQL_UPDATE_SERIAL_WHERE)
+
+    err = SQLITE->execSQL(QString(SQL_UPDATE_DEVICES_SERIAL_PARAMS_WHERE)
                           .arg(params.name)
                           .arg(params.baudrate)
                           .arg(params.parity)
@@ -105,16 +91,31 @@ void SvSerialEditor::accept()
   
   catch(SvException e) {
     
-    if(q) {
-      q->finish();
-      delete q;
-    }
-    
     _last_error = e.err;
 //        qDebug() << _last_error;
     QDialog::reject();
   }
   
   QDialog::accept();
+  
+}
+
+QSqlError check_params_exists(idev::SvSimulatedDeviceTypes dev_type)
+{
+  QSqlQuery *q = new QSqlQuery(SQLITE->db);
+  QSqlError err;
+  
+  err = SQLITE->execSQL(QString(SQL_SELECT_COUNT_DEVICES_PARAMS_WHERE).arg(dev_type), q);
+  
+  if(q->next() && q->value("count").toInt() == 0) {
+    
+    err = SQLITE->execSQL(QString(SQL_INSERT_DEVICES_PARAMS).arg(int(dev_type)));
+    
+  }
+  
+  q->finish();
+  delete q;
+
+  return err;
   
 }

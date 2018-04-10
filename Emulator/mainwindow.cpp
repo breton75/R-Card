@@ -47,7 +47,7 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->dockCarrentInfo->move(iw.position);
 //  ui->dockWidget->setWindowState(gw.state);
   
-  ui->dspinAISRadius->setValue(AppParams::readParam(this, "GENERAL", "AISRadius", 2).toReal());
+//  ui->dspinAISRadius->setValue(AppParams::readParam(this, "GENERAL", "AISRadius", 2).toReal());
   
   /* лог */
   log = svlog::SvLog(ui->textLog);
@@ -115,80 +115,8 @@ bool MainWindow::init()
     _query->finish();
     
     
-    /// параметры COM портов
-    if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELECT_FROM_DEVICE_PARAMS), _query).type()) 
-      _exception.raise(_query->lastError().databaseText());
-
-    while(_query->next()) {    
-      
-      idev::SvSimulatedDeviceTypes dt = idev::SvSimulatedDeviceTypes(_query->value("device_type").toUInt());
-      
-      switch (dt) {
-        case idev::sdtLAG:
-          
-          _lag_serial_params.name =         _query->value("port_name").toString();        
-          _lag_serial_params.description =  _query->value("description").toString();
-          _lag_serial_params.baudrate =     _query->value("baudrate").toInt();                              
-          _lag_serial_params.databits =     QSerialPort::DataBits(_query->value("data_bits").toInt());      
-          _lag_serial_params.flowcontrol =  QSerialPort::FlowControl(_query->value("flow_control").toInt());
-          _lag_serial_params.parity =       QSerialPort::Parity(_query->value("parity").toInt());           
-          _lag_serial_params.stopbits =     QSerialPort::StopBits(_query->value("stop_bits").toInt());  
-          ui->editLAGSerialInterface->setText(_lag_serial_params.description);
-          
-          ui->checkLAGEnabled->setChecked(_query->value("is_active").toBool());
-          
-          QStringList arg_list = _query->value("args").toString().split(";");
-          for(QString arg: arg_list) {
-            if
-            if(arg.split("=").first() == "msgtype") {
-              bool ok;
-              arg.split("=").
-              
-            }
-            .first()
-                
-          }
-          
-          break;
-          
-        case idev::sdtSelfAIS:
-          _ais_serial_params.name =         _query->value("port_name").toString();
-          _ais_serial_params.description =  _query->value("description").toString();
-          _ais_serial_params.baudrate =     _query->value("baudrate").toInt();
-          _ais_serial_params.databits =     QSerialPort::DataBits(_query->value("data_bits").toInt());
-          _ais_serial_params.flowcontrol =  QSerialPort::FlowControl(_query->value("flow_control").toInt());
-          _ais_serial_params.parity =       QSerialPort::Parity(_query->value("parity").toInt());
-          _ais_serial_params.stopbits =     QSerialPort::StopBits(_query->value("stop_bits").toInt());
-          ui->editAISSerialInterface->setText(_ais_serial_params.description);
-          
-        case idev::sdtNavtex:
-           
-          _navtex_serial_params.name =        _query->value("port_name").toString();                          
-          _navtex_serial_params.baudrate =    _query->value("baudrate").toInt();                              
-          _navtex_serial_params.databits =    QSerialPort::DataBits(_query->value("data_bits").toInt());      
-          _navtex_serial_params.flowcontrol = QSerialPort::FlowControl(_query->value("flow_control").toInt());
-          _navtex_serial_params.parity =      QSerialPort::Parity(_query->value("parity").toInt());           
-          _navtex_serial_params.stopbits =    QSerialPort::StopBits(_query->value("stop_bits").toInt());      
-          ui->editNAVTEXSerialInterface->setText(_navtex_serial_params.description);
-          
-        case idev::sdtEcho:
-          
-//          _echo_serial_params.name =  
-//          _echo_serial_params.baudrate = 
-//          _echo_serial_params.databits = 
-//          _echo_serial_params.flowcontrol = 
-//          _echo_serial_params.parity = 
-//          _echo_serial_params.stopbits = 
-          
-        default:
-          break;
-      }
-      
-      
-      
-    }
-    _query->finish();
-    
+    /// параметры устройств
+    read_devices_params();    
     
     
     qInfo() << "init 1";
@@ -285,6 +213,9 @@ NX:
     
     _query->finish();
     
+    connect(this, &MainWindow::startNAVEmulation, _navtex, &nav::SvNAVTEX::start);
+    connect(this, &MainWindow::stopNAVEmulation, _navtex, &nav::SvNAVTEX::stop);
+    
     
     connect(_area->scene, SIGNAL(selectionChanged()), this, SLOT(area_selection_changed()));
     connect(ui->listVessels, &QListWidget::currentItemChanged, this, &MainWindow::currentVesselListItemChanged);
@@ -343,11 +274,13 @@ MainWindow::~MainWindow()
   while(_current_state != sStopped)
     qApp->processEvents();
   
+  save_devices_params();
+  
   AppParams::saveWindowParams(this, this->size(), this->pos(), this->windowState());
   AppParams::saveWindowParams(ui->dockGraphics, ui->dockGraphics->size(), ui->dockGraphics->pos(), ui->dockGraphics->windowState(), "AREA WINDOW");
   AppParams::saveWindowParams(ui->dockCarrentInfo, ui->dockCarrentInfo->size(), ui->dockCarrentInfo->pos(), ui->dockCarrentInfo->windowState(), "INFO WINDOW");
   
-  AppParams::saveParam(this, "GENERAL", "AISRadius", QVariant(ui->dspinAISRadius->value()));
+//  AppParams::saveParam(this, "GENERAL", "AISRadius", QVariant(ui->dspinAISRadius->value()));
   
   delete ui;
 }
@@ -508,6 +441,9 @@ void MainWindow::on_bnCycle_clicked()
       
       try {
         
+        /// сохраняем параметры устройств
+        save_devices_params();
+        
         /** открываем порты устройств **/
         /// LAG
         if(ui->checkLAGEnabled->isChecked()) {
@@ -524,13 +460,20 @@ void MainWindow::on_bnCycle_clicked()
           
         }
         
+        /// NAVTEX
+        if(ui->checkNAVTEXEnabled->isChecked()) {
+         
+          _navtex->setSerialPortParams(_navtex_serial_params);
+          if(!_navtex->open()) _exception.raise(QString("НАВТЕКС: %1").arg(_navtex->lastError()));
+          
+        }
         
-//        if(!_self_lag->open()) _exception.raise(_self_lag->lastError());
       }
       
       catch(SvException &e) {
         if(_self_ais->isOpened()) _self_ais->close();
         if(_self_lag->isOpened()) _self_lag->close();
+        if(_navtex->isOpened()) _navtex->close();
         
         QMessageBox::critical(this, "Ошибка", QString("Ошибка открытия порта.\n%1").arg(e.err), QMessageBox::Ok);
         emit newState(sStopped);
@@ -543,9 +486,12 @@ void MainWindow::on_bnCycle_clicked()
       
       emit startAISEmulation(0);
       
-      emit startLAGEmulation(ui->spinLAGUploadDataPeriod->value());
+      emit startLAGEmulation(ui->spinLAGUploadInterval->value());
+      
+      emit startNAVEmulation(ui->spinNAVTEXUploadInterval->value());
       
       emit newState(sRunned);
+      
       break;
     }
       
@@ -553,12 +499,11 @@ void MainWindow::on_bnCycle_clicked()
     {
       emit newState(sStopping);
 
-      /// LAG      
       if(ui->checkLAGEnabled->isChecked()) _self_lag->close();
-      
-      /// AIS
       if(ui->checkAISEnabled->isChecked()) _self_ais->close();
+      if(ui->checkNAVTEXEnabled->isChecked()) _navtex->close();
       
+      emit stopNAVEmulation();
       
       emit stopLAGEmulation();
       
@@ -839,9 +784,6 @@ nav::SvNAVTEX* MainWindow::createNavtex(QSqlQuery* q)
   _navtex->setData(ndata);
   
   update_NAVTEX_data();
-  
-  ui->spinNAVTEXUploadPeriod->setValue(q->value("interval").toUInt());
-  ui->checkNAVTEKEnabled->setEnabled(q->value("is_active").toBool());
   
   connect(this, &MainWindow::startNAVEmulation, _navtex, &nav::SvNAVTEX::start);
   connect(this, &MainWindow::stopNAVEmulation, _navtex, &nav::SvNAVTEX::stop);
@@ -1156,4 +1098,188 @@ void MainWindow::on_bnSetActive_clicked()
   LISTITEMs.value(_selected_vessel_id)->setIcon(vessel->isActive() ? QIcon(":/icons/Icons/bullet_white.png") : QIcon(":/icons/Icons/bullet_red.png"));
   
 //  update_vessel_by_id(_selected_vessel_id);
+}
+
+void MainWindow::read_devices_params()
+{
+  if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELECT_FROM_DEVICES_PARAMS), _query).type()) 
+    _exception.raise(_query->lastError().databaseText());
+
+  while(_query->next()) {    
+    
+    idev::SvSimulatedDeviceTypes dt = idev::SvSimulatedDeviceTypes(_query->value("device_type").toUInt());
+    
+    switch (dt) {
+      case idev::sdtLAG: {
+        
+        _lag_serial_params.name =         _query->value("port_name").toString();        
+        _lag_serial_params.description =  _query->value("description").toString();
+        _lag_serial_params.baudrate =     _query->value("baudrate").toInt();                              
+        _lag_serial_params.databits =     QSerialPort::DataBits(_query->value("data_bits").toInt());      
+        _lag_serial_params.flowcontrol =  QSerialPort::FlowControl(_query->value("flow_control").toInt());
+        _lag_serial_params.parity =       QSerialPort::Parity(_query->value("parity").toInt());           
+        _lag_serial_params.stopbits =     QSerialPort::StopBits(_query->value("stop_bits").toInt());  
+        ui->editLAGSerialInterface->setText(_lag_serial_params.description);
+        
+        ui->checkLAGEnabled->setChecked(_query->value("is_active").toBool());
+        ui->spinLAGUploadInterval->setValue(_query->value("upload_interval").toUInt());
+        
+        QVariant args = parse_args(_query->value("args").toString(), ARG_LAG_MSGTYPE);
+        quint32 msgtype = args.canConvert<quint32>() ? args.toUInt() : 0;
+        ui->cbLAGMessageType->setCurrentIndex(msgtype < ui->cbLAGMessageType->count() ? msgtype : 0);
+        
+        break;
+      }
+        
+      case idev::sdtSelfAIS: {
+        
+        _ais_serial_params.name =         _query->value("port_name").toString();
+        _ais_serial_params.description =  _query->value("description").toString();
+        _ais_serial_params.baudrate =     _query->value("baudrate").toInt();
+        _ais_serial_params.databits =     QSerialPort::DataBits(_query->value("data_bits").toInt());
+        _ais_serial_params.flowcontrol =  QSerialPort::FlowControl(_query->value("flow_control").toInt());
+        _ais_serial_params.parity =       QSerialPort::Parity(_query->value("parity").toInt());
+        _ais_serial_params.stopbits =     QSerialPort::StopBits(_query->value("stop_bits").toInt());
+        ui->editAISSerialInterface->setText(_ais_serial_params.description);
+        
+        ui->checkAISEnabled->setChecked(_query->value("is_active").toBool());
+        
+        QVariant args = parse_args(_query->value("args").toString(), ARG_AIS_RECEIVERANGE);
+        ui->dspinAISRadius->setValue(args.canConvert<qreal>() ? args.toReal() : 50);
+        
+        
+      }
+        
+      case idev::sdtNavtex:
+         
+        _navtex_serial_params.name =        _query->value("port_name").toString(); 
+        _navtex_serial_params.description = _query->value("description").toString();
+        _navtex_serial_params.baudrate =    _query->value("baudrate").toInt();                              
+        _navtex_serial_params.databits =    QSerialPort::DataBits(_query->value("data_bits").toInt());      
+        _navtex_serial_params.flowcontrol = QSerialPort::FlowControl(_query->value("flow_control").toInt());
+        _navtex_serial_params.parity =      QSerialPort::Parity(_query->value("parity").toInt());           
+        _navtex_serial_params.stopbits =    QSerialPort::StopBits(_query->value("stop_bits").toInt());      
+        ui->editNAVTEXSerialInterface->setText(_navtex_serial_params.description);
+        
+        ui->checkNAVTEXEnabled->setChecked(_query->value("is_active").toBool());
+        ui->spinNAVTEXUploadInterval->setValue(_query->value("upload_interval").toUInt());
+        
+      case idev::sdtEcho:
+        
+//          _echo_serial_params.name =  
+//          _echo_serial_params.baudrate = 
+//          _echo_serial_params.databits = 
+//          _echo_serial_params.flowcontrol = 
+//          _echo_serial_params.parity = 
+//          _echo_serial_params.stopbits = 
+        
+      default:
+        break;
+    }
+    
+    
+    
+  }
+  _query->finish();
+  
+}
+
+void MainWindow::save_devices_params()
+{
+  QSqlError err;
+  
+  /// ----------- LAG ------------- ///
+  try {
+
+    err = check_params_exists(idev::sdtLAG);
+    
+    if(err.type() != QSqlError::NoError) _exception.raise(err.databaseText());
+    
+    err = SQLITE->execSQL(QString(SQL_UPDATE_DEVICES_PARAMS_WHERE)
+                          .arg(ui->checkLAGEnabled->isChecked())
+                          .arg(ui->spinLAGUploadInterval->value())
+                          .arg(QString("-%1 %2").arg(ARG_LAG_MSGTYPE).arg(ui->cbLAGMessageType->currentIndex()))
+                          .arg(idev::sdtLAG));
+    
+    if(QSqlError::NoError != err.type()) _exception.raise(err.databaseText());
+    
+  }
+  
+  catch(SvException e) {
+    log << svlog::Critical << svlog::Time << QString("Ошибка при обновлении параметров ЛАГ:\n%1").arg(e.err) << svlog::endl;
+  }
+   
+  /// ----------- AIS ------------- ///
+  try {
+    
+    err = check_params_exists(idev::sdtSelfAIS);
+    
+    if(err.type() != QSqlError::NoError) _exception.raise(err.databaseText());
+    
+    err = SQLITE->execSQL(QString(SQL_UPDATE_DEVICES_PARAMS_WHERE)
+                          .arg(ui->checkAISEnabled->isChecked())
+                          .arg(1000)
+                          .arg(QString("-%1 %2").arg(ARG_AIS_RECEIVERANGE).arg(ui->dspinAISRadius->value(), 0, 'f', 1))
+                          .arg(idev::sdtSelfAIS));
+    
+    if(QSqlError::NoError != err.type()) _exception.raise(err.databaseText());
+   
+  }
+  
+  catch(SvException e) {
+    log << svlog::Critical << svlog::Time << QString("Ошибка при обновлении параметров АИС:\n%1").arg(e.err) << svlog::endl;
+  }
+    
+  /// ----------- NAVTEX ------------- ///
+  try {
+    
+    err = check_params_exists(idev::sdtNavtex);
+    
+    if(err.type() != QSqlError::NoError) _exception.raise(err.databaseText());
+    
+    err = SQLITE->execSQL(QString(SQL_UPDATE_DEVICES_PARAMS_WHERE)
+                          .arg(ui->checkAISEnabled->isChecked())
+                          .arg(ui->spinNAVTEXUploadInterval->value())
+                          .arg("")
+                          .arg(idev::sdtNavtex));
+    
+    if(QSqlError::NoError != err.type()) _exception.raise(err.databaseText());
+    
+  
+  }
+  
+  catch(SvException e) {
+    log << svlog::Critical << svlog::Time << QString("Ошибка при обновлении параметров НАВТЕКС:\n%1").arg(e.err) << svlog::endl;
+  }
+    
+}
+
+QVariant MainWindow::parse_args(QString args, QString arg)
+{
+  //! обязателен первый аргумент!! парсер считает, что там находится путь к программе
+  QStringList arg_list;
+  arg_list << "" << args.split(" ");
+  
+  QCommandLineParser parser;
+  parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
+  
+  QCommandLineOption msgtypeOption = QCommandLineOption(ARG_LAG_MSGTYPE,
+                                                        "Тип сообщения для LAG. По умолчанию 0.\n",
+                                                        "0", "0");
+  
+  QCommandLineOption receiveRangeOption = QCommandLineOption(ARG_AIS_RECEIVERANGE,
+                                                        "Дальность приема сообщений для AIS в км. По умолчанию 50.\n",
+                                                        "50", "50");
+
+  parser.addOption(msgtypeOption);
+  parser.addOption(receiveRangeOption);
+
+  QVariant result = QVariant();
+  if (parser.parse(arg_list)) {
+    
+    result = QVariant::fromValue(parser.value(arg));
+    
+  }
+  
+  return result;
 }

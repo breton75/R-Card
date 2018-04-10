@@ -76,10 +76,10 @@ private:
   SvMapObjectVesselAbstract* _map_object = nullptr;
   
 signals:
-  void write_message(const QString& message);
+  void write_message(const QStringList &message);
   
 private slots:
-  void write(const QString& message);
+  void write(const QStringList &messages);
   void prepare_message();
   
   

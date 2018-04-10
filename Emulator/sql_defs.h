@@ -146,18 +146,23 @@
 #define SQL_SELECT_LAG_TYPES "select id, type_name from lag_types"
 
 
-#define SQL_SELECT_FROM_DEVICE_PARAMS  "SELECT id, device_type, vessel_id, port_name, baudrate, parity, stop_bits, " \
+#define SQL_SELECT_FROM_DEVICES_PARAMS  "SELECT id, device_type, vessel_id, port_name, baudrate, parity, stop_bits, " \
                                        "data_bits, flow_control, description, is_active, upload_interval, args " \
-                                       "FROM device_params"
+                                       "FROM devices_params"
 
-#define SQL_SELECT_COUNT_DEVICE_PARAMS_WHERE  "SELECT count() as count " \
-                                              "FROM device_params WHERE device_type = %1"
+#define SQL_SELECT_COUNT_DEVICES_PARAMS_WHERE  "SELECT count() as count " \
+                                              "FROM devices_params WHERE device_type = %1"
 
-#define SQL_INSERT_DEVICE_PARAMS  "INSERT INTO device_params (device_type) VALUES(%1)"
+#define SQL_INSERT_DEVICES_PARAMS  "INSERT INTO devices_params (device_type) VALUES(%1)"
 
-#define SQL_UPDATE_DEVICE_SERIAL_PARAMS_WHERE  "UPDATE serial_port_params SET port_name='%1', baudrate=%2, "\
+#define SQL_UPDATE_DEVICES_SERIAL_PARAMS_WHERE  "UPDATE devices_params SET port_name='%1', baudrate=%2, "\
                                                "parity=%3, stop_bits=%4, data_bits=%5, flow_control=%6, description='%7' "\
                                                "WHERE device_type = %8"
+
+
+#define SQL_UPDATE_DEVICES_PARAMS_WHERE  "UPDATE devices_params SET is_active=%1, upload_interval=%2, args='%3' "\
+                                               "WHERE device_type = %4"
+
 
 
 #define SQL_SELECT_NAVTEX "SELECT navtex.id as id, " CR \
