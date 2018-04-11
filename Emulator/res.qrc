@@ -35,4 +35,10 @@
     <file>Icons/lock.png</file>
     <file>Icons/Anchor.ico</file>
   </qresource>
+  <qresource prefix="alarm">
+    <file>Icons/bell.png</file>
+    <file>Icons/bullet_feed.png</file>
+    <file>Icons/error.png</file>
+    <file>Icons/exclamation.png</file>
+  </qresource>
 </RCC>

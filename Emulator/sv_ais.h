@@ -177,6 +177,8 @@ public:
   bool start(quint32 msecs);
   void stop();
   
+  void alarm(int id, QString state, QString text);
+  
 private:
   qreal _receive_range;
   

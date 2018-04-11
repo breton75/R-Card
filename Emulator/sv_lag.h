@@ -63,6 +63,8 @@ public:
   
   idev::SvSimulatedDeviceTypes type() const { return idev::sdtLAG; }
   
+  void alarm(int id, QString state, QString text);
+  
 private:
   lag::lagData _data;
   

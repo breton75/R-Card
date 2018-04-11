@@ -342,27 +342,18 @@ QString nmea::lag_VBW(const geo::GEOPOSITION& geopos)
 }
 
 
-QStringList nmea::navtex_NRX(const QString& text)
+QStringList nmea::navtex_NRX(const nav::navtexData& ndata)
 {
+  QList<QChar> reserved = {0x0D, 0x0A, 0x24, 0x2A, 0x2C, 0x21, 0x5C, 0x5E, 0x7E, 0x7F };
+  
   QStringList result = QStringList();
   
-//  quint8 b6[71];
-//  memset(&b6, 0, 71);
-
-
-  
-  
-//  /// формируем сообщение
-//  QString msg = "";
-//  for(int i = 0; i < 71; i++)
-//    msg.append(SIXBIT_SYMBOLS.value(b6[i]));  // message id
-  
   QString new_text = "";
-  for(int i = 0; i < text.length(); i++) {
-    if(text.at(i) == QChar(0x0D) || text.at(i) == QChar(0x0A))
+  for(int i = 0; i < ndata.message_text.length(); i++) {
+    if(reserved.contains(ndata.message_text.at(i)))
       new_text.append('^');
     
-    new_text.append(text.at(i));
+    new_text.append(ndata.message_text.at(i));
     
   }
   
@@ -370,11 +361,21 @@ QStringList nmea::navtex_NRX(const QString& text)
   for(int i = 0; i < total_count; i++) {
     
     
-    QString s = QString("!%1NRX,%2,%3,0,A,%4,2*")
-                              .arg("CR")
-                              .arg(total_count)
-                              .arg(i + 1)
-                              .arg(new_text.mid(0 + 62 * i, 62));
+      QString s = QString("$%1NRX,%2,%3,00,%4%5%6,%7,%8,%9,%10,%11,%12,%13,A,%14*")
+                              .arg("CR")      // 1
+                              .arg(QString("%1").arg(total_count, 3).replace(" ", "0"))  // 2
+                              .arg(QString("%1").arg(i + 1, 3).replace(" ", "0"))        //3
+                              .arg(i > 0 ? "" : ndata.region_letter_id)      // 4
+                              .arg(i > 0 ? "" : ndata.message_letter_id)     // 5
+                              .arg(i > 0 ? "" : QString("%1").arg(ndata.message_last_number, 2).replace(" ", "0")) // 6
+                              .arg(i > 0 ? "" : QString::number(ndata.transmit_frequency_id))    // 7
+                              .arg(i > 0 ? "" : QTime::currentTime().toString("hhmmss.00"))    // 8
+                              .arg(i > 0 ? "" : QDate::currentDate().toString("dd"))   // 9
+                              .arg(i > 0 ? "" : QDate::currentDate().toString("MM"))   // 10
+                              .arg(i > 0 ? "" : QDate::currentDate().toString("yyyy"))   // 11
+                              .arg(i > 0 ? "" : QString("%1.0").arg(ndata.message_text.length()))       // 12
+                              .arg(i > 0 ? "" : "0.0")       // 13
+                              .arg(new_text.mid(0 + 62 * i, 62));     // 14
     
         quint8 src = 0;
         for(int j = 1; j <= s.length() - 2; j++) {
@@ -384,6 +385,27 @@ QStringList nmea::navtex_NRX(const QString& text)
         result.append(QString("%1%2").arg(s).arg(QString("%1\r\n").arg(src, 2, 16).replace(' ', '0').toUpper()));
   }
     
+  return result;
+  
+}
+
+QString nmea::alarm_ALR(QString talkerID, int id , QString state, QString text)
+{
+  QString result = QString("$%1ALR,%2,%3,%4.00,%5,%6,A,%7*")
+                   .arg(talkerID)
+                   .arg(QTime::currentTime().toString("hh"))
+                   .arg(QTime::currentTime().toString("mm"))
+                   .arg(QTime::currentTime().toString("ss"))
+                   .arg(QString("%1").arg(id, 3).replace(" ", "0"))
+                   .arg(state)
+                   .arg(text.left(62));
+  
+  quint8 src = 0;
+  for(int i = 1; i <= result.length() - 2; i++)
+    src = src ^ quint8(result.at(i).toLatin1());
+  
+  result.append(QString("%1\r\n").arg(src, 2, 16).replace(' ', '0').toUpper());
+  
   return result;
   
 }

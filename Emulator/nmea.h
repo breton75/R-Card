@@ -6,6 +6,7 @@
 
 #include "geo.h"
 #include "sv_ais.h"
+#include "sv_navtex.h"
 
 namespace nmea {
 
@@ -40,8 +41,10 @@ namespace nmea {
   
   QString lag_VBW(const geo::GEOPOSITION &geopos);
   
-  QStringList navtex_NRX(const QString& text);
+  QStringList navtex_NRX(const nav::navtexData &ndata);
   
+  QString alarm_ALR(QString talkerID, int id, QString state, QString text);
+                
 }
 
 

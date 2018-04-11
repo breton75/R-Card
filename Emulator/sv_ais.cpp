@@ -513,6 +513,11 @@ void ais::SvSelfAIS::parse_Q(QString& msg)
   
 }
 
+void ais::SvSelfAIS::alarm(int id, QString state, QString text)
+{
+  QString msg = nmea::alarm_ALR(_static_voyage_data.talkerID, id, state, text);
+  emit write_message(msg);
+}
 
 /** ----- Other AIS ------- **/
 ais::SvOtherAIS::SvOtherAIS(int vessel_id, const ais::aisStaticVoyageData& svdata, const ais::aisDynamicData& ddata)

@@ -1,10 +1,11 @@
 #include "sv_navtex.h"
+#include "nmea.h"
 
-/** --------- NAVTEKS --------- **/
-nav::SvNAVTEX::SvNAVTEX(svlog::SvLog &log)
+/** --------- NAVTEX --------- **/
+nav::SvNAVTEX::SvNAVTEX(svlog::SvLog &log, int id)
 {
   _log = log;
-  
+  _id = id;
 }
 
 nav::SvNAVTEX::~SvNAVTEX()
@@ -43,7 +44,7 @@ void nav::SvNAVTEX::close()
 bool nav::SvNAVTEX::start(quint32 msecs)
 {
   if(!_isActive)
-    return true;
+    return false;
   
   _timer.start(msecs);
   
@@ -57,20 +58,25 @@ void nav::SvNAVTEX::stop()
 
 void nav::SvNAVTEX::prepare_message()
 {
-  QStringList msgs = nmea::navtex_NRX(_data.last_message);
+  QStringList msgs = nmea::navtex_NRX(_data);
   emit write_message(msgs);
 }
 
 void nav::SvNAVTEX::write(const QStringList &messages)
 {
-  if(_port.isOpen()) {
+  if(_port.isOpen() && (_receive_frequency == _data.transmit_frequency_id)) {
    
     for(QString msg: messages) {
+      
       _port.write(msg.toStdString().c_str(), msg.size());
-    
-      _log << svlog::Attention << svlog::Time << msg << svlog::endl;
+      
+      _port.waitForBytesWritten();
+      
+      _log << svlog::Attention << svlog::TimeZZZ << msg << svlog::endl;
     
     }
+    
+    _data.message_last_number++;
   }
   
 }
@@ -83,4 +89,11 @@ void nav::SvNAVTEX::setSerialPortParams(const SerialPortParams& params)
   _port.setFlowControl(params.flowcontrol);
   _port.setParity(params.parity);
   _port.setStopBits(params.stopbits);
+}
+
+
+void nav::SvNAVTEX::alarm(int id, QString state, QString text)
+{
+  QString msg = nmea::alarm_ALR("CR", id, state, text);
+  emit write_message(QStringList(msg));
 }

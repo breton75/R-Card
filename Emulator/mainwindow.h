@@ -41,6 +41,10 @@ class MainWindow : public QMainWindow
   
   QString ARG_LAG_MSGTYPE = "msgtype";
   QString ARG_AIS_RECEIVERANGE = "receive_range";
+  QString ARG_NAV_RECV_FREQ = "recv_freq";
+  QString ARG_ALARM_ID = "alarm_id";
+  QString ARG_ALARM_STATE = "alarm_state";
+  QString ARG_ALARM_TEXT = "alarm_text";
   
 public:
   explicit MainWindow(QWidget *parent = 0);
@@ -143,6 +147,14 @@ private slots:
   void read_devices_params();
   void save_devices_params();
   
+  void on_bnEditNAVTEX_clicked();
+  
+  void on_bnNAVTEXAlarmSend_clicked();
+  
+  void on_bnLAGAlarmSend_clicked();
+  
+  void on_bnAISAlarmSend_clicked();
+  
 signals:
   void newState(States state);
   
@@ -151,12 +163,12 @@ signals:
   void startGPSEmulation(quint32 msecs);
   void startAISEmulation(quint32 msecs);
   void startLAGEmulation(quint32 msecs);
-  void startNAVEmulation(quint32 msecs);
+  void startNAVTEXEmulation(quint32 msecs);
   
   void stopGPSEmulation();
   void stopAISEmulation();
   void stopLAGEmulation();
-  void stopNAVEmulation();
+  void stopNAVTEXEmulation();
   
 };
 

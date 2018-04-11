@@ -95,3 +95,9 @@ void lag::SvLAG::read()
 {
   
 }
+
+void lag::SvLAG::alarm(int id, QString state, QString text)
+{
+  QString msg = nmea::alarm_ALR("VD", id, state, text);
+  emit write_message(msg);
+}

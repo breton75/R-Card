@@ -4,6 +4,7 @@
 
 extern SvSQLITE *SQLITE;
 extern SvSerialEditor* SERIALEDITOR_UI;
+extern SvNavtexEditor* NAVTEXEDITOR_UI;
 
 //vsl::SvVessel* SELF_VESSEL;
 
@@ -114,6 +115,17 @@ bool MainWindow::init()
     }
     _query->finish();
     
+    /// частоты для NAVTEX
+    ui->cbNAVTEXReceiveFrequency->clear();
+    QMap<int, QString> freqs = SvNavtexEditor::frequencies();
+    for(int freq_id: freqs.keys())
+      ui->cbNAVTEXReceiveFrequency->addItem(freqs.value(freq_id), freq_id);
+    
+    /// тревога
+    ui->cbLAGAlarmState->addItems(QStringList({"Порог превышен", "Порог не превышен"}));
+    ui->cbAISAlarmState->addItems(QStringList({"Порог превышен", "Порог не превышен"}));
+    ui->cbNAVTEXAlarmState->addItems(QStringList({"Порог превышен", "Порог не превышен"}));
+    
     
     /// параметры устройств
     read_devices_params();    
@@ -212,9 +224,6 @@ NX:
     createNavtex(_query);
     
     _query->finish();
-    
-    connect(this, &MainWindow::startNAVEmulation, _navtex, &nav::SvNAVTEX::start);
-    connect(this, &MainWindow::stopNAVEmulation, _navtex, &nav::SvNAVTEX::stop);
     
     
     connect(_area->scene, SIGNAL(selectionChanged()), this, SLOT(area_selection_changed()));
@@ -433,6 +442,7 @@ void MainWindow::stateChanged(States state)
 
 void MainWindow::on_bnCycle_clicked()
 {
+  
   switch (_current_state) {
     
     case sStopped:
@@ -464,6 +474,8 @@ void MainWindow::on_bnCycle_clicked()
         if(ui->checkNAVTEXEnabled->isChecked()) {
          
           _navtex->setSerialPortParams(_navtex_serial_params);
+          _navtex->setReceiveFrequency(ui->cbNAVTEXReceiveFrequency->currentData().toUInt());
+
           if(!_navtex->open()) _exception.raise(QString("НАВТЕКС: %1").arg(_navtex->lastError()));
           
         }
@@ -488,7 +500,7 @@ void MainWindow::on_bnCycle_clicked()
       
       emit startLAGEmulation(ui->spinLAGUploadInterval->value());
       
-      emit startNAVEmulation(ui->spinNAVTEXUploadInterval->value());
+      emit startNAVTEXEmulation(ui->spinNAVTEXUploadInterval->value());
       
       emit newState(sRunned);
       
@@ -503,7 +515,7 @@ void MainWindow::on_bnCycle_clicked()
       if(ui->checkAISEnabled->isChecked()) _self_ais->close();
       if(ui->checkNAVTEXEnabled->isChecked()) _navtex->close();
       
-      emit stopNAVEmulation();
+      emit stopNAVTEXEmulation();
       
       emit stopLAGEmulation();
       
@@ -766,27 +778,29 @@ vsl::SvVessel* MainWindow::createOtherVessel(QSqlQuery* q)
 nav::SvNAVTEX* MainWindow::createNavtex(QSqlQuery* q)
 {  
   /** ----- создаем устройство ------ **/
-  _navtex = new nav::SvNAVTEX(log);
+  int id = q->value("id").toUInt();
+  
+  _navtex = new nav::SvNAVTEX(log, id);
   
   nav::navtexData ndata;
-  ndata.id = q->value("id").toUInt();
-  ndata.station_region_id = q->value("station_region_id").toUInt();
-  ndata.station_message_id = q->value("station_message_id").toUInt();
+  ndata.region_id = q->value("station_region_id").toUInt();
+  ndata.message_id = q->value("message_id").toUInt();
   ndata.message_designation = q->value("message_designation").toString();
   ndata.region_station_name = q->value("region_station_name").toString();
-  ndata.last_message = q->value("last_message").toString();
-  ndata.is_active = q->value("is_active").toBool();
-  ndata.region_country = q->value("region_country").toString();
+  ndata.message_text = q->value("message_text").toString();
+//  ndata.region_country = q->value("region_country").toString();
   ndata.message_letter_id = q->value("message_letter_id").toString();
   ndata.region_letter_id = q->value("region_letter_id").toString();
   ndata.message_last_number = q->value("message_last_number").toUInt();
+  ndata.transmit_frequency_id = q->value("transmit_frequency").toUInt();
+  ndata.transmit_frequency = SvNavtexEditor::frequencies().value(ndata.transmit_frequency_id);
   
   _navtex->setData(ndata);
   
   update_NAVTEX_data();
   
-  connect(this, &MainWindow::startNAVEmulation, _navtex, &nav::SvNAVTEX::start);
-  connect(this, &MainWindow::stopNAVEmulation, _navtex, &nav::SvNAVTEX::stop);
+  connect(this, &MainWindow::startNAVTEXEmulation, _navtex, &nav::SvNAVTEX::start);
+  connect(this, &MainWindow::stopNAVTEXEmulation, _navtex, &nav::SvNAVTEX::stop);
   
   return _navtex;
   
@@ -942,14 +956,16 @@ void MainWindow::update_NAVTEX_data()
   ui->textNAVTEXParams->setHtml(QString("<!DOCTYPE html><p><strong>Станция:</strong>\t%1</p>" \
                                         "<p><strong>Тип сообщения:</strong>\t%2</p>" \
                                         "<p><strong>Заголовок сообщения:</strong>\t%3%4%5</p>" \
+                                        "<p><strong>Частота передачи:</strong>\t%6</p>" \
                                         "<p><strong>Сообщение:</strong></p>" \
-                                        "<p>%6</p>")
+                                        "<p>%7</p>")
                                 .arg(_navtex->data()->region_station_name)
                                 .arg(_navtex->data()->message_designation)
                                 .arg(_navtex->data()->region_letter_id)
                                 .arg(_navtex->data()->message_letter_id)
                                 .arg(QString("%1").arg(_navtex->data()->message_last_number, 2, 10).replace(" ", "0"))
-                                .arg(_navtex->data()->last_message));
+                                .arg(_navtex->data()->transmit_frequency)
+                                .arg(_navtex->data()->message_text));
   
 }
 
@@ -1124,6 +1140,10 @@ void MainWindow::read_devices_params()
         ui->checkLAGEnabled->setChecked(_query->value("is_active").toBool());
         ui->spinLAGUploadInterval->setValue(_query->value("upload_interval").toUInt());
         
+        ui->spinLAGAlarmId->setValue(_query->value("alarm_id").toUInt());
+        ui->cbLAGAlarmState->setCurrentIndex(_query->value("alarm_state").toUInt());
+        ui->editLAGAlarmMessageText->setText(_query->value("alarm_text").toString());
+              
         QVariant args = parse_args(_query->value("args").toString(), ARG_LAG_MSGTYPE);
         quint32 msgtype = args.canConvert<quint32>() ? args.toUInt() : 0;
         ui->cbLAGMessageType->setCurrentIndex(msgtype < ui->cbLAGMessageType->count() ? msgtype : 0);
@@ -1144,13 +1164,17 @@ void MainWindow::read_devices_params()
         
         ui->checkAISEnabled->setChecked(_query->value("is_active").toBool());
         
+        ui->spinAISAlarmId->setValue(_query->value("alarm_id").toUInt());
+        ui->cbAISAlarmState->setCurrentIndex(_query->value("alarm_state").toUInt());
+        ui->editAISAlarmMessageText->setText(_query->value("alarm_text").toString());
+        
         QVariant args = parse_args(_query->value("args").toString(), ARG_AIS_RECEIVERANGE);
         ui->dspinAISRadius->setValue(args.canConvert<qreal>() ? args.toReal() : 50);
         
         
       }
         
-      case idev::sdtNavtex:
+      case idev::sdtNavtex: {
          
         _navtex_serial_params.name =        _query->value("port_name").toString(); 
         _navtex_serial_params.description = _query->value("description").toString();
@@ -1163,6 +1187,16 @@ void MainWindow::read_devices_params()
         
         ui->checkNAVTEXEnabled->setChecked(_query->value("is_active").toBool());
         ui->spinNAVTEXUploadInterval->setValue(_query->value("upload_interval").toUInt());
+        
+        ui->spinNAVTEXAlarmId->setValue(_query->value("alarm_id").toUInt());
+        ui->cbNAVTEXAlarmState->setCurrentIndex(_query->value("alarm_state").toUInt());
+        ui->editNAVTEXAlarmMessageText->setText(_query->value("alarm_text").toString());
+                
+        QVariant args = parse_args(_query->value("args").toString(), ARG_NAV_RECV_FREQ);
+        int indx = ui->cbNAVTEXReceiveFrequency->findData(args.canConvert<quint32>() ? args.toUInt() : 1);
+        ui->cbNAVTEXReceiveFrequency->setCurrentIndex(indx < ui->cbNAVTEXReceiveFrequency->count() ? indx : 1);
+        
+      }
         
       case idev::sdtEcho:
         
@@ -1199,6 +1233,9 @@ void MainWindow::save_devices_params()
                           .arg(ui->checkLAGEnabled->isChecked())
                           .arg(ui->spinLAGUploadInterval->value())
                           .arg(QString("-%1 %2").arg(ARG_LAG_MSGTYPE).arg(ui->cbLAGMessageType->currentIndex()))
+                          .arg(ui->spinLAGAlarmId->value())
+                          .arg(ui->cbLAGAlarmState->currentIndex())
+                          .arg(ui->editLAGAlarmMessageText->text())
                           .arg(idev::sdtLAG));
     
     if(QSqlError::NoError != err.type()) _exception.raise(err.databaseText());
@@ -1220,6 +1257,9 @@ void MainWindow::save_devices_params()
                           .arg(ui->checkAISEnabled->isChecked())
                           .arg(1000)
                           .arg(QString("-%1 %2").arg(ARG_AIS_RECEIVERANGE).arg(ui->dspinAISRadius->value(), 0, 'f', 1))
+                          .arg(ui->spinAISAlarmId->value())
+                          .arg(ui->cbAISAlarmState->currentIndex())
+                          .arg(ui->editAISAlarmMessageText->text())
                           .arg(idev::sdtSelfAIS));
     
     if(QSqlError::NoError != err.type()) _exception.raise(err.databaseText());
@@ -1238,9 +1278,12 @@ void MainWindow::save_devices_params()
     if(err.type() != QSqlError::NoError) _exception.raise(err.databaseText());
     
     err = SQLITE->execSQL(QString(SQL_UPDATE_DEVICES_PARAMS_WHERE)
-                          .arg(ui->checkAISEnabled->isChecked())
+                          .arg(ui->checkNAVTEXEnabled->isChecked())
                           .arg(ui->spinNAVTEXUploadInterval->value())
-                          .arg("")
+                          .arg(QString("-%1 %2").arg(ARG_NAV_RECV_FREQ).arg(ui->cbNAVTEXReceiveFrequency->currentData().toUInt()))
+                          .arg(ui->spinNAVTEXAlarmId->value())
+                          .arg(ui->cbNAVTEXAlarmState->currentIndex())
+                          .arg(ui->editNAVTEXAlarmMessageText->text())
                           .arg(idev::sdtNavtex));
     
     if(QSqlError::NoError != err.type()) _exception.raise(err.databaseText());
@@ -1263,17 +1306,10 @@ QVariant MainWindow::parse_args(QString args, QString arg)
   QCommandLineParser parser;
   parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
   
-  QCommandLineOption msgtypeOption = QCommandLineOption(ARG_LAG_MSGTYPE,
-                                                        "Тип сообщения для LAG. По умолчанию 0.\n",
-                                                        "0", "0");
+  parser.addOption(QCommandLineOption(ARG_LAG_MSGTYPE, "Тип сообщения для LAG", "0", "0"));
+  parser.addOption(QCommandLineOption(ARG_AIS_RECEIVERANGE, "Дальность приема для AIS в км", "50", "50"));
+  parser.addOption(QCommandLineOption(ARG_NAV_RECV_FREQ, "Частота приемника NAVTEX", "1", "1"));
   
-  QCommandLineOption receiveRangeOption = QCommandLineOption(ARG_AIS_RECEIVERANGE,
-                                                        "Дальность приема сообщений для AIS в км. По умолчанию 50.\n",
-                                                        "50", "50");
-
-  parser.addOption(msgtypeOption);
-  parser.addOption(receiveRangeOption);
-
   QVariant result = QVariant();
   if (parser.parse(arg_list)) {
     
@@ -1282,4 +1318,62 @@ QVariant MainWindow::parse_args(QString args, QString arg)
   }
   
   return result;
+}
+
+void MainWindow::on_bnEditNAVTEX_clicked()
+{
+  NAVTEXEDITOR_UI = new SvNavtexEditor(this, _navtex->id());
+  if(NAVTEXEDITOR_UI->exec() != QDialog::Accepted) {
+
+    if(!NAVTEXEDITOR_UI->last_error().isEmpty()) {
+      QMessageBox::critical(this, "Ошибка", QString("Ошибка при изменении параметров:\n%1").arg(NAVTEXEDITOR_UI->last_error()), QMessageBox::Ok);
+    
+      delete NAVTEXEDITOR_UI;
+        
+      return;
+    }
+    
+  }
+  
+  nav::navtexData data;
+//  memcpy(&data, _navtex->data(), sizeof(nav::navtexData));
+  
+  data.message_id = NAVTEXEDITOR_UI->t_message_id;
+  data.region_id = NAVTEXEDITOR_UI->t_region_id;
+  data.message_text = NAVTEXEDITOR_UI->t_message_text;
+  data.message_designation = NAVTEXEDITOR_UI->t_message_designation;
+  data.message_letter_id = NAVTEXEDITOR_UI->t_message_letter_id;
+  data.region_letter_id = NAVTEXEDITOR_UI->t_region_letter_id;
+  data.region_station_name = NAVTEXEDITOR_UI->t_region_station_name;
+  data.transmit_frequency = NAVTEXEDITOR_UI->t_transmit_frequency;
+  data.transmit_frequency_id = NAVTEXEDITOR_UI->t_transmit_frequency_id;
+  data.message_last_number = NAVTEXEDITOR_UI->t_message_last_number;
+  
+  delete NAVTEXEDITOR_UI;
+
+  _navtex->setData(data);
+  
+  update_NAVTEX_data();
+  
+}
+
+void MainWindow::on_bnNAVTEXAlarmSend_clicked()
+{
+  _navtex->alarm(ui->spinNAVTEXAlarmId->value(),
+                 ui->cbNAVTEXAlarmState->currentIndex() == 0 ? "A" : "V",
+                 ui->editNAVTEXAlarmMessageText->text().left(62));
+}
+
+void MainWindow::on_bnLAGAlarmSend_clicked()
+{
+  _self_lag->alarm(ui->spinLAGAlarmId->value(),
+                 ui->cbLAGAlarmState->currentIndex() == 0 ? "A" : "V",
+                 ui->editLAGAlarmMessageText->text().left(62));    
+}
+
+void MainWindow::on_bnAISAlarmSend_clicked()
+{
+  _self_ais->alarm(ui->spinAISAlarmId->value(),
+                 ui->cbAISAlarmState->currentIndex() == 0 ? "A" : "V",
+                 ui->editAISAlarmMessageText->text().left(62));
 }

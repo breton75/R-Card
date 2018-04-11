@@ -14,6 +14,7 @@ SvNavtexEditor::SvNavtexEditor(QWidget *parent, int navtexId) :
   
   loadMessages();
   loadRegions();
+  loadFrequencies();
   
   if(showMode == smEdit) {
     
@@ -29,9 +30,11 @@ SvNavtexEditor::SvNavtexEditor(QWidget *parent, int navtexId) :
       
       t_id = q->value("id").toUInt();
       t_region_id = q->value("station_region_id").toUInt();
-      t_message_id = q->value("station_message_id").toUInt();
-      t_last_message = q->value("last_message").toString();
-      t_isactive = q->value("is_active").toBool();
+      t_message_id = q->value("message_id").toUInt();
+      t_message_text = q->value("message_text").toString();
+      t_transmit_frequency_id = q->value("transmit_frequency").toUInt();
+      t_transmit_frequency = frequencies().value(t_transmit_frequency_id);
+      t_message_last_number = q->value("message_last_number").toUInt();
       
     }
     
@@ -42,7 +45,8 @@ SvNavtexEditor::SvNavtexEditor(QWidget *parent, int navtexId) :
  
   ui->cbNAVTEXMessageType->setCurrentIndex(ui->cbNAVTEXMessageType->findData(t_message_id));
   ui->cbNAVTEXStation->setCurrentIndex(ui->cbNAVTEXStation->findData(t_region_id));
-  ui->textNAVTEXMessageText->setText(t_last_message);
+  ui->textNAVTEXMessageText->setText(t_message_text);
+  ui->cbNAVTEXTransmitFrequency->setCurrentIndex(ui->cbNAVTEXTransmitFrequency->findData(t_transmit_frequency_id));
   
   connect(ui->bnSave, SIGNAL(clicked()), this, SLOT(accept()));
   connect(ui->bnCancel, SIGNAL(clicked()), this, SLOT(reject()));
@@ -60,6 +64,7 @@ SvNavtexEditor::~SvNavtexEditor()
 void SvNavtexEditor::loadMessages()
 {
   ui->cbNAVTEXMessageType->clear();
+  _messages.clear();
   
   QSqlQuery* q = new QSqlQuery(SQLITE->db);
   if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELECT_NAVTEX_MESSAGES), q).type()) {
@@ -68,11 +73,17 @@ void SvNavtexEditor::loadMessages()
     return;
   }
   
-  while(q->next())
+  while(q->next()) {
     ui->cbNAVTEXMessageType->addItem(QString("%1 (%2)")
                                  .arg(q->value("letter_id").toString())
                                  .arg(q->value("designation").toString()),
                               q->value("id").toUInt());
+    
+    _messages.insert(q->value("id").toUInt(),
+                     QString("%1|%2").arg(q->value("letter_id").toString())
+                                     .arg(q->value("designation").toString()));
+    
+  }
 
   q->finish();
   delete q;
@@ -85,6 +96,7 @@ void SvNavtexEditor::loadMessages()
 void SvNavtexEditor::loadRegions()
 {
   ui->cbNAVTEXStation->clear();
+  _regions.clear();
   
   QSqlQuery* q = new QSqlQuery(SQLITE->db);
   if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELECT_NAVTEX_REGIONS), q).type()) {
@@ -93,11 +105,17 @@ void SvNavtexEditor::loadRegions()
     return;
   }
   
-  while(q->next())
+  while(q->next()) {
     ui->cbNAVTEXStation->addItem(QString("%1 (%2)")
                                  .arg(q->value("letter_id").toString())
                                  .arg(q->value("station_name").toString()),
                               q->value("id").toUInt());
+  
+    _regions.insert(q->value("id").toUInt(),
+                   QString("%1|%2").arg(q->value("letter_id").toString())
+                                   .arg(q->value("station_name").toString()));
+  
+  }
 
   q->finish();
   delete q;
@@ -108,26 +126,44 @@ void SvNavtexEditor::loadRegions()
   
 }
 
+void SvNavtexEditor::loadFrequencies()
+{
+  ui->cbNAVTEXTransmitFrequency->clear();
+  
+  QMap<int, QString> freqs = frequencies();
+  
+  for(int freq_id: freqs.keys())
+    ui->cbNAVTEXTransmitFrequency->addItem(freqs.value(freq_id), freq_id);
+  
+}
+
 void SvNavtexEditor::accept()
 {
+  
   t_region_id = ui->cbNAVTEXStation->currentData().toUInt();
+  t_region_letter_id = _regions.value(t_region_id).split("|").first();
+  t_region_station_name = _regions.value(t_region_id).split("|").last();
+  
   t_message_id = ui->cbNAVTEXMessageType->currentData().toUInt();
-  t_last_message = ui->textNAVTEXMessageText->toPlainText();
+  t_message_letter_id = _messages.value(t_message_id).split("|").first();
+  t_message_designation = _messages.value(t_message_id).split("|").last();
+  
+  t_message_text = ui->textNAVTEXMessageText->toPlainText().replace('\'', '"');
+  
+  t_transmit_frequency_id = ui->cbNAVTEXTransmitFrequency->currentData().toUInt();
+  t_transmit_frequency = frequencies().value(t_transmit_frequency_id);
   
   switch (this->showMode) {
     
     case smNew: {
       
       try {
-        qDebug() << QString(SQL_INSERT_NAVTEX)
-                    .arg(t_region_id)
-                    .arg(t_message_id)
-                    .arg(t_last_message);
         
         QSqlError sql = SQLITE->execSQL(QString(SQL_INSERT_NAVTEX)
                                         .arg(t_region_id)
                                         .arg(t_message_id)
-                                        .arg(t_last_message));
+                                        .arg(t_message_text)
+                                        .arg(t_transmit_frequency_id));
         
         if(QSqlError::NoError != sql.type()) _exception.raise(sql.databaseText());
         
@@ -136,7 +172,7 @@ void SvNavtexEditor::accept()
       catch(SvException &e) {
           
         _last_error = e.err;
-        qDebug() << 111 << _last_error;
+//        qDebug() << 111 << _last_error;
         QDialog::reject();
         
         return;
@@ -146,11 +182,11 @@ void SvNavtexEditor::accept()
     case smEdit: {
       try {
         
-        
         QSqlError sql = SQLITE->execSQL(QString(SQL_UPDATE_NAVTEX)
                                         .arg(t_region_id)
                                         .arg(t_message_id)
-                                        .arg(t_last_message)
+                                        .arg(t_message_text)
+                                        .arg(t_transmit_frequency_id)
                                         .arg(t_id));
         
         if(QSqlError::NoError != sql.type()) _exception.raise(sql.databaseText());
@@ -161,7 +197,7 @@ void SvNavtexEditor::accept()
       catch(SvException &e) {
           
         _last_error = e.err;
-        qDebug() << 222 << _last_error;
+//        qDebug() << 222 << _last_error;
         QDialog::reject();
         
         return;
