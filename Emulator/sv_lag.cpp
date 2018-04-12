@@ -65,8 +65,32 @@ void lag::SvLAG::newGPSData(const geo::GEOPOSITION& geopos)
 
 void lag::SvLAG::prepare_message()
 {
-  QString msg = nmea::lag_VBW(_current_geoposition);
+  QString msg = "";
+  
+  switch (_msg_type) {
+    
+    case lag::lmtVBW:
+      msg = nmea::lag_VBW(_current_geoposition);
+      break;
+      
+    case lag::lmtVDR:
+      msg = nmea::lag_VDR(_current_geoposition);
+      break;
+      
+    case lag::lmtVHW:
+      msg = nmea::lag_VHW(_current_geoposition);   
+      break;
+      
+    case lag::lmtVLW:
+      msg = nmea::lag_VLW(_current_geoposition);   
+      break;      
+
+  }
+
+  if(msg.isEmpty()) return;
+  
   emit write_message(msg);
+  
 }
 
 void lag::SvLAG::write(const QString &message)
@@ -100,4 +124,9 @@ void lag::SvLAG::alarm(int id, QString state, QString text)
 {
   QString msg = nmea::alarm_ALR("VD", id, state, text);
   emit write_message(msg);
+}
+
+void lag::SvLAG::setMessageType(lag::MessageType msgtype)
+{
+  _msg_type = msgtype;
 }

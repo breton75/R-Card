@@ -18,7 +18,11 @@ SvMapObject::~SvMapObject()
 
 void SvMapObject::hoverEnterEvent(QGraphicsSceneHoverEvent *)
 {
-  this->setToolTip(QString("Долгота: %1\n Широта: %2").arg(_geo_position.longtitude).arg(_geo_position.latitude));
+  this->setToolTip(QString("Долгота: %1\nШирота: %2\nКурс: %3\nСкорость: %4")
+                   .arg(_geo_position.longtitude)
+                   .arg(_geo_position.latitude)
+                   .arg(_geo_position.course)
+                   .arg(_geo_position.speed));
   this->update();
 }
 

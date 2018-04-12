@@ -13,6 +13,11 @@
 
 namespace geo {
 
+  enum UNITS {
+    uKnotsMiles,
+    uKmhKm
+  };
+
   struct BOUNDS {
     qreal min_lat;
     qreal min_lon;
@@ -49,6 +54,9 @@ namespace geo {
     quint8 rate_of_turn = 0;
     qreal drift = 0.0;
     
+    qreal full_distance = 0.0;
+    
+    UNITS units = uKmhKm;
     
     bool isValid() { return ((longtitude != -1.0) && (latitude != -1.0) && (course != -1) && (speed != -1.0)); }
     bool isValidCoordinates() { return ((longtitude != -1.0) && (latitude != -1.0)); }
@@ -58,7 +66,8 @@ namespace geo {
     geo::GEOPOSITION& operator =(const geo::GEOPOSITION& other)
     { 
       latitude = other.latitude; longtitude = other.longtitude; 
-      course = other.course; speed = other.speed; utc = other.utc; accuracy = other.accuracy;
+      course = other.course; speed = other.speed; utc = other.utc;
+      accuracy = other.accuracy; full_distance = other.full_distance;
     }
     
   };

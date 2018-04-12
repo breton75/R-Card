@@ -25,6 +25,12 @@
     <file>Icons/Search.ico</file>
   </qresource>
   <qresource prefix="icons">
+    <file>Icons/link2.ico</file>
+    <file>Icons/link3.ico</file>
+    <file>Icons/start.ico</file>
+    <file>Icons/anchor3.ico</file>
+    <file>Icons/link-broken1.ico</file>
+    <file>Icons/toggle-right-alt2.ico</file>
     <file>Icons/bullet_black.png</file>
     <file>Icons/bullet_blue.png</file>
     <file>Icons/bullet_green.png</file>

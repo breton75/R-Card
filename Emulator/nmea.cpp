@@ -322,10 +322,13 @@ QString nmea::ais_sentence_ABK(quint8 message_id, QString &talkerID, ais::aisSta
 
 QString nmea::lag_VBW(const geo::GEOPOSITION& geopos)
 {
+  qreal speed_knt = geopos.units == geo::uKmhKm ? geopos.speed / 1.85 : geopos.speed;
+  qreal drift_knt = geopos.units == geo::uKmhKm ? geopos.drift / 1.85 : geopos.drift;
+  
   QString result = QString("$VDVBW,%1,%2,A,%3,%4,A,%5,A,%6,A*")
-                .arg(geopos.speed, 0, 'f', 1)
-                .arg(0.0, 0, 'g', 1)
-                .arg(geopos.speed, 0, 'f', 1)
+                .arg(speed_knt, 0, 'f', 1)
+                .arg(drift_knt, 0, 'g', 1)
+                .arg(0.0, 0, 'f', 1)
                 .arg(0.0, 0, 'g', 1)
                 .arg(0.0, 0, 'g', 1)
                 .arg(0.0, 0, 'g', 1);
@@ -334,11 +337,67 @@ QString nmea::lag_VBW(const geo::GEOPOSITION& geopos)
   for(int i = 1; i <= result.length() - 2; i++)
     src = src ^ quint8(result.at(i).toLatin1());
   
-  
-  result.append(QString("%1\r\n").arg(src, 2, 16).replace(' ', '0').toUpper()); //.arg(QChar(13)).arg(QChar(10)));
-  
+  result.append(QString("%1\r\n").arg(src, 2, 16).replace(' ', '0').toUpper());
   
   return result;
+  
+}
+
+QString nmea::lag_VDR(const geo::GEOPOSITION &geopos)
+{
+  qreal drift_knt = geopos.units == geo::uKmhKm ? geopos.drift / 1.85 : geopos.drift;
+  
+  QString result = QString("$VDVDR,%1,T,%2,M,%3,N*")
+                .arg(geopos.course, 0, 'f', 1)
+                .arg(geopos.course, 0, 'f', 1)
+                .arg(drift_knt, 0, 'f', 1);
+  
+  quint8 src = 0;
+  for(int i = 1; i <= result.length() - 2; i++)
+    src = src ^ quint8(result.at(i).toLatin1());
+  
+  result.append(QString("%1\r\n").arg(src, 2, 16).replace(' ', '0').toUpper());
+  
+  return result;
+  
+}
+
+QString nmea::lag_VHW(const geo::GEOPOSITION &geopos)
+{
+  qreal speed_kmh = geopos.units == geo::uKmhKm ? geopos.speed : geopos.speed * 1.85;
+  qreal speed_knt = geopos.units == geo::uKmhKm ? geopos.speed / 1.85 : geopos.speed;
+  
+  QString result = QString("$VDVHW,%1,T,%2,M,%3,N,%4,K*")
+                .arg(geopos.course, 0, 'f', 1)
+                .arg(geopos.course, 0, 'f', 1)
+                .arg(speed_knt, 0, 'f', 1)
+                .arg(speed_kmh, 0, 'f', 1);
+  
+  quint8 src = 0;
+  for(int i = 1; i <= result.length() - 2; i++)
+    src = src ^ quint8(result.at(i).toLatin1());
+  
+  result.append(QString("%1\r\n").arg(src, 2, 16).replace(' ', '0').toUpper());
+  
+  return result;
+}
+
+QString nmea::lag_VLW(const geo::GEOPOSITION &geopos)
+{
+  qreal dist_ml = geopos.units == geo::uKmhKm ? geopos.full_distance / 1.85 : geopos.speed;
+  
+  QString result = QString("$VDVLW,%1,N,%2,N,0.0,N,0.0,N*")
+                .arg(dist_ml, 0, 'f', 1)
+                .arg(dist_ml, 0, 'f', 1);
+  
+  quint8 src = 0;
+  for(int i = 1; i <= result.length() - 2; i++)
+    src = src ^ quint8(result.at(i).toLatin1());
+  
+  result.append(QString("%1\r\n").arg(src, 2, 16).replace(' ', '0').toUpper());
+  
+  return result;
+  
 }
 
 

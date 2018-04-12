@@ -147,6 +147,7 @@ geo::GEOPOSITION geo::get_next_geoposition(const geo::GEOPOSITION& geopos, qreal
   geo::GEOPOSITION new_geopos = geopos;  
   new_geopos.latitude = qRadiansToDegrees(lat2);
   new_geopos.longtitude += qRadiansToDegrees(lon2);
+  new_geopos.full_distance += distance;
   
   return new_geopos;
 }

@@ -140,6 +140,8 @@ private:
   
   ais::aisNavStat _nav_status;
   
+  QDateTime _last_update;
+  
 //public slots:
 //  void newGPSData(const geo::GEOPOSITION& geopos);
   
@@ -151,7 +153,7 @@ class ais::SvSelfAIS : public ais::SvAIS
   Q_OBJECT
   
 public:
-  SvSelfAIS(int vessel_id, const ais::aisStaticVoyageData& svdata, const ais::aisDynamicData& ddata, svlog::SvLog& log);
+  SvSelfAIS(int vessel_id, const ais::aisStaticVoyageData& svdata, const ais::aisDynamicData& ddata, svlog::SvLog& log, QDateTime lastUpdate);
   ~SvSelfAIS(); 
   
   void setSerialPortParams(const SerialPortParams& params);
@@ -224,7 +226,7 @@ class ais::SvOtherAIS : public ais::SvAIS
   Q_OBJECT
   
 public:
-  SvOtherAIS(int vessel_id, const ais::aisStaticVoyageData& svdata, const ais::aisDynamicData& ddata);
+  SvOtherAIS(int vessel_id, const ais::aisStaticVoyageData& svdata, const ais::aisDynamicData& ddata, QDateTime lastUpdate);
   ~SvOtherAIS(); 
   
   idev::SvSimulatedDeviceTypes type() const { return idev::sdtOtherAIS; }

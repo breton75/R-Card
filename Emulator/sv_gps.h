@@ -45,7 +45,7 @@ class gps::SvGPS : public idev::SvIDevice
   Q_OBJECT
   
 public:
-  SvGPS(int vessel_id, gps::gpsInitParams &params, geo::BOUNDS* bounds);
+  SvGPS(int vessel_id, gps::gpsInitParams &params, geo::BOUNDS* bounds, QDateTime lastUpdate);
   ~SvGPS(); 
   
   int vesselId() { return _vessel_id; }
@@ -67,6 +67,8 @@ private:
   int _vessel_id = -1;
   gps::gpsInitParams _gps_params;
   geo::BOUNDS* _bounds = nullptr;
+  
+  QDateTime _last_update;
   
   QMutex _mutex;
   

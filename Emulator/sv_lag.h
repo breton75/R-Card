@@ -20,6 +20,13 @@
 
 namespace lag {
 
+  enum MessageType {
+    lmtVBW,
+    lmtVDR,
+    lmtVHW,
+    lmtVLW
+  };
+
   struct lagData {                     // Информация о судне. Данные передаются каждые 6 минут
     
     quint32 id;                           // id судна в БД
@@ -65,6 +72,11 @@ public:
   
   void alarm(int id, QString state, QString text);
   
+  static QMap<lag::MessageType, QString> msgtypes() { return {{lag::lmtVBW, "VBW (Dual Ground/Water Speed)"},
+                                                        {lag::lmtVDR, "VDR (Set and Drift)"}, 
+                                                        {lag::lmtVHW, "VHW (Water Speed and Heading)"}, 
+                                                        {lag::lmtVLW, "VLW (Dual Ground/Water Distance)"}}; }
+  
 private:
   lag::lagData _data;
   
@@ -78,6 +90,8 @@ private:
   
   QSerialPort _port;
   
+  lag::MessageType _msg_type;
+  
 signals:
   void write_message(const QString& message);
   
@@ -88,6 +102,7 @@ private slots:
   
 public slots:
   void newGPSData(const geo::GEOPOSITION& geopos);
+  void setMessageType(lag::MessageType msgtype);
   
 };
 

@@ -2,10 +2,12 @@
 
 gps::SvGPS* SELF_GPS;
 
-gps::SvGPS::SvGPS(int vessel_id, gpsInitParams &params, geo::BOUNDS* bounds)
+gps::SvGPS::SvGPS(int vessel_id, gpsInitParams &params, geo::BOUNDS* bounds, QDateTime lastUpdate)
 {
   _vessel_id = vessel_id;
   _bounds = bounds;
+  
+  _last_update = lastUpdate;
   
   setInitParams(params);
   
@@ -139,7 +141,6 @@ void gps::SvGPSEmitter::run()
       _current_geo_position.course = normalize_course(_current_geo_position.course + quint64(geo::get_rnd_course()) % 45);
       continue;
     }
-    
     
     
     _current_geo_position = new_geopos;

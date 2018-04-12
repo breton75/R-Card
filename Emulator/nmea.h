@@ -40,6 +40,9 @@ namespace nmea {
   QString ais_sentence_ABK(quint8 message_id, QString &talkerID, ais::aisStaticVoyageData* static_voyage_data);
   
   QString lag_VBW(const geo::GEOPOSITION &geopos);
+  QString lag_VDR(const geo::GEOPOSITION &geopos);
+  QString lag_VHW(const geo::GEOPOSITION &geopos);
+  QString lag_VLW(const geo::GEOPOSITION &geopos);
   
   QStringList navtex_NRX(const nav::navtexData &ndata);
   

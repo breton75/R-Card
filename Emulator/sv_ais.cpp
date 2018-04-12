@@ -7,7 +7,7 @@ QMap<quint32, ais::aisNavStat> NAVSTATs;
 extern SvSQLITE* SQLITE;
 
 /** --------- Self AIS --------- **/
-ais::SvSelfAIS::SvSelfAIS(int vessel_id, const ais::aisStaticVoyageData& svdata, const ais::aisDynamicData& ddata, svlog::SvLog &log)
+ais::SvSelfAIS::SvSelfAIS(int vessel_id, const ais::aisStaticVoyageData& svdata, const ais::aisDynamicData& ddata, svlog::SvLog &log, QDateTime lastUpdate)
 {
   setVesselId(vessel_id);
   
@@ -15,7 +15,8 @@ ais::SvSelfAIS::SvSelfAIS(int vessel_id, const ais::aisStaticVoyageData& svdata,
   setDynamicData(ddata);
   
   _log = log;
-    
+  _last_update = lastUpdate;
+  
 }
 
 ais::SvSelfAIS::~SvSelfAIS()
@@ -126,7 +127,7 @@ void ais::SvSelfAIS::on_receive_message(ais::SvAIS* otherAIS, quint32 message_id
     }
     
   }
-  
+
   emit updateVesselById(otherAIS->vesselId());
   
 }
@@ -520,9 +521,10 @@ void ais::SvSelfAIS::alarm(int id, QString state, QString text)
 }
 
 /** ----- Other AIS ------- **/
-ais::SvOtherAIS::SvOtherAIS(int vessel_id, const ais::aisStaticVoyageData& svdata, const ais::aisDynamicData& ddata)
+ais::SvOtherAIS::SvOtherAIS(int vessel_id, const ais::aisStaticVoyageData& svdata, const ais::aisDynamicData& ddata, QDateTime lastUpdate)
 {
   _vessel_id = vessel_id;
+  _last_update = lastUpdate;
   
   setStaticVoyageData(svdata);
   setDynamicData(ddata);
@@ -569,13 +571,11 @@ bool ais::SvOtherAIS::start(quint32 msecs)
   }
   
   // при первом запуске ставим интервал случайный, чтобы все корабли не отбивались одновременно
-  QTime t = QTime::currentTime();
-  qsrand(t.msec() + _vessel_id);
-  qreal r = qreal(qrand() % 100) / 100.0;
-  quint32 first_interval = quint32(_static_voyage_interval * r);
-  qDebug() << first_interval;
+  qsrand(_last_update.time().minute() * 60000 + _last_update.time().second() * 1000 + _last_update.time().msec());
+  
+  quint32 first_interval = quint32(_static_voyage_interval * qreal(qrand() % 100) / 100.0);
+
   _timer_static_voyage.start(first_interval);
-//  _timer_voyage.start(_voyage_interval);
   _timer_dynamic.start(_dynamic_interval);
   
   return true;
@@ -601,7 +601,6 @@ void ais::SvOtherAIS::newGPSData(const geo::GEOPOSITION& geopos)
 
 void ais::SvOtherAIS::on_interrogate(quint32 mmsi1, quint32 msg1num, quint32 msg2num, quint32 mmsi2, quint32 msg3num)
 {
-  qDebug() << mmsi1 << msg1num;
   QList<int> messageIDs;
   messageIDs << 3 << 5;
   

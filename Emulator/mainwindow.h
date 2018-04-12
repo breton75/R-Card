@@ -55,7 +55,7 @@ public:
   svlog::SvLog log;
   
 public slots:
-  gps::gpsInitParams readGPSInitParams(QSqlQuery* q, ais::aisDynamicData &dynamic_data, int vessel_id);
+  gps::gpsInitParams readGPSInitParams(QSqlQuery* q, ais::aisDynamicData &dynamic_data, QDateTime lastUpdate);
   ais::aisStaticVoyageData readAISStaticVoyageData(QSqlQuery* q);
   ais::aisDynamicData readAISDynamicData(QSqlQuery* q);
   ais::aisNavStat readNavStat(QSqlQuery* q);
@@ -107,6 +107,8 @@ private:
   
   QVariant parse_args(QString args, QString arg);
   
+  QTimer _timer_x10;
+  
 public slots:
   void update_vessel_by_id(int id);
   
@@ -155,6 +157,14 @@ private slots:
   
   void on_bnAISAlarmSend_clicked();
   
+  void on_cbLAGMessageType_currentIndexChanged(int index);
+  
+  void on_bnCycle_pressed();
+  
+  void setX10Emulation();
+  
+  void on_bnCycle_released();
+  
 signals:
   void newState(States state);
   
@@ -169,6 +179,8 @@ signals:
   void stopAISEmulation();
   void stopLAGEmulation();
   void stopNAVTEXEmulation();
+  
+  void new_lag_message_type(lag::MessageType msgtype);
   
 };
 

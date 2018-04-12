@@ -29,6 +29,8 @@ MainWindow::MainWindow(QWidget *parent) :
   
   ui->setupUi(this);
   
+  setWindowTitle(QString("Имитатор судового оборудования v.%1").arg(APP_VERSION));
+  
   AppParams::WindowParams p;
   p = AppParams::readWindowParams(this);
   resize(p.size);
@@ -125,6 +127,12 @@ bool MainWindow::init()
     ui->cbLAGAlarmState->addItems(QStringList({"Порог превышен", "Порог не превышен"}));
     ui->cbAISAlarmState->addItems(QStringList({"Порог превышен", "Порог не превышен"}));
     ui->cbNAVTEXAlarmState->addItems(QStringList({"Порог превышен", "Порог не превышен"}));
+    
+    /// типы сообщений LAG
+    ui->cbLAGMessageType->clear();
+    QMap<lag::MessageType, QString> mtypes = lag::SvLAG::msgtypes();
+    for(lag::MessageType mtype: mtypes.keys())
+      ui->cbLAGMessageType->addItem(mtypes.value(mtype), mtype);
     
     
     /// параметры устройств
@@ -231,6 +239,11 @@ NX:
     
     connect(this, SIGNAL(newState(States)), this, SLOT(stateChanged(States)));
    
+    connect(this, &MainWindow::new_lag_message_type, _self_lag, &lag::SvLAG::setMessageType);
+    
+    _timer_x10.setSingleShot(true);
+    connect(&_timer_x10, &QTimer::timeout, this, &MainWindow::setX10Emulation);
+    
 //    QStringList l = nmea::ais_message_5(0, _self_ais->getStaticData(), _self_ais->getVoyageData(), _self_ais->navStatus());
 //    QUdpSocket* udp = new QUdpSocket();
 //    for(QString s: l) {
@@ -243,13 +256,7 @@ NX:
 //    }
 //    udp->close();
 //    delete udp;
-    
-    bool b = false;
-    QString s = "";
-    int i = -100;
-    i = s.toInt(&b);
-    
-    qDebug() << b << i << bool(!b && !s.isEmpty());
+
     
     return true;
   }
@@ -294,10 +301,10 @@ MainWindow::~MainWindow()
   delete ui;
 }
 
-gps::gpsInitParams MainWindow::readGPSInitParams(QSqlQuery* q, ais::aisDynamicData& dynamic_data, int vessel_id)
+gps::gpsInitParams MainWindow::readGPSInitParams(QSqlQuery* q, ais::aisDynamicData& dynamic_data, QDateTime lastUpdate)
 {
   gps::gpsInitParams result;
-  QDateTime dt = q->value("gps_last_update").toDateTime(); // для нормальной генерации случайных чисел
+//  QDateTime dt = q->value("gps_last_update").toDateTime(); // для нормальной генерации случайных чисел
 
   result.gps_timeout = q->value("gps_timeout").toUInt();
   result.init_random_coordinates = q->value("init_random_coordinates").toBool();
@@ -312,7 +319,7 @@ gps::gpsInitParams MainWindow::readGPSInitParams(QSqlQuery* q, ais::aisDynamicDa
   if(result.init_random_coordinates || 
      (!result.init_random_coordinates && !dynamic_data.geoposition.isValidCoordinates())) {
     
-    geo::COORDINATES coord = geo::get_rnd_coordinates(_area->bounds(), vessel_id + dt.time().second() * 1000 + dt.time().msec());
+    geo::COORDINATES coord = geo::get_rnd_coordinates(_area->bounds(), lastUpdate.time().second() * 1000 + lastUpdate.time().msec());
     
     result.geoposition.latitude = coord.latitude;
     result.geoposition.longtitude = coord.longtitude;
@@ -407,7 +414,29 @@ void MainWindow::stateChanged(States state)
     case sRunned:
     {
       ui->tabWidget->setEnabled(true);
+      
+      ui->checkAISEnabled->setEnabled(false);
+      ui->checkLAGEnabled->setEnabled(false);
+      ui->checkNAVTEXEnabled->setEnabled(false);
+      ui->bnAISEditSerialParams->setEnabled(false);
+      ui->bnLAGEditSerialParams->setEnabled(false);
+      ui->bnNAVTEKEditSerialParams->setEnabled(false);
+      
+      ui->dspinAISRadius->setEnabled(false);
+      ui->bnAddVessel->setEnabled(false);
+      ui->bnEditVessel->setEnabled(false);
+      ui->bnRemoveVessel->setEnabled(false);
+      ui->bnSetActive->setEnabled(false);
+      
+      ui->spinLAGUploadInterval->setEnabled(false);
+      ui->cbLAGMessageType->setEnabled(false);
+      
+      ui->spinNAVTEXUploadInterval->setEnabled(false);
+      ui->cbNAVTEXReceiveFrequency->setEnabled(false);
+      
       ui->bnCycle->setEnabled(true);
+      
+      ui->bnCycle->setIcon(QIcon());
       ui->bnCycle->setText("Стоп");
       ui->bnCycle->setStyleSheet("background-color: tomato");
       
@@ -417,7 +446,28 @@ void MainWindow::stateChanged(States state)
     case sStopped:
     {
       ui->tabWidget->setEnabled(true);
+      
+      ui->checkAISEnabled->setEnabled(true);
+      ui->checkLAGEnabled->setEnabled(true);
+      ui->checkNAVTEXEnabled->setEnabled(true);
+      ui->bnAISEditSerialParams->setEnabled(true);
+      ui->bnLAGEditSerialParams->setEnabled(true);
+      ui->bnNAVTEKEditSerialParams->setEnabled(true);
+      
+      ui->dspinAISRadius->setEnabled(true);
+      ui->bnAddVessel->setEnabled(true);
+      ui->bnEditVessel->setEnabled(true);
+      ui->bnRemoveVessel->setEnabled(true);
+      ui->bnSetActive->setEnabled(true);
+      
+      ui->spinLAGUploadInterval->setEnabled(true);
+      ui->cbLAGMessageType->setEnabled(true);
+      
+      ui->spinNAVTEXUploadInterval->setEnabled(true);
+      ui->cbNAVTEXReceiveFrequency->setEnabled(true);
+      
       ui->bnCycle->setEnabled(true);
+      ui->bnCycle->setIcon(QIcon(":/icons/Icons/start.ico"));
       ui->bnCycle->setText("Старт");
       ui->bnCycle->setStyleSheet("");
       break;
@@ -459,6 +509,7 @@ void MainWindow::on_bnCycle_clicked()
         if(ui->checkLAGEnabled->isChecked()) {
           
           _self_lag->setSerialPortParams(_lag_serial_params);
+          _self_lag->setMessageType(lag::MessageType(ui->cbLAGMessageType->currentData().toInt()));
           if(!_self_lag->open()) _exception.raise(QString("ЛАГ: %1").arg(_self_lag->lastError()));
         }
         
@@ -466,6 +517,7 @@ void MainWindow::on_bnCycle_clicked()
         if(ui->checkAISEnabled->isChecked()) {
          
           _self_ais->setSerialPortParams(_ais_serial_params);
+          _self_ais->setReceiveRange(ui->dspinAISRadius->value());
           if(!_self_ais->open()) _exception.raise(QString("АИС: %1").arg(_self_ais->lastError()));
           
         }
@@ -492,7 +544,7 @@ void MainWindow::on_bnCycle_clicked()
         return;
       }
       
-      emit setMultiplier(ui->spinEmulationMultiplier->value());
+//      emit setMultiplier(ui->spinEmulationMultiplier->value());
       
       emit startGPSEmulation(0);
       
@@ -533,6 +585,9 @@ void MainWindow::on_bnCycle_clicked()
       _self_lag->close();
       
       emit newState(sStopped);
+      
+      emit setMultiplier(1);
+          
       break;
     }
       
@@ -542,7 +597,6 @@ void MainWindow::on_bnCycle_clicked()
   
 }
 
-//void MainWindow::onFocusItemChanged(QGraphicsItem *newFocusItem, QGraphicsItem *oldFocusItem, Qt::FocusReason reason)
 void MainWindow::area_selection_changed()
 {
   /// ищем все выделения и удаляем их
@@ -636,20 +690,21 @@ vsl::SvVessel* MainWindow::createSelfVessel(QSqlQuery* q)
   
   // читаем информацию из БД  
   int vessel_id = q->value("id").toUInt();
+  QDateTime last_update = q->value("gps_last_update").toDateTime(); // для нормальной генерации случайных чисел
   
   ais::aisStaticVoyageData static_voyage_data = readAISStaticVoyageData(q); 
   ais::aisDynamicData dynamic_data = readAISDynamicData(q);
-  gps::gpsInitParams gps_params = readGPSInitParams(q, dynamic_data, vessel_id);
+  gps::gpsInitParams gps_params = readGPSInitParams(q, dynamic_data, last_update);
   ais::aisNavStat nav_stat = readNavStat(q);
   
   
   /** ----- создаем устройства ------ **/
   // GPS
-  _self_gps = new gps::SvGPS(vessel_id, gps_params, _area->bounds());
+  _self_gps = new gps::SvGPS(vessel_id, gps_params, _area->bounds(), last_update);
   GPSs.insert(vessel_id, _self_gps);
   
   // АИС
-  _self_ais = new ais::SvSelfAIS(vessel_id, static_voyage_data, dynamic_data, log);
+  _self_ais = new ais::SvSelfAIS(vessel_id, static_voyage_data, dynamic_data, log, last_update);
   _self_ais->setReceiveRange(ui->dspinAISRadius->value()); /** надо переделать */
   AISs.insert(vessel_id, _self_ais);
   _self_ais->setNavStatus(nav_stat);
@@ -704,21 +759,22 @@ vsl::SvVessel* MainWindow::createOtherVessel(QSqlQuery* q)
   // читаем информацию из БД  
   int vessel_id = q->value("id").toUInt();
   bool is_active = q->value("is_active").toBool();
+  QDateTime last_update = q->value("gps_last_update").toDateTime(); // для нормальной генерации случайных чисел
   
   ais::aisStaticVoyageData static_voyage_data = readAISStaticVoyageData(q); 
   ais::aisDynamicData dynamic_data = readAISDynamicData(q);
-  gps::gpsInitParams gps_params = readGPSInitParams(q, dynamic_data, vessel_id);
+  gps::gpsInitParams gps_params = readGPSInitParams(q, dynamic_data, last_update);
   ais::aisNavStat nav_stat = readNavStat(q);                     
   
   /** ----- создаем устройства ------ **/
   // GPS
-  gps::SvGPS* newGPS = new gps::SvGPS(vessel_id, gps_params, _area->bounds());
+  gps::SvGPS* newGPS = new gps::SvGPS(vessel_id, gps_params, _area->bounds(), last_update);
   GPSs.insert(vessel_id, newGPS);
  
   
   // АИС
   ais::SvOtherAIS* newAIS;
-  newAIS = new ais::SvOtherAIS(vessel_id, static_voyage_data, dynamic_data);
+  newAIS = new ais::SvOtherAIS(vessel_id, static_voyage_data, dynamic_data, last_update);
   AISs.insert(vessel_id, newAIS);
   newAIS->setNavStatus(nav_stat);
   
@@ -816,7 +872,7 @@ void MainWindow::update_vessel_by_id(int id)
       
       ((SvMapObjectOtherVessel*)(vessel->mapObject()))->setOutdated(true);
   
-      LISTITEMs.value(id)->setIcon(QIcon(":/icons/Icons/link_break.png"));
+      LISTITEMs.value(id)->setIcon(QIcon(":/icons/Icons/link-broken1.ico"));
       LISTITEMs.value(id)->setFont(_font_nolink);
       LISTITEMs.value(id)->setTextColor(QColor(OUTDATED_VESSEL_COLOR));
       
@@ -825,13 +881,13 @@ void MainWindow::update_vessel_by_id(int id)
       
       ((SvMapObjectOtherVessel*)(vessel->mapObject()))->setOutdated(false);
       
-      LISTITEMs.value(id)->setIcon(QIcon(":/icons/Icons/bullet_green.png"));
+      LISTITEMs.value(id)->setIcon(QIcon(":/icons/Icons/link3.ico"));
       LISTITEMs.value(id)->setFont(_font_default);
       LISTITEMs.value(id)->setTextColor(QColor(DEFAULT_VESSEL_PEN_COLOR));
       
+      vessel->updateVessel();
     }  
     
-    vessel->updateVessel();
     
   }
 }
@@ -932,10 +988,10 @@ void MainWindow::editVessel(int id)
     }
       
     /** --------- изменяем данные судна ----------- **/
-    
+    QDateTime last_update = q->value("gps_last_update").toDateTime();
     ais::aisStaticVoyageData static_voyage_data = readAISStaticVoyageData(q); 
     ais::aisDynamicData *dynamic_data = VESSELs.value(id)->ais()->dynamicData();
-    gps::gpsInitParams gps_params = readGPSInitParams(q, *dynamic_data, id);
+    gps::gpsInitParams gps_params = readGPSInitParams(q, *dynamic_data, last_update);
     q->finish();
     
 //    dynamic_data.geoposition = VESSELs.value(id)->ais()->getDynamicData()->geoposition;
@@ -1146,7 +1202,7 @@ void MainWindow::read_devices_params()
               
         QVariant args = parse_args(_query->value("args").toString(), ARG_LAG_MSGTYPE);
         quint32 msgtype = args.canConvert<quint32>() ? args.toUInt() : 0;
-        ui->cbLAGMessageType->setCurrentIndex(msgtype < ui->cbLAGMessageType->count() ? msgtype : 0);
+        ui->cbLAGMessageType->setCurrentIndex(ui->cbLAGMessageType->findData(msgtype < ui->cbLAGMessageType->count() ? msgtype : lag::lmtVBW));
         
         break;
       }
@@ -1376,4 +1432,28 @@ void MainWindow::on_bnAISAlarmSend_clicked()
   _self_ais->alarm(ui->spinAISAlarmId->value(),
                  ui->cbAISAlarmState->currentIndex() == 0 ? "A" : "V",
                  ui->editAISAlarmMessageText->text().left(62));
+}
+
+void MainWindow::on_cbLAGMessageType_currentIndexChanged(int index)
+{
+  emit new_lag_message_type(lag::MessageType(ui->cbLAGMessageType->currentData().toInt()));
+}
+
+void MainWindow::setX10Emulation()
+{
+  emit setMultiplier(10);
+  ui->bnCycle->setStyleSheet("background-color: rgb(85, 170, 255);");
+  ui->bnCycle->setText("Старт х10");
+  update();
+}
+
+void MainWindow::on_bnCycle_pressed()
+{
+    _timer_x10.start(2000);
+}
+
+
+void MainWindow::on_bnCycle_released()
+{
+    _timer_x10.stop();
 }
