@@ -46,7 +46,8 @@ SOURCES += main.cpp\
     nmea.cpp \
     sv_serialeditor.cpp \
     sv_navtex.cpp \
-    sv_navtexeditor.cpp
+    sv_navtexeditor.cpp \
+    sv_echo.cpp
 
 HEADERS  += mainwindow.h \
     types.h \
@@ -70,7 +71,8 @@ HEADERS  += mainwindow.h \
     nmea.h \
     sv_serialeditor.h \
     sv_navtex.h \
-    sv_navtexeditor.h
+    sv_navtexeditor.h \
+    sv_echo.h
 
 FORMS    += mainwindow.ui \
     sv_vesseleditor.ui \
