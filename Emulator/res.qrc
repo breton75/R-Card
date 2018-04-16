@@ -25,6 +25,10 @@
     <file>Icons/Search.ico</file>
   </qresource>
   <qresource prefix="icons">
+    <file>Icons/order.ico</file>
+    <file>Icons/pause.ico</file>
+    <file>Icons/wave_new.ico</file>
+    <file>Icons/content-reorder.ico</file>
     <file>Icons/link2.ico</file>
     <file>Icons/link3.ico</file>
     <file>Icons/start.ico</file>

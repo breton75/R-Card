@@ -109,6 +109,8 @@ private:
   
   QTimer _timer_x10;
   
+  void updateGPSInitParams(gps::SvGPS* g);
+  
 public slots:
   void update_vessel_by_id(int id);
   

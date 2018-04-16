@@ -139,6 +139,7 @@
                        "               last_update = strftime('%Y-%m-%d %H:%M:%f', 'now', 'localtime')" CR \
                        "WHERE vessel_id = %9"
 
+//#define SQL_UPDATE_AIS_DYNAMIC "UPDATE ais SET 
 
 #define SQL_SELECT_VESSEL_TYPES "SELECT ITU_id, type_name FROM vessel_types;"
 #define SQL_SELECT_CARGO_TYPES "SELECT ITU_id, type_name FROM cargo_types;"

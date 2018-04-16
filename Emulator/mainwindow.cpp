@@ -562,10 +562,6 @@ void MainWindow::on_bnCycle_clicked()
     case sRunned:
     {
       emit newState(sStopping);
-
-      if(ui->checkLAGEnabled->isChecked()) _self_lag->close();
-      if(ui->checkAISEnabled->isChecked()) _self_ais->close();
-      if(ui->checkNAVTEXEnabled->isChecked()) _navtex->close();
       
       emit stopNAVTEXEmulation();
       
@@ -575,14 +571,17 @@ void MainWindow::on_bnCycle_clicked()
       
       emit stopGPSEmulation();
       
-      foreach (gps::SvGPS* gps, GPSs.values()) {
-        gps->waitWhileRunned();
-//        gps->stop();
+      /// сохраняем последние геопозиции 
+      foreach (gps::SvGPS* curgps, GPSs.values()) {
+        curgps->waitWhileRunned();
+        
+        updateGPSInitParams(curgps);
       }
       
-      
       /** закрываем порты **/
-      _self_lag->close();
+      if(ui->checkLAGEnabled->isChecked()) _self_lag->close();
+      if(ui->checkAISEnabled->isChecked()) _self_ais->close();
+      if(ui->checkNAVTEXEnabled->isChecked()) _navtex->close();
       
       emit newState(sStopped);
       
@@ -625,17 +624,13 @@ void MainWindow::area_selection_changed()
 
   /// выделяем судно в списке  
   disconnect(ui->listVessels, &QListWidget::currentItemChanged, this, &MainWindow::currentVesselListItemChanged);
-  
-  if((_selected_vessel_id == -1) || (_self_vessel->id == _selected_vessel_id)) {\
-    ui->listVessels->setCurrentRow(-1);
-    ui->textMapObjectInfo->setText("");
-  }
-  else ui->listVessels->setCurrentItem(LISTITEMs.value(_selected_vessel_id));
+    
+  ui->listVessels->setCurrentItem(LISTITEMs.value(_selected_vessel_id));
   
   bool b = ui->listVessels->currentRow() > -1;
   ui->actionEditVessel->setEnabled(b); 
-  ui->actionRemoveVessel->setEnabled(b); 
-  ui->bnRemoveVessel->setEnabled(b);
+  ui->actionRemoveVessel->setEnabled(b && (_selected_vessel_id != _self_vessel->id)); 
+  ui->bnRemoveVessel->setEnabled(b && (_selected_vessel_id != _self_vessel->id));
   ui->bnEditVessel->setEnabled(b);
   
   connect(ui->listVessels, &QListWidget::currentItemChanged, this, &MainWindow::currentVesselListItemChanged);
@@ -1456,4 +1451,59 @@ void MainWindow::on_bnCycle_pressed()
 void MainWindow::on_bnCycle_released()
 {
     _timer_x10.stop();
+}
+
+void MainWindow::updateGPSInitParams(gps::SvGPS* g)
+{
+  QString upd = "";
+  gps::gpsInitParams params = g->initParams();
+  
+  if(!params.init_random_coordinates) {
+    
+    upd.append(QString("dynamic_latitude=%1,dynamic_longtitude=%2,")
+                         .arg(g->currentGeoposition()->latitude)
+                         .arg(g->currentGeoposition()->longtitude));
+    
+    params.geoposition.latitude = g->currentGeoposition()->latitude;
+    params.geoposition.longtitude = g->currentGeoposition()->longtitude;
+    
+  }
+  
+  if(!params.init_random_course) {
+    upd.append(QString("dynamic_course=%1,").arg(g->currentGeoposition()->course));
+    params.geoposition.course = g->currentGeoposition()->course;
+  }
+  
+  if(!params.init_random_speed) {
+    upd.append(QString("dynamic_speed=%1,").arg(g->currentGeoposition()->speed));
+    params.geoposition.speed = g->currentGeoposition()->speed;
+  }        
+  
+  if(!params.init_random_pitch) {
+    upd.append(QString("dynamic_pitch=%1,").arg(g->currentGeoposition()->pitch));
+    params.geoposition.pitch = g->currentGeoposition()->pitch;
+  }
+  
+  if(!params.init_random_roll) {
+    upd.append(QString("dynamic_roll=%1,").arg(g->currentGeoposition()->roll));
+    params.geoposition.roll = g->currentGeoposition()->roll;
+  }
+  
+  if(upd.isEmpty()) return;
+  
+  upd.chop(1);
+  QString sql = QString("UPDATE ais SET %1 where vessel_id=%2").arg(upd)
+                .arg(g->vesselId());
+  
+  QSqlError e = SQLITE->execSQL(sql);
+  
+  if(e.type() != QSqlError::NoError) {
+    log << svlog::Error << svlog::Time << e.text() << svlog::endl;
+    return;
+  
+  }
+  
+  g->setInitParams(params);
+  
+  return;
 }

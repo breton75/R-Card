@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>490</width>
+    <width>439</width>
     <height>743</height>
    </rect>
   </property>
@@ -49,7 +49,7 @@
        </font>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tabAIS">
        <attribute name="title">
@@ -71,15 +71,15 @@
         <item>
          <widget class="QToolBox" name="toolBox">
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="page">
            <property name="geometry">
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>415</width>
-             <height>464</height>
+             <width>361</width>
+             <height>461</height>
             </rect>
            </property>
            <attribute name="label">
@@ -461,8 +461,8 @@ color: rgb(0, 0, 127);</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>160</width>
-             <height>196</height>
+             <width>361</width>
+             <height>461</height>
             </rect>
            </property>
            <attribute name="label">
@@ -492,7 +492,7 @@ color: rgb(0, 0, 127);</string>
               <property name="frameShadow">
                <enum>QFrame::Raised</enum>
               </property>
-              <layout class="QHBoxLayout" name="horizontalLayout_8">
+              <layout class="QHBoxLayout" name="horizontalLayout_2">
                <item>
                 <widget class="QPushButton" name="bnAddVessel">
                  <property name="sizePolicy">
@@ -554,6 +554,22 @@ color: rgb(0, 0, 127);</string>
                 </widget>
                </item>
                <item>
+                <spacer name="horizontalSpacer_3">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeType">
+                  <enum>QSizePolicy::Fixed</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>10</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
                 <widget class="QPushButton" name="bnSetActive">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -566,7 +582,7 @@ color: rgb(0, 0, 127);</string>
                  </property>
                  <property name="icon">
                   <iconset resource="res.qrc">
-                   <normaloff>:/buttons/Icons/Hand.ico</normaloff>:/buttons/Icons/Hand.ico</iconset>
+                   <normaloff>:/icons/Icons/pause.ico</normaloff>:/icons/Icons/pause.ico</iconset>
                  </property>
                  <property name="flat">
                   <bool>true</bool>
@@ -586,6 +602,26 @@ color: rgb(0, 0, 127);</string>
                  </property>
                 </spacer>
                </item>
+               <item>
+                <widget class="QPushButton" name="bnDropDynamicData">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="res.qrc">
+                   <normaloff>:/icons/Icons/wave_new.ico</normaloff>:/icons/Icons/wave_new.ico</iconset>
+                 </property>
+                 <property name="flat">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </widget>
             </item>
@@ -596,16 +632,6 @@ color: rgb(0, 0, 127);</string>
                 <weight>50</weight>
                 <bold>false</bold>
                </font>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QTextEdit" name="textMapObjectInfo">
-              <property name="styleSheet">
-               <string notr="true">background-color: rgb(240, 240, 240);</string>
-              </property>
-              <property name="readOnly">
-               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -642,8 +668,8 @@ color: rgb(0, 0, 127);</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>415</width>
-             <height>491</height>
+             <width>361</width>
+             <height>488</height>
             </rect>
            </property>
            <attribute name="label">
@@ -1097,15 +1123,15 @@ color: rgb(0, 0, 127);</string>
         <item>
          <widget class="QToolBox" name="toolBox_2">
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="page_2">
            <property name="geometry">
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>415</width>
-             <height>464</height>
+             <width>361</width>
+             <height>461</height>
             </rect>
            </property>
            <attribute name="label">
@@ -1562,8 +1588,8 @@ color: rgb(0, 0, 127);</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>415</width>
-             <height>343</height>
+             <width>361</width>
+             <height>461</height>
             </rect>
            </property>
            <attribute name="label">
@@ -1681,19 +1707,31 @@ color: rgb(0, 0, 127);</string>
        <attribute name="title">
         <string>Эхолот</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout">
+       <layout class="QVBoxLayout" name="verticalLayout_21">
+        <property name="leftMargin">
+         <number>2</number>
+        </property>
+        <property name="topMargin">
+         <number>2</number>
+        </property>
+        <property name="rightMargin">
+         <number>2</number>
+        </property>
+        <property name="bottomMargin">
+         <number>2</number>
+        </property>
         <item>
          <widget class="QToolBox" name="toolBox_4">
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="page_4">
            <property name="geometry">
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>401</width>
-             <height>450</height>
+             <width>361</width>
+             <height>488</height>
             </rect>
            </property>
            <attribute name="label">
@@ -1734,7 +1772,7 @@ color: rgb(0, 0, 127);</string>
                </font>
               </property>
               <property name="title">
-               <string>Внешний интерфейс</string>
+               <string>Сетевые параметры</string>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_19">
                <item>
@@ -1797,7 +1835,7 @@ color: rgb(0, 0, 127);</string>
               <property name="flat">
                <bool>false</bool>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayout_21">
+              <layout class="QVBoxLayout" name="verticalLayout">
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayout_31">
                  <item>
@@ -1850,6 +1888,66 @@ color: rgb(0, 0, 127);</string>
                    </property>
                    <property name="value">
                     <number>1000</number>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_36">
+                 <item>
+                  <widget class="QLabel" name="label_29">
+                   <property name="minimumSize">
+                    <size>
+                     <width>120</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>60</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <weight>50</weight>
+                     <bold>false</bold>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Кол-во излучателй</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QSpinBox" name="spinECHOUploadInterval_2">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <weight>50</weight>
+                     <bold>false</bold>
+                    </font>
+                   </property>
+                   <property name="suffix">
+                    <string/>
+                   </property>
+                   <property name="minimum">
+                    <number>1</number>
+                   </property>
+                   <property name="maximum">
+                    <number>30</number>
+                   </property>
+                   <property name="value">
+                    <number>30</number>
                    </property>
                   </widget>
                  </item>
@@ -2097,122 +2195,6 @@ color: rgb(0, 0, 127);</string>
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="pageNavtexParams_2">
-           <property name="geometry">
-            <rect>
-             <x>0</x>
-             <y>0</y>
-             <width>401</width>
-             <height>450</height>
-            </rect>
-           </property>
-           <attribute name="label">
-            <string>Параметры станции</string>
-           </attribute>
-           <layout class="QVBoxLayout" name="verticalLayout_22">
-            <item>
-             <widget class="QFrame" name="graphControlFrame_4">
-              <property name="frameShape">
-               <enum>QFrame::StyledPanel</enum>
-              </property>
-              <property name="frameShadow">
-               <enum>QFrame::Raised</enum>
-              </property>
-              <layout class="QHBoxLayout" name="horizontalLayout_35">
-               <item>
-                <widget class="QPushButton" name="bnEditNAVTEX_2">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="res.qrc">
-                   <normaloff>:/buttons/Icons/Pen.ico</normaloff>:/buttons/Icons/Pen.ico</iconset>
-                 </property>
-                 <property name="flat">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="bnSetActive_3">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="res.qrc">
-                   <normaloff>:/buttons/Icons/Hand.ico</normaloff>:/buttons/Icons/Hand.ico</iconset>
-                 </property>
-                 <property name="flat">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_9">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>129</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QPushButton" name="bnVesselPosition_3">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="res.qrc">
-                   <normaloff>:/buttons/Icons/Info2.ico</normaloff>:/buttons/Icons/Info2.ico</iconset>
-                 </property>
-                 <property name="flat">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item>
-             <widget class="QTextEdit" name="textNAVTEXParams_2">
-              <property name="font">
-               <font>
-                <weight>50</weight>
-                <bold>false</bold>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">background-color: rgb(240, 240, 240);</string>
-              </property>
-              <property name="readOnly">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
          </widget>
         </item>
        </layout>
@@ -2303,7 +2285,7 @@ color: rgb(0, 0, 127);</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>490</width>
+     <width>439</width>
      <height>21</height>
     </rect>
    </property>
@@ -2371,7 +2353,18 @@ color: rgb(0, 0, 127);</string>
     <number>8</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_3">
-    <layout class="QVBoxLayout" name="verticalLayout_13"/>
+    <layout class="QVBoxLayout" name="verticalLayout_13">
+     <item>
+      <widget class="QTextEdit" name="textMapObjectInfo">
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(240, 240, 240);</string>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <action name="actionNewVessel">

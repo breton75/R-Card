@@ -40,7 +40,7 @@ bool gps::SvGPS::start(quint32 msecs)
   
   _gps_emitter = new gps::SvGPSEmitter(_vessel_id, _gps_params, _bounds, _multiplier);
   connect(_gps_emitter, &gps::SvGPSEmitter::finished, _gps_emitter, &gps::SvGPSEmitter::deleteLater);
-  connect(_gps_emitter, SIGNAL(newGPSData(const geo::GEOPOSITION&)), this, SIGNAL(newGPSData(const geo::GEOPOSITION&)));
+  connect(_gps_emitter, &gps::SvGPSEmitter::newGPSData, this, &SvGPS::on_newGPSData);
   _gps_emitter->start();
                  
   
@@ -55,6 +55,11 @@ void gps::SvGPS::stop()
   
 }
 
+void gps::SvGPS::on_newGPSData(const geo::GEOPOSITION &geopos)
+{
+  _current_geo_position = geopos;
+  emit newGPSData(_current_geo_position);
+}
 
 /** ******  EMITTER  ****** **/
 gps::SvGPSEmitter::SvGPSEmitter(int vessel_id, gps::gpsInitParams& params, geo::BOUNDS *bounds, quint32 multiplier)

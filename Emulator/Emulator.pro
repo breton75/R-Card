@@ -10,7 +10,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = Emulator
 TEMPLATE = app
-CONFIG += console
+#CONFIG += console
 
 VERSION = 0.9.0    # major.minor.patch
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"

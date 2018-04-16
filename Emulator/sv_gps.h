@@ -27,11 +27,17 @@ namespace gps {
     quint32 speed_change_segment;
     quint32 speed_change_ratio;
     
+    quint32 roll_pitch_change_ratio;
+    quint32 roll_change_segment;
+    quint32 pitch_change_segment;
+    
     quint32 multiplier;
     
     bool init_random_coordinates;
     bool init_random_course;
     bool init_random_speed;
+    bool init_random_roll;
+    bool init_random_pitch;
     
   };
 
@@ -50,17 +56,18 @@ public:
   
   int vesselId() { return _vessel_id; }
   
-  void setInitParams(gps::gpsInitParams &params) { _gps_params = params; }
-  
-//  gps::SvGPSEmitter* emitter() { return _gps_emitter; }
+  void setInitParams(gps::gpsInitParams &params) { _gps_params = params; _current_geo_position = params.geoposition; }
+  gps::gpsInitParams initParams() { return _gps_params; }
   
   idev::SvSimulatedDeviceTypes type() const { return idev::sdtGPS; }
     
-  bool waitWhileRunned() { while(_gps_emitter != nullptr) qApp->processEvents();  }
-
+  void waitWhileRunned() { while(_gps_emitter != nullptr) qApp->processEvents();  }
+  
+  geo::GEOPOSITION *currentGeoposition() { return &_current_geo_position; }
+  
   
 private:
-//  geo::GEOPOSITION _current_geo_position;
+  geo::GEOPOSITION _current_geo_position;
   
   gps::SvGPSEmitter* _gps_emitter = nullptr;
   
@@ -82,6 +89,9 @@ public slots:
   void stop();
   
   void set_multiplier(quint32 multiplier) { _multiplier = multiplier;  }
+  
+private slots:
+  void on_newGPSData(const geo::GEOPOSITION &geopos);
   
 signals:
   void newGPSData(const geo::GEOPOSITION& geopos);
