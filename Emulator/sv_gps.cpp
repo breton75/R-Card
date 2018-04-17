@@ -2,6 +2,8 @@
 
 gps::SvGPS* SELF_GPS;
 
+#define CLOCK 10.0
+
 gps::SvGPS::SvGPS(int vessel_id, gpsInitParams &params, geo::BOUNDS* bounds, QDateTime lastUpdate)
 {
   _vessel_id = vessel_id;
@@ -72,8 +74,8 @@ gps::SvGPSEmitter::SvGPSEmitter(int vessel_id, gps::gpsInitParams& params, geo::
   _current_geo_position = _gps_params.geoposition;
 
   // длина пути в метрах, за один отсчет таймера // скорость в узлах. 1 узел = 1852 метра в час
-  _one_tick_length = _current_geo_position.speed * 1000.0 / 3600.0 / (1000.0 / qreal(_gps_params.gps_timeout)) * _multiplier;
-
+  _one_tick_length = _current_geo_position.speed * 1000.0 / 3600.0 / (1000.0 / CLOCK /*qreal(_gps_params.gps_timeout)*/) * _multiplier;
+  qDebug() << _one_tick_length << _current_geo_position.speed;
 }
 
 gps::SvGPSEmitter::~SvGPSEmitter()
@@ -97,19 +99,24 @@ void gps::SvGPSEmitter::run()
   _started = true;
   _finished = false;
 
-  quint64 time_counter = QDateTime::currentDateTime().currentMSecsSinceEpoch();
+  quint64 calc_timer = QDateTime::currentDateTime().currentMSecsSinceEpoch();
+  quint64 emit_timer = QDateTime::currentDateTime().currentMSecsSinceEpoch();
   
   while(_started) {
     
-    if(QDateTime::currentDateTime().currentMSecsSinceEpoch() - time_counter < _gps_params.gps_timeout) {
+    if(QDateTime::currentDateTime().currentMSecsSinceEpoch() - calc_timer <= CLOCK - 1 /*_gps_params.gps_timeout*/) {
       
       msleep(1); // чтоб не грузило систему
       continue;
     }
     
-    time_counter = QDateTime::currentDateTime().currentMSecsSinceEpoch();
+    calc_timer = QDateTime::currentDateTime().currentMSecsSinceEpoch();
     
-    emit newGPSData(_current_geo_position);
+    if(QDateTime::currentDateTime().currentMSecsSinceEpoch() - emit_timer >= _gps_params.gps_timeout) {
+      emit newGPSData(_current_geo_position);
+      emit_timer = QDateTime::currentDateTime().currentMSecsSinceEpoch();
+    }
+    
     
     /** вычисляем новый курс **/
     if(_gps_params.course_change_ratio * 1000 && 
@@ -147,8 +154,11 @@ void gps::SvGPSEmitter::run()
       continue;
     }
     
+    if(round(new_geopos.full_distance - _current_geo_position.full_distance) >= 1.0)
+      emit passed1m(new_geopos);
     
     _current_geo_position = new_geopos;
+    
     
 //    qDebug() << "llat llon:" << _current_geo_position.latitude << _current_geo_position.longtitude;
     

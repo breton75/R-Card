@@ -158,15 +158,16 @@
 #define SQL_INSERT_DEVICES_PARAMS  "INSERT INTO devices_params (device_type) VALUES(%1)"
 
 #define SQL_UPDATE_DEVICES_SERIAL_PARAMS_WHERE  "UPDATE devices_params SET port_name='%1', baudrate=%2, "\
-                                               "parity=%3, stop_bits=%4, data_bits=%5, flow_control=%6, description='%7' "\
+                                               "parity=%3, stop_bits=%4, data_bits=%5, flow_control=%6"\
                                                "WHERE device_type = %8"
 
+#define SQL_UPDATE_DEVICES_NETWORK_PARAMS_WHERE  "UPDATE devices_params SET network_interface=%1', network_protocol=%2, "\
+                                                 "network_ip=%3, network_port=%4, description='%5'  "\
+                                                 "WHERE device_type = %6"
 
 #define SQL_UPDATE_DEVICES_PARAMS_WHERE  "UPDATE devices_params SET is_active=%1, upload_interval=%2, args='%3', "\
                                          "alarm_id=%4, alarm_state=%5, alarm_text='%6' " \
                                          "WHERE device_type = %7"
-
-
 
 #define SQL_SELECT_NAVTEX "SELECT navtex.id as id, " CR \
                            "      navtex.station_region_id as station_region_id, " CR \

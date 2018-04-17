@@ -13,6 +13,8 @@ QMap<int, QChar> SIXBIT_SYMBOLS = {
   
 };
 
+QList<QChar> RESERVED_SYMBOLS = {0x0D, 0x0A, 0x24, 0x2A, 0x2C, 0x21, 0x5C, 0x5E, 0x7E, 0x7F };
+
 QMap<nmea::NMEASentence, QString> SENTENCES = {{nmea::ABK_UAIS_Addressed_and_binary_broadcast_acknowledgement, "ABK"},
                                          {nmea::AIR_InterrogationRequest, "AIR"},
                                          {nmea::VDO_UAIS_VHF_Datalink_Own_vessel_report, "VDO"},
@@ -403,13 +405,12 @@ QString nmea::lag_VLW(const geo::GEOPOSITION &geopos)
 
 QStringList nmea::navtex_NRX(const nav::navtexData& ndata)
 {
-  QList<QChar> reserved = {0x0D, 0x0A, 0x24, 0x2A, 0x2C, 0x21, 0x5C, 0x5E, 0x7E, 0x7F };
-  
+
   QStringList result = QStringList();
   
   QString new_text = "";
   for(int i = 0; i < ndata.message_text.length(); i++) {
-    if(reserved.contains(ndata.message_text.at(i)))
+    if(RESERVED_SYMBOLS.contains(ndata.message_text.at(i)))
       new_text.append('^');
     
     new_text.append(ndata.message_text.at(i));
@@ -450,14 +451,25 @@ QStringList nmea::navtex_NRX(const nav::navtexData& ndata)
 
 QString nmea::alarm_ALR(QString talkerID, int id , QString state, QString text)
 {
-  QString result = QString("$%1ALR,%2,%3,%4.00,%5,%6,A,%7*")
+  QString result = "";
+  QString new_text = "";
+  
+  for(int i = 0; i < text.length(); i++) {
+    if(RESERVED_SYMBOLS.contains(text.at(i)))
+      new_text.append('^');
+    
+    new_text.append(text.at(i));
+    
+  }
+  
+  result = QString("$%1ALR,%2,%3,%4.00,%5,%6,A,%7*")
                    .arg(talkerID)
                    .arg(QTime::currentTime().toString("hh"))
                    .arg(QTime::currentTime().toString("mm"))
                    .arg(QTime::currentTime().toString("ss"))
                    .arg(QString("%1").arg(id, 3).replace(" ", "0"))
                    .arg(state)
-                   .arg(text.left(62));
+                   .arg(new_text.left(62));
   
   quint8 src = 0;
   for(int i = 1; i <= result.length() - 2; i++)

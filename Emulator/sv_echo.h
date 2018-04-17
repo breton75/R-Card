@@ -11,6 +11,7 @@
 #include <QSerialPortInfo>
 #include <QByteArray>
 #include <QUdpSocket>
+#include <QNetworkDatagram>
 
 #include "geo.h"
 #include "sv_gps.h"

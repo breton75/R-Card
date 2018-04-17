@@ -5,6 +5,7 @@
 extern SvSQLITE *SQLITE;
 extern SvSerialEditor* SERIALEDITOR_UI;
 extern SvNavtexEditor* NAVTEXEDITOR_UI;
+extern SvNetworkEditor* NETWORKEDITOR_UI;
 
 //vsl::SvVessel* SELF_VESSEL;
 
@@ -707,6 +708,9 @@ vsl::SvVessel* MainWindow::createSelfVessel(QSqlQuery* q)
   // LAG
   _self_lag = new lag::SvLAG(vessel_id, dynamic_data.geoposition, log);
 
+  // эхолот
+  _self_multi_echo = new ech::SvECHO(vessel_id, dynamic_data.geoposition, log);
+  
   
   /** --------- создаем объект собственного судна -------------- **/
   _self_vessel = new vsl::SvVessel(this, vessel_id);
@@ -715,6 +719,7 @@ vsl::SvVessel* MainWindow::createSelfVessel(QSqlQuery* q)
   _self_vessel->mountGPS(_self_gps);
   _self_vessel->mountAIS(_self_ais);
   _self_vessel->mountLAG(_self_lag);
+  _self_vessel->mountECHO(_self_multi_echo);
   
   _self_vessel->assignMapObject(new SvMapObjectSelfVessel(_area, vessel_id));
      
@@ -1106,6 +1111,31 @@ void MainWindow::on_bnNAVTEKEditSerialParams_clicked()
 
 }
 
+void MainWindow::on_bnECHOEditSerialParams_clicked()
+{
+  NETWORKEDITOR_UI = new SvNetworkEditor(_echo_network_params, this);
+  if(NETWORKEDITOR_UI->exec() != QDialog::Accepted) {
+
+    if(!NETWORKEDITOR_UI->last_error().isEmpty()) {
+      QMessageBox::critical(this, "Ошибка", QString("Ошибка при изменении параметров:\n%1").arg(NETWORKEDITOR_UI->last_error()), QMessageBox::Ok);
+    
+      delete NETWORKEDITOR_UI;
+        
+      return;
+    }
+    
+  }
+  
+  _echo_network_params.ifc = NETWORKEDITOR_UI->params.ifc;
+  _echo_network_params.protocol = NETWORKEDITOR_UI->params.protocol;
+  _echo_network_params.ip = NETWORKEDITOR_UI->params.ip;
+  _echo_network_params.port = NETWORKEDITOR_UI->params.port;
+  
+  delete NETWORKEDITOR_UI;
+
+  ui->editECHOInterface->setText(_echo_network_params.description);
+}
+
 void MainWindow::currentVesselListItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
 {
   disconnect(_area->scene, SIGNAL(selectionChanged()), this, SLOT(area_selection_changed()));
@@ -1249,14 +1279,25 @@ void MainWindow::read_devices_params()
         
       }
         
-      case idev::sdtEcho:
+      case idev::sdtEcho: {
         
-//          _echo_serial_params.name =  
-//          _echo_serial_params.baudrate = 
-//          _echo_serial_params.databits = 
-//          _echo_serial_params.flowcontrol = 
-//          _echo_serial_params.parity = 
-//          _echo_serial_params.stopbits = 
+        QVariant args;
+        
+        _echo_network_params.ifc = _query->value("network_interface").toUInt();
+        _echo_network_params.protocol = _query->value("network_protocol").toUInt();
+        _echo_network_params.ip = _query->value("network_ip").toUInt();
+        _echo_network_params.port = _query->value("network_port").toUInt();
+        _echo_network_params.description = _query->value("description").toString();
+        ui->editECHOInterface->setText(_echo_network_params.description);
+        
+        ui->spinECHOAlarmId->setValue(_query->value("alarm_id").toUInt());
+        ui->cbECHOAlarmState->setCurrentIndex(_query->value("alarm_state").toUInt());
+        ui->editECHOAlarmMessageText->setText(_query->value("alarm_text").toString());
+        
+        args = parse_args(_query->value("args").toString(), ARG_ECHO_EMIT_COUNT);
+        ui->spinECHOEmittersCount->setValue(args.canConvert<uint>() ? args.toUInt() : 28);
+
+      }
         
       default:
         break;
@@ -1352,7 +1393,7 @@ QVariant MainWindow::parse_args(QString args, QString arg)
 {
   //! обязателен первый аргумент!! парсер считает, что там находится путь к программе
   QStringList arg_list;
-  arg_list << "" << args.split(" ");
+  arg_list << "dumb_path_to_app" << args.split(" ");
   
   QCommandLineParser parser;
   parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
@@ -1360,6 +1401,12 @@ QVariant MainWindow::parse_args(QString args, QString arg)
   parser.addOption(QCommandLineOption(ARG_LAG_MSGTYPE, "Тип сообщения для LAG", "0", "0"));
   parser.addOption(QCommandLineOption(ARG_AIS_RECEIVERANGE, "Дальность приема для AIS в км", "50", "50"));
   parser.addOption(QCommandLineOption(ARG_NAV_RECV_FREQ, "Частота приемника NAVTEX", "1", "1"));
+  
+  parser.addOption(QCommandLineOption(ARG_ECHO_INTERFACE, "Сетевой интерфейс для эхолота", "", ""));
+  parser.addOption(QCommandLineOption(ARG_ECHO_PROTOCOL , "Протокол для эхолота", "UDP", "UDP"));
+  parser.addOption(QCommandLineOption(ARG_ECHO_IP, "IP для эхолота", "127.0.0.1", "127.0.0.1"));
+  parser.addOption(QCommandLineOption(ARG_ECHO_PORT, "Порт для эхолота", "35580", "35580"));
+  parser.addOption(QCommandLineOption(ARG_ECHO_EMIT_COUNT, "Кол-во излучателей для эхолота", "10", "10"));
   
   QVariant result = QVariant();
   if (parser.parse(arg_list)) {
@@ -1447,7 +1494,6 @@ void MainWindow::on_bnCycle_pressed()
     _timer_x10.start(2000);
 }
 
-
 void MainWindow::on_bnCycle_released()
 {
     _timer_x10.stop();
@@ -1507,3 +1553,69 @@ void MainWindow::updateGPSInitParams(gps::SvGPS* g)
   
   return;
 }
+
+void MainWindow::on_bnDropDynamicData_clicked()
+{
+  int msgbtn = QMessageBox::question(0, "Подтверждение", "Текущие данные о местоположении судна(ов) будут сброшены.\nДля выбранного судна - \"Да\"\n"
+                           "Для всех судов - \"Да для всех\".\n"
+                           "Вы уверены?", QMessageBox::Yes | QMessageBox::YesToAll | QMessageBox::No);
+  
+  if(!QList<int>({QMessageBox::Yes, QMessageBox::YesToAll}).contains(msgbtn)) return;
+
+  QString sql;
+  switch (msgbtn) {
+    case QMessageBox::Yes: 
+      
+      sql = QString("UPDATE ais SET dynamic_latitude=NULL, "
+                    "dynamic_longtitude=NULL, "
+                    "dynamic_course=NULL, dynamic_speed=NULL, "
+                    "dynamic_pitch=NULL, dynamic_roll=NULL "
+                    "where vessel_id=%1").arg(_selected_vessel_id);
+      break;
+      
+    case QMessageBox::YesToAll: 
+      
+      sql = "UPDATE ais SET dynamic_latitude=NULL, "
+            "dynamic_longtitude=NULL, "
+            "dynamic_course=NULL, dynamic_speed=NULL, "
+            "dynamic_pitch=NULL, dynamic_roll=NULL";
+      break;
+  }
+  
+  try {
+    
+    QSqlError e = SQLITE->execSQL(sql);
+    if(e.type() != QSqlError::NoError) _exception.raise(e.text());
+    
+    
+    // читаем информацию из БД  
+    /// ------ читаем список судов --------- ///
+    if(QSqlError::NoError != SQLITE->execSQL(QString(SQL_SELECT_VESSELS), _query).type())
+      _exception.raise(_query->lastError().databaseText());
+    
+    /** --------- читаем данные судна ----------- **/
+    while(_query->next()) {
+      
+      int vessel_id = _query->value("id").toUInt();
+      QDateTime last_update = _query->value("gps_last_update").toDateTime(); // для нормальной генерации случайных чисел
+      
+      ais::aisDynamicData dynamic_data = readAISDynamicData(_query);
+      gps::gpsInitParams gps_params = readGPSInitParams(_query, dynamic_data, last_update);
+      
+      AISs.value(vessel_id)->setDynamicData(dynamic_data);
+      GPSs.value(vessel_id)->setInitParams(gps_params);
+      
+//      update_vessel_by_id(vessel_id);
+      
+      VESSELs.value(vessel_id)->updateVessel();
+      
+    }
+    _query->finish();
+    
+  }
+  
+  catch(SvException &e) {
+    log << svlog::Critical << svlog::Time << e.err << svlog::endl;
+  }
+}
+

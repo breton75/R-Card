@@ -12,7 +12,7 @@ TARGET = Emulator
 TEMPLATE = app
 #CONFIG += console
 
-VERSION = 0.9.0    # major.minor.patch
+VERSION = 0.9.1    # major.minor.patch
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
 # The following define makes your compiler emit warnings if you use
@@ -47,7 +47,8 @@ SOURCES += main.cpp\
     sv_serialeditor.cpp \
     sv_navtex.cpp \
     sv_navtexeditor.cpp \
-    sv_echo.cpp
+    sv_echo.cpp \
+    sv_networkeditor.cpp
 
 HEADERS  += mainwindow.h \
     types.h \
@@ -72,14 +73,16 @@ HEADERS  += mainwindow.h \
     sv_serialeditor.h \
     sv_navtex.h \
     sv_navtexeditor.h \
-    sv_echo.h
+    sv_echo.h \
+    sv_networkeditor.h
 
 FORMS    += mainwindow.ui \
     sv_vesseleditor.ui \
     sv_vesselmotioneditor.ui \
     sv_vesselposition.ui \
     sv_serialeditor.ui \
-    sv_navtexeditor.ui
+    sv_navtexeditor.ui \
+    sv_networkeditor.ui
 
 RESOURCES += \
     res.qrc

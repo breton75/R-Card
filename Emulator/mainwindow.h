@@ -11,24 +11,28 @@
 #include <QSerialPortInfo>
 #include <QCommandLineParser>
 
-#include "sv_area.h"
 #include "../../svlib/sv_settings.h"
 #include "../../svlib/sv_sqlite.h"
+#include "../../svlib/sv_log.h"
+
 #include "sv_vessel.h"
 #include "sv_idevice.h"
 #include "sv_gps.h"
 #include "sv_ais.h"
 #include "sv_lag.h"
+#include "sv_navtex.h"
+#include "sv_echo.h"
+
 #include "sv_mapobjects.h"
 #include "sv_vesseleditor.h"
-#include "sv_navtex.h"
 #include "sv_navtexeditor.h"
 
 #include "sql_defs.h"
-#include "../../svlib/sv_log.h"
+#include "sv_area.h"
 #include "sv_exception.h"
 #include "nmea.h"
 #include "sv_serialeditor.h"
+#include "sv_networkeditor.h"
 
 
 namespace Ui {
@@ -42,9 +46,12 @@ class MainWindow : public QMainWindow
   QString ARG_LAG_MSGTYPE = "msgtype";
   QString ARG_AIS_RECEIVERANGE = "receive_range";
   QString ARG_NAV_RECV_FREQ = "recv_freq";
-  QString ARG_ALARM_ID = "alarm_id";
-  QString ARG_ALARM_STATE = "alarm_state";
-  QString ARG_ALARM_TEXT = "alarm_text";
+  
+  QString ARG_ECHO_INTERFACE = "intreface";
+  QString ARG_ECHO_PROTOCOL = "protocol";
+  QString ARG_ECHO_IP = "ip";
+  QString ARG_ECHO_PORT = "port";
+  QString ARG_ECHO_EMIT_COUNT = "emit_count";
   
 public:
   explicit MainWindow(QWidget *parent = 0);
@@ -81,7 +88,7 @@ private:
   ais::SvSelfAIS* _self_ais = nullptr;
   vsl::SvVessel* _self_vessel = nullptr;
   lag::SvLAG* _self_lag = nullptr;
-  
+  ech::SvECHO* _self_multi_echo;
   nav::SvNAVTEX* _navtex = nullptr;
   
 //  SvMapObjectSelfVessel* _self_map_obj;
@@ -97,7 +104,7 @@ private:
   SerialPortParams _lag_serial_params = SerialPortParams(idev::sdtLAG);
   SerialPortParams _ais_serial_params = SerialPortParams(idev::sdtSelfAIS);
   SerialPortParams _navtex_serial_params = SerialPortParams(idev::sdtNavtex);
-//  QSerialPort _echo_serial;
+  NetworkParams _echo_network_params = NetworkParams(idev::sdtEcho);
   
   int _selected_vessel_id = -1;
   
@@ -120,12 +127,11 @@ private slots:
   
   void area_selection_changed();
 
-  //  void initGeposition(gps::gpsInitParams& gpsParams, const ais::aisDynamicData& dynamicData);
-  
   vsl::SvVessel* createSelfVessel(QSqlQuery* q);
   vsl::SvVessel* createOtherVessel(QSqlQuery* q);
   
   nav::SvNAVTEX* createNavtex(QSqlQuery* q);
+
   
   void on_actionNewVessel_triggered();
   void on_actionEditVessel_triggered();
@@ -166,6 +172,10 @@ private slots:
   void setX10Emulation();
   
   void on_bnCycle_released();
+  
+  void on_bnDropDynamicData_clicked();
+  
+  void on_bnECHOEditSerialParams_clicked();
   
 signals:
   void newState(States state);
