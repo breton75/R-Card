@@ -155,6 +155,8 @@ public:
     area::AREA_DATA* areaData() { return &_area_data; }
     geo::BOUNDS* bounds() { return &_area_data.geo_bounds; }
     
+    void setBounds(geo::BOUNDS& bounds) { _area_data.geo_bounds = bounds; }
+    
     area::SvAreaScene* scene;
     area::SvAreaView* view;
     

@@ -50,20 +50,9 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->dockCarrentInfo->resize(iw.size);
   ui->dockCarrentInfo->move(iw.position);
 //  ui->dockWidget->setWindowState(gw.state);
-  
-//  ui->dspinAISRadius->setValue(AppParams::readParam(this, "GENERAL", "AISRadius", 2).toReal());
-  
+
   /* лог */
   log = svlog::SvLog(ui->textLog);
-  
-  QList<QSerialPortInfo> splst = QSerialPortInfo::availablePorts();
-  
-//  foreach (QSerialPortInfo spinf, splst) {
-//    spinf.manufacturer()
-//    ui->cbAISSelectInterface->addItem(spinf.portName());
-//    ui->cbLAGSelectInterface->addItem(spinf.portName());
-//    ui->cbNAVTEKSelectInterface->addItem(spinf.portName());
-//  }
 
   _font_default.setItalic(false);
   _font_inactive.setItalic(true);
@@ -82,11 +71,20 @@ bool MainWindow::init()
     _area = new area::SvArea(ui->dockGraphics);
     ui->vlayDock->addWidget(_area);
     
-    if(_area->readBounds(map_file_name)) 
-      _area->readMap(map_file_name);
+    /// границы области
+    geo::BOUNDS bounds;
+    bounds.min_lat = AppParams::readParam(this, "BOUNDS", "minlat", 60.0295).toReal();
+    bounds.max_lat = AppParams::readParam(this, "BOUNDS", "maxlat", 60.1603).toReal();
+    bounds.min_lon = AppParams::readParam(this, "BOUNDS", "minlon", 29.0211).toReal();
+    bounds.max_lon = AppParams::readParam(this, "BOUNDS", "maxlon", 29.4598).toReal();
     
-    else 
-      QMessageBox::warning(this, tr("Ошибка в файле XML"), tr("Неверные границы области (bounds)"));
+    _area->setBounds(bounds);
+    
+//    if(_area->readBounds(map_file_name)) 
+//      _area->readMap(map_file_name);
+    
+//    else 
+//      QMessageBox::warning(this, tr("Ошибка в файле XML"), tr("Неверные границы области (bounds)"));
   
     _area->setUp("area_1");
     
@@ -533,6 +531,16 @@ void MainWindow::on_bnCycle_clicked()
           
         }
         
+        /// ECHO
+        if(ui->checkECHOEnabled->isChecked()) {
+         
+          _self_multi_echo->setNetworParams(_echo_network_params);
+          _self_multi_echo->setBeamCount(ui->spinECHOBeamCount->value());
+
+          if(!_self_multi_echo->open()) _exception.raise(QString("Эхолот: %1").arg(_self_multi_echo->lastError()));
+          
+        }
+        
       }
       
       catch(SvException &e) {
@@ -545,8 +553,6 @@ void MainWindow::on_bnCycle_clicked()
         return;
       }
       
-//      emit setMultiplier(ui->spinEmulationMultiplier->value());
-      
       emit startGPSEmulation(0);
       
       emit startAISEmulation(0);
@@ -554,6 +560,8 @@ void MainWindow::on_bnCycle_clicked()
       emit startLAGEmulation(ui->spinLAGUploadInterval->value());
       
       emit startNAVTEXEmulation(ui->spinNAVTEXUploadInterval->value());
+      
+      emit startECHOEmulation(ui->spinECHOUploadClearance->value());
       
       emit newState(sRunned);
       
@@ -563,6 +571,8 @@ void MainWindow::on_bnCycle_clicked()
     case sRunned:
     {
       emit newState(sStopping);
+      
+      emit stopECHOEmulation();
       
       emit stopNAVTEXEmulation();
       
@@ -583,6 +593,7 @@ void MainWindow::on_bnCycle_clicked()
       if(ui->checkLAGEnabled->isChecked()) _self_lag->close();
       if(ui->checkAISEnabled->isChecked()) _self_ais->close();
       if(ui->checkNAVTEXEnabled->isChecked()) _navtex->close();
+      if(ui->checkECHOEnabled->isChecked()) _self_multi_echo->close();
       
       emit newState(sStopped);
       
@@ -709,7 +720,8 @@ vsl::SvVessel* MainWindow::createSelfVessel(QSqlQuery* q)
   _self_lag = new lag::SvLAG(vessel_id, dynamic_data.geoposition, log);
 
   // эхолот
-  _self_multi_echo = new ech::SvECHO(vessel_id, dynamic_data.geoposition, log);
+  QString imgpath = AppParams::readParam(this, "General", "DepthMapImage", "mountain.png").toString();
+  _self_multi_echo = new ech::SvECHO(vessel_id, dynamic_data.geoposition, _area->bounds(), imgpath, log);
   
   
   /** --------- создаем объект собственного судна -------------- **/
@@ -730,6 +742,7 @@ vsl::SvVessel* MainWindow::createSelfVessel(QSqlQuery* q)
   // подключаем
   connect(_self_gps, SIGNAL(newGPSData(const geo::GEOPOSITION&)), _self_ais, SLOT(newGPSData(const geo::GEOPOSITION&)));
   connect(_self_gps, SIGNAL(newGPSData(const geo::GEOPOSITION&)), _self_lag, SLOT(newGPSData(const geo::GEOPOSITION&)));
+  connect(_self_gps, &gps::SvGPS::passed1m, _self_multi_echo, &ech::SvECHO::passed1m);
   
   connect(_self_ais, &ais::SvSelfAIS::updateSelfVessel, _self_vessel, &vsl::SvVessel::updateVessel);
   connect(_self_ais, &ais::SvSelfAIS::updateVesselById, this, &MainWindow::update_vessel_by_id);
@@ -737,11 +750,15 @@ vsl::SvVessel* MainWindow::createSelfVessel(QSqlQuery* q)
   connect(_self_vessel, &vsl::SvVessel::updateMapObjectPos, this, &updateMapObjectInfo);
   
   connect(this, &MainWindow::setMultiplier, _self_gps, &gps::SvGPS::set_multiplier);
+  
   connect(this, &MainWindow::startGPSEmulation, _self_gps, &gps::SvGPS::start);
   connect(this, &MainWindow::stopGPSEmulation, _self_gps, &gps::SvGPS::stop);
   
   connect(this, &MainWindow::startLAGEmulation, _self_lag, &lag::SvLAG::start);
   connect(this, &MainWindow::stopLAGEmulation, _self_lag, &lag::SvLAG::stop);
+  
+  connect(this, &MainWindow::startECHOEmulation, _self_multi_echo, &ech::SvECHO::start);
+  connect(this, &MainWindow::stopECHOEmulation, _self_multi_echo, &ech::SvECHO::stop);
   
   
   LISTITEMs.insert(vessel_id, new QListWidgetItem(QIcon(":/icons/Icons/lock.png"), QString("%1\t%2 [Собственный]").arg(vessel_id).arg(static_voyage_data.name)));
@@ -1111,7 +1128,7 @@ void MainWindow::on_bnNAVTEKEditSerialParams_clicked()
 
 }
 
-void MainWindow::on_bnECHOEditSerialParams_clicked()
+void MainWindow::on_bnECHOEditNetworkParams_clicked()
 {
   NETWORKEDITOR_UI = new SvNetworkEditor(_echo_network_params, this);
   if(NETWORKEDITOR_UI->exec() != QDialog::Accepted) {
@@ -1130,6 +1147,7 @@ void MainWindow::on_bnECHOEditSerialParams_clicked()
   _echo_network_params.protocol = NETWORKEDITOR_UI->params.protocol;
   _echo_network_params.ip = NETWORKEDITOR_UI->params.ip;
   _echo_network_params.port = NETWORKEDITOR_UI->params.port;
+  _echo_network_params.description = NETWORKEDITOR_UI->params.description;
   
   delete NETWORKEDITOR_UI;
 
@@ -1290,12 +1308,15 @@ void MainWindow::read_devices_params()
         _echo_network_params.description = _query->value("description").toString();
         ui->editECHOInterface->setText(_echo_network_params.description);
         
+        ui->checkECHOEnabled->setChecked(_query->value("is_active").toBool());
+        ui->spinECHOUploadClearance->setValue(_query->value("upload_interval").toUInt());
+        
         ui->spinECHOAlarmId->setValue(_query->value("alarm_id").toUInt());
         ui->cbECHOAlarmState->setCurrentIndex(_query->value("alarm_state").toUInt());
         ui->editECHOAlarmMessageText->setText(_query->value("alarm_text").toString());
         
-        args = parse_args(_query->value("args").toString(), ARG_ECHO_EMIT_COUNT);
-        ui->spinECHOEmittersCount->setValue(args.canConvert<uint>() ? args.toUInt() : 28);
+        args = parse_args(_query->value("args").toString(), ARG_ECHO_BEAM_COUNT);
+        ui->spinECHOBeamCount->setValue(args.canConvert<uint>() ? args.toUInt() : 28);
 
       }
         
@@ -1386,6 +1407,30 @@ void MainWindow::save_devices_params()
   catch(SvException e) {
     log << svlog::Critical << svlog::Time << QString("Ошибка при обновлении параметров НАВТЕКС:\n%1").arg(e.err) << svlog::endl;
   }
+  
+  /// ----------- ECHOLOT ------------- ///
+  try {
+    
+    err = check_params_exists(idev::sdtEcho);
+    if(err.type() != QSqlError::NoError) _exception.raise(err.databaseText());
+    
+    err = SQLITE->execSQL(QString(SQL_UPDATE_DEVICES_PARAMS_WHERE)
+                          .arg(ui->checkECHOEnabled->isChecked())
+                          .arg(ui->spinECHOUploadClearance->value())
+                          .arg(QString("-%1 %2").arg(ARG_ECHO_BEAM_COUNT).arg(ui->spinECHOBeamCount->value()))
+                          .arg(ui->spinECHOAlarmId->value())
+                          .arg(ui->cbECHOAlarmState->currentIndex())
+                          .arg(ui->editECHOAlarmMessageText->text())
+                          .arg(idev::sdtEcho));
+    
+    if(QSqlError::NoError != err.type()) _exception.raise(err.databaseText());
+    
+  
+  }
+  
+  catch(SvException e) {
+    log << svlog::Critical << svlog::Time << QString("Ошибка при обновлении параметров Эхолота:\n%1").arg(e.err) << svlog::endl;
+  }
     
 }
 
@@ -1401,12 +1446,7 @@ QVariant MainWindow::parse_args(QString args, QString arg)
   parser.addOption(QCommandLineOption(ARG_LAG_MSGTYPE, "Тип сообщения для LAG", "0", "0"));
   parser.addOption(QCommandLineOption(ARG_AIS_RECEIVERANGE, "Дальность приема для AIS в км", "50", "50"));
   parser.addOption(QCommandLineOption(ARG_NAV_RECV_FREQ, "Частота приемника NAVTEX", "1", "1"));
-  
-  parser.addOption(QCommandLineOption(ARG_ECHO_INTERFACE, "Сетевой интерфейс для эхолота", "", ""));
-  parser.addOption(QCommandLineOption(ARG_ECHO_PROTOCOL , "Протокол для эхолота", "UDP", "UDP"));
-  parser.addOption(QCommandLineOption(ARG_ECHO_IP, "IP для эхолота", "127.0.0.1", "127.0.0.1"));
-  parser.addOption(QCommandLineOption(ARG_ECHO_PORT, "Порт для эхолота", "35580", "35580"));
-  parser.addOption(QCommandLineOption(ARG_ECHO_EMIT_COUNT, "Кол-во излучателей для эхолота", "10", "10"));
+  parser.addOption(QCommandLineOption(ARG_ECHO_BEAM_COUNT, "Кол-во излучателей для эхолота", "10", "10"));
   
   QVariant result = QVariant();
   if (parser.parse(arg_list)) {

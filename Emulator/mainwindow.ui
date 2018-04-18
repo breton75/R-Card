@@ -461,8 +461,8 @@ color: rgb(0, 0, 127);</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>210</width>
-             <height>123</height>
+             <width>361</width>
+             <height>340</height>
             </rect>
            </property>
            <attribute name="label">
@@ -493,6 +493,18 @@ color: rgb(0, 0, 127);</string>
                <enum>QFrame::Raised</enum>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_2">
+               <property name="leftMargin">
+                <number>2</number>
+               </property>
+               <property name="topMargin">
+                <number>2</number>
+               </property>
+               <property name="rightMargin">
+                <number>2</number>
+               </property>
+               <property name="bottomMargin">
+                <number>2</number>
+               </property>
                <item>
                 <widget class="QPushButton" name="bnAddVessel">
                  <property name="sizePolicy">
@@ -669,7 +681,7 @@ color: rgb(0, 0, 127);</string>
              <x>0</x>
              <y>0</y>
              <width>361</width>
-             <height>345</height>
+             <height>367</height>
             </rect>
            </property>
            <attribute name="label">
@@ -1130,7 +1142,7 @@ color: rgb(0, 0, 127);</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>292</width>
+             <width>344</width>
              <height>345</height>
             </rect>
            </property>
@@ -1588,14 +1600,26 @@ color: rgb(0, 0, 127);</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>140</width>
-             <height>139</height>
+             <width>361</width>
+             <height>340</height>
             </rect>
            </property>
            <attribute name="label">
             <string>Параметры станции</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_7">
+            <property name="leftMargin">
+             <number>2</number>
+            </property>
+            <property name="topMargin">
+             <number>2</number>
+            </property>
+            <property name="rightMargin">
+             <number>2</number>
+            </property>
+            <property name="bottomMargin">
+             <number>2</number>
+            </property>
             <item>
              <widget class="QFrame" name="graphControlFrame_3">
               <property name="frameShape">
@@ -1605,6 +1629,18 @@ color: rgb(0, 0, 127);</string>
                <enum>QFrame::Raised</enum>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_13">
+               <property name="leftMargin">
+                <number>2</number>
+               </property>
+               <property name="topMargin">
+                <number>2</number>
+               </property>
+               <property name="rightMargin">
+                <number>2</number>
+               </property>
+               <property name="bottomMargin">
+                <number>2</number>
+               </property>
                <item>
                 <widget class="QPushButton" name="bnEditNAVTEX">
                  <property name="sizePolicy">
@@ -1626,26 +1662,6 @@ color: rgb(0, 0, 127);</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="bnSetActive_2">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="res.qrc">
-                   <normaloff>:/buttons/Icons/Hand.ico</normaloff>:/buttons/Icons/Hand.ico</iconset>
-                 </property>
-                 <property name="flat">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
                 <spacer name="horizontalSpacer_4">
                  <property name="orientation">
                   <enum>Qt::Horizontal</enum>
@@ -1657,26 +1673,6 @@ color: rgb(0, 0, 127);</string>
                   </size>
                  </property>
                 </spacer>
-               </item>
-               <item>
-                <widget class="QPushButton" name="bnVesselPosition_2">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="res.qrc">
-                   <normaloff>:/buttons/Icons/Info2.ico</normaloff>:/buttons/Icons/Info2.ico</iconset>
-                 </property>
-                 <property name="flat">
-                  <bool>true</bool>
-                 </property>
-                </widget>
                </item>
               </layout>
              </widget>
@@ -1730,8 +1726,8 @@ color: rgb(0, 0, 127);</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>364</width>
-             <height>370</height>
+             <width>344</width>
+             <height>345</height>
             </rect>
            </property>
            <attribute name="label">
@@ -1799,7 +1795,7 @@ color: rgb(0, 0, 127);</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="bnECHOEditSerialParams">
+                <widget class="QPushButton" name="bnECHOEditNetworkParams">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                    <horstretch>0</horstretch>
@@ -1924,7 +1920,7 @@ color: rgb(0, 0, 127);</string>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QSpinBox" name="spinECHOEmittersCount">
+                  <widget class="QSpinBox" name="spinECHOBeamCount">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -2192,6 +2188,98 @@ color: rgb(0, 0, 127);</string>
                </size>
               </property>
              </spacer>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="page_5">
+           <attribute name="label">
+            <string>Параметры моря</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_22">
+            <property name="leftMargin">
+             <number>2</number>
+            </property>
+            <property name="topMargin">
+             <number>2</number>
+            </property>
+            <property name="rightMargin">
+             <number>2</number>
+            </property>
+            <property name="bottomMargin">
+             <number>2</number>
+            </property>
+            <item>
+             <widget class="QFrame" name="graphControlFrame_4">
+              <property name="frameShape">
+               <enum>QFrame::StyledPanel</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Raised</enum>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_20">
+               <property name="leftMargin">
+                <number>2</number>
+               </property>
+               <property name="topMargin">
+                <number>2</number>
+               </property>
+               <property name="rightMargin">
+                <number>2</number>
+               </property>
+               <property name="bottomMargin">
+                <number>2</number>
+               </property>
+               <item>
+                <widget class="QPushButton" name="bnEditECHO">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="res.qrc">
+                   <normaloff>:/buttons/Icons/Pen.ico</normaloff>:/buttons/Icons/Pen.ico</iconset>
+                 </property>
+                 <property name="flat">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_9">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>129</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QTextEdit" name="textNAVTEXParams_2">
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(240, 240, 240);</string>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
             </item>
            </layout>
           </widget>

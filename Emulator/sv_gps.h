@@ -95,6 +95,7 @@ private slots:
   
 signals:
   void newGPSData(const geo::GEOPOSITION& geopos);
+  void passed1m(const geo::GEOPOSITION& geopos);
   
 };
 

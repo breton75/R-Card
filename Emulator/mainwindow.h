@@ -46,12 +46,7 @@ class MainWindow : public QMainWindow
   QString ARG_LAG_MSGTYPE = "msgtype";
   QString ARG_AIS_RECEIVERANGE = "receive_range";
   QString ARG_NAV_RECV_FREQ = "recv_freq";
-  
-  QString ARG_ECHO_INTERFACE = "intreface";
-  QString ARG_ECHO_PROTOCOL = "protocol";
-  QString ARG_ECHO_IP = "ip";
-  QString ARG_ECHO_PORT = "port";
-  QString ARG_ECHO_EMIT_COUNT = "emit_count";
+  QString ARG_ECHO_BEAM_COUNT = "beam_count";
   
 public:
   explicit MainWindow(QWidget *parent = 0);
@@ -175,7 +170,7 @@ private slots:
   
   void on_bnDropDynamicData_clicked();
   
-  void on_bnECHOEditSerialParams_clicked();
+  void on_bnECHOEditNetworkParams_clicked();
   
 signals:
   void newState(States state);
@@ -186,11 +181,13 @@ signals:
   void startAISEmulation(quint32 msecs);
   void startLAGEmulation(quint32 msecs);
   void startNAVTEXEmulation(quint32 msecs);
+  void startECHOEmulation(quint32 msecs);
   
   void stopGPSEmulation();
   void stopAISEmulation();
   void stopLAGEmulation();
   void stopNAVTEXEmulation();
+  void stopECHOEmulation();
   
   void new_lag_message_type(lag::MessageType msgtype);
   

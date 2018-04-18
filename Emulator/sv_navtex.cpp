@@ -43,7 +43,7 @@ void nav::SvNAVTEX::close()
 
 bool nav::SvNAVTEX::start(quint32 msecs)
 {
-  if(!_isActive)
+  if(!_isOpened)
     return false;
   
   _timer.start(msecs);

@@ -12,12 +12,14 @@
 #include <QByteArray>
 #include <QUdpSocket>
 #include <QNetworkDatagram>
+#include <QtGui/QImage>
 
 #include "geo.h"
 #include "sv_gps.h"
 #include "sv_idevice.h"
 #include "../../svlib/sv_log.h"
 #include "nmea.h"
+#include "sv_networkeditor.h"
 
 namespace ech {
 
@@ -44,13 +46,16 @@ class ech::SvECHO : public idev::SvIDevice
   Q_OBJECT
   
 public:
-  SvECHO(int vessel_id, const geo::GEOPOSITION& geopos, svlog::SvLog &log);
+  SvECHO(int vessel_id, const geo::GEOPOSITION& geopos, geo::BOUNDS* bounds, QString& imgpath, svlog::SvLog &log);
   ~SvECHO(); 
   
   void setVesselId(int id) { _vessel_id = id; }
   int vesselId() { return _vessel_id; }
   
   void setData(const ech::echoData& edata) { _data = edata; }
+  
+  void setNetworParams(NetworkParams params) { _params = params; }
+  void setBeamCount(int count) { _beam_count = count; }
   
   ech::echoData  *getData() { return &_data; }
     
@@ -69,16 +74,27 @@ private:
   ech::echoData _data;
   
   QUdpSocket *_udp = nullptr;
-  quint32 _ip;
-  quint16 _port;
+  
+  NetworkParams _params;
   
   int _vessel_id = -1;
+  
+  int _beam_count = 1;
   
   svlog::SvLog _log;
   
   geo::GEOPOSITION _current_geoposition;
+  geo::BOUNDS _bounds;
+  
+  qreal _map_width_meters;
+  qreal _map_height_meters;
   
   QTimer _timer;
+  
+  QImage _depth_map_image;
+  
+  quint32 _clearance = 1;
+  quint32 _clearance_counter = 0;
   
 signals:
   void write_message(const QString& message);
@@ -89,6 +105,7 @@ private slots:
   
 public slots:
   void newGPSData(const geo::GEOPOSITION& geopos);
+  void passed1m(const geo::GEOPOSITION& geopos);
   
 };
 

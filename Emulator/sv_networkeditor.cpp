@@ -13,15 +13,24 @@ SvNetworkEditor::SvNetworkEditor(NetworkParams params, QWidget *parent) :
   this->params = params;
   
   ui->cbInterface->clear();
-  for(QNetworkInterface itf: QNetworkInterface::allInterfaces())
-    ui->cbInterface->addItem(itf.name(), itf.index());
+  for(QNetworkInterface itf: QNetworkInterface::allInterfaces()) {
+    if(itf.flags().testFlag(QNetworkInterface::CanMulticast) &&
+        !itf.flags().testFlag(QNetworkInterface::IsLoopBack))
+      ui->cbInterface->addItem(itf.humanReadableName(), itf.index());
+  }
   
-  ui->cbInterface->setCurrentIndex(ui->cbInterface->findData(params.ifc));
-    
   ui->cbProtocol->clear();
   ui->cbProtocol->addItem("UDP", QAbstractSocket::UdpSocket);
   
-  ui->lblCaption->setText(QString("Настройки порта для устройства: Эхолот")); 
+  
+  ui->cbInterface->setCurrentIndex(ui->cbInterface->findData(params.ifc));
+  ui->cbProtocol->setCurrentIndex(ui->cbProtocol->findData(params.protocol));
+  ui->editIP->setText(QHostAddress(params.ip).toString());  
+  ui->spinPort->setValue(params.port);
+  
+  ui->lblCaption->setText(QString("Настройки порта для устройства: Эхолот"));
+  
+  
   
   connect(ui->bnSave, SIGNAL(clicked()), this, SLOT(accept()));
   connect(ui->bnCancel, SIGNAL(clicked()), this, SLOT(reject()));
@@ -41,10 +50,10 @@ void SvNetworkEditor::accept()
   params.protocol = ui->cbProtocol->currentData().toInt();
   params.ip = QHostAddress(ui->editIP->text().trimmed()).toIPv4Address();
   params.port = ui->spinPort->value();
-  params.description = QString("%1 %2 (%3:%4)")
-                       .arg(QNetworkInterface::interfaceFromIndex(params.ifc).name())
+  params.description = QString("%1:%2:%3 (%4)")
                        .arg(ui->cbProtocol->currentText())
-                       .arg(params.ip).arg(params.port);
+                       .arg(QHostAddress(params.ip).toString()).arg(params.port)
+                       .arg(QNetworkInterface::interfaceFromIndex(params.ifc).humanReadableName());
   
   try {
     

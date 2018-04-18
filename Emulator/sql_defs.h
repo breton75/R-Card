@@ -149,7 +149,8 @@
 
 #define SQL_SELECT_FROM_DEVICES_PARAMS  "SELECT id, device_type, vessel_id, port_name, baudrate, parity, stop_bits, " \
                                        "data_bits, flow_control, description, is_active, upload_interval, args, " \
-                                       "alarm_id, alarm_state, alarm_text " \
+                                       "alarm_id, alarm_state, alarm_text, " \
+                                       "network_interface, network_protocol, network_ip, network_port "\
                                        "FROM devices_params"
 
 #define SQL_SELECT_COUNT_DEVICES_PARAMS_WHERE  "SELECT count() as count " \
@@ -161,7 +162,7 @@
                                                "parity=%3, stop_bits=%4, data_bits=%5, flow_control=%6"\
                                                "WHERE device_type = %8"
 
-#define SQL_UPDATE_DEVICES_NETWORK_PARAMS_WHERE  "UPDATE devices_params SET network_interface=%1', network_protocol=%2, "\
+#define SQL_UPDATE_DEVICES_NETWORK_PARAMS_WHERE  "UPDATE devices_params SET network_interface=%1, network_protocol=%2, "\
                                                  "network_ip=%3, network_port=%4, description='%5'  "\
                                                  "WHERE device_type = %6"
 

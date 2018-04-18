@@ -43,6 +43,7 @@ bool gps::SvGPS::start(quint32 msecs)
   _gps_emitter = new gps::SvGPSEmitter(_vessel_id, _gps_params, _bounds, _multiplier);
   connect(_gps_emitter, &gps::SvGPSEmitter::finished, _gps_emitter, &gps::SvGPSEmitter::deleteLater);
   connect(_gps_emitter, &gps::SvGPSEmitter::newGPSData, this, &SvGPS::on_newGPSData);
+  connect(_gps_emitter, SIGNAL(passed1m(geo::GEOPOSITION)), this, SIGNAL(passed1m(geo::GEOPOSITION)));
   _gps_emitter->start();
                  
   
@@ -75,7 +76,7 @@ gps::SvGPSEmitter::SvGPSEmitter(int vessel_id, gps::gpsInitParams& params, geo::
 
   // длина пути в метрах, за один отсчет таймера // скорость в узлах. 1 узел = 1852 метра в час
   _one_tick_length = _current_geo_position.speed * 1000.0 / 3600.0 / (1000.0 / CLOCK /*qreal(_gps_params.gps_timeout)*/) * _multiplier;
-  qDebug() << _one_tick_length << _current_geo_position.speed;
+//  qDebug() << _one_tick_length << _current_geo_position.speed;
 }
 
 gps::SvGPSEmitter::~SvGPSEmitter()
@@ -95,6 +96,7 @@ void gps::SvGPSEmitter::run()
   
   qreal course_segment_counter = 0.0;
   qreal speed_segment_counter = 0.0;
+  qreal pass1m_segment_counter = 0.0;
   
   _started = true;
   _finished = false;
@@ -154,8 +156,12 @@ void gps::SvGPSEmitter::run()
       continue;
     }
     
-    if(round(new_geopos.full_distance - _current_geo_position.full_distance) >= 1.0)
+    if(round(pass1m_segment_counter) >= 1.0) {
       emit passed1m(new_geopos);
+      pass1m_segment_counter = -_one_tick_length;
+    }
+    
+    pass1m_segment_counter += _one_tick_length;
     
     _current_geo_position = new_geopos;
     
