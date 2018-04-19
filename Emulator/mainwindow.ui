@@ -461,8 +461,8 @@ color: rgb(0, 0, 127);</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>361</width>
-             <height>340</height>
+             <width>364</width>
+             <height>343</height>
             </rect>
            </property>
            <attribute name="label">
@@ -680,8 +680,8 @@ color: rgb(0, 0, 127);</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>361</width>
-             <height>367</height>
+             <width>364</width>
+             <height>370</height>
             </rect>
            </property>
            <attribute name="label">
@@ -1142,7 +1142,7 @@ color: rgb(0, 0, 127);</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>344</width>
+             <width>292</width>
              <height>345</height>
             </rect>
            </property>
@@ -1600,8 +1600,8 @@ color: rgb(0, 0, 127);</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>361</width>
-             <height>340</height>
+             <width>364</width>
+             <height>343</height>
             </rect>
            </property>
            <attribute name="label">
@@ -1719,14 +1719,14 @@ color: rgb(0, 0, 127);</string>
         <item>
          <widget class="QToolBox" name="toolBox_4">
           <property name="currentIndex">
-           <number>0</number>
+           <number>2</number>
           </property>
           <widget class="QWidget" name="page_4">
            <property name="geometry">
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>344</width>
+             <width>292</width>
              <height>345</height>
             </rect>
            </property>
@@ -1941,6 +1941,9 @@ color: rgb(0, 0, 127);</string>
                    </property>
                    <property name="maximum">
                     <number>30</number>
+                   </property>
+                   <property name="singleStep">
+                    <number>2</number>
                    </property>
                    <property name="value">
                     <number>30</number>
@@ -2192,6 +2195,14 @@ color: rgb(0, 0, 127);</string>
            </layout>
           </widget>
           <widget class="QWidget" name="page_5">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>98</width>
+             <height>111</height>
+            </rect>
+           </property>
            <attribute name="label">
             <string>Параметры моря</string>
            </attribute>
@@ -2280,6 +2291,36 @@ color: rgb(0, 0, 127);</string>
                <bool>true</bool>
               </property>
              </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="pageEchoMonitor">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>364</width>
+             <height>316</height>
+            </rect>
+           </property>
+           <attribute name="label">
+            <string>Монитор</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_24">
+            <property name="leftMargin">
+             <number>2</number>
+            </property>
+            <property name="topMargin">
+             <number>2</number>
+            </property>
+            <property name="rightMargin">
+             <number>2</number>
+            </property>
+            <property name="bottomMargin">
+             <number>2</number>
+            </property>
+            <item>
+             <layout class="QVBoxLayout" name="vlayEchoMonitor"/>
             </item>
            </layout>
           </widget>

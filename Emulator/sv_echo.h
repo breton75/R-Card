@@ -21,6 +21,8 @@
 #include "nmea.h"
 #include "sv_networkeditor.h"
 
+#define HEADRANGE 40
+
 namespace ech {
 
   struct echoData {                     // Информация о судне. Данные передаются каждые 6 минут
@@ -36,6 +38,36 @@ namespace ech {
       
   };
   
+  #pragma pack(1)
+  struct Beam {
+    quint32 index;
+    qreal X;
+    qreal Y;
+    qreal Z;
+    qreal angle;
+    qreal backscatter;
+    quint8 quality;
+    quint32 fish;
+  };
+  
+  struct Header {
+    quint32 sync_pattern = 0x77F9345A;
+    quint32 size;
+    char header[8] = {'C','O','R','B','A','T','H','Y'};
+    quint32 version = 3;
+    double time = 100;
+    quint32 num_points;
+    qint32 ping_number = 0;
+    double latitude;
+    double longtitude;
+    float bearing;
+    float roll;
+    float pitch;
+    float heave;
+    quint32 sample_type = 1;
+    quint32 spare = 0;
+  };
+  #pragma pack(pop)
   
   class SvECHO;
   
@@ -55,7 +87,7 @@ public:
   void setData(const ech::echoData& edata) { _data = edata; }
   
   void setNetworParams(NetworkParams params) { _params = params; }
-  void setBeamCount(int count) { _beam_count = count; }
+  void setBeamCount(int count);
   
   ech::echoData  *getData() { return &_data; }
     
@@ -73,7 +105,10 @@ public:
 private:
   ech::echoData _data;
   
+  QList<ech::Beam> _beams;
+  
   QUdpSocket *_udp = nullptr;
+  ech::Header _udp_header;
   
   NetworkParams _params;
   
@@ -97,10 +132,11 @@ private:
   quint32 _clearance_counter = 0;
   
 signals:
-  void write_message(const QString& message);
+  void write_message(const QByteArray& message);
+  void beamsUpdated(const ech::Beam* bl);
   
 private slots:
-  void write(const QString& message);
+  void write(const QByteArray& message);
   void prepare_message();
   
 public slots:

@@ -88,6 +88,20 @@ bool MainWindow::init()
   
     _area->setUp("area_1");
     
+    /** -------- монитор эхолота -------- **/
+    _customplot = new QCustomPlot(this); 
+    _customplot->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    _customplot->xAxis->setRange(0, 1000, Qt::AlignLeft);
+    _customplot->yAxis->setRange(0, 300, Qt::AlignCenter);
+    _customplot->legend->setVisible(true);
+    ui->vlayEchoMonitor->addWidget(_customplot);
+    _customplot->setVisible(true);
+    
+    _customplot->addGraph();
+//    _customplot->graph(0)->set
+        
+    
+    qInfo() << "init 0";
     
     /** ---------- открываем БД ----------- **/
     SQLITE = new SvSQLITE(this, db_file_name);
@@ -242,6 +256,8 @@ NX:
     
     _timer_x10.setSingleShot(true);
     connect(&_timer_x10, &QTimer::timeout, this, &MainWindow::setX10Emulation);
+    
+    connect(_self_multi_echo, &ech::SvECHO::beamsUpdated, this, &MainWindow::on_echoBeamsUpdated);
     
 //    QStringList l = nmea::ais_message_5(0, _self_ais->getStaticData(), _self_ais->getVoyageData(), _self_ais->navStatus());
 //    QUdpSocket* udp = new QUdpSocket();
@@ -1324,8 +1340,6 @@ void MainWindow::read_devices_params()
         break;
     }
     
-    
-    
   }
   _query->finish();
   
@@ -1659,3 +1673,8 @@ void MainWindow::on_bnDropDynamicData_clicked()
   }
 }
 
+void MainWindow::on_echoBeamsUpdated(const ech::Beam* bl)
+{
+  _customplot->graph(0)->addData(double(_echoXcounter), bl->Z);
+  _customplot->update();
+}

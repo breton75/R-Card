@@ -34,6 +34,7 @@
 #include "sv_serialeditor.h"
 #include "sv_networkeditor.h"
 
+#include "../qcustomplot/qcustomplot.h"
 
 namespace Ui {
 class MainWindow;
@@ -111,6 +112,9 @@ private:
   
   QTimer _timer_x10;
   
+  QCustomPlot *_customplot;
+  int _echoXcounter = 0;
+  
   void updateGPSInitParams(gps::SvGPS* g);
   
 public slots:
@@ -171,6 +175,8 @@ private slots:
   void on_bnDropDynamicData_clicked();
   
   void on_bnECHOEditNetworkParams_clicked();
+  
+  void on_echoBeamsUpdated(const ech::Beam *bl);
   
 signals:
   void newState(States state);

@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network sql xml serialport
+QT       += core gui network sql xml serialport printsupport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -48,7 +48,8 @@ SOURCES += main.cpp\
     sv_navtex.cpp \
     sv_navtexeditor.cpp \
     sv_echo.cpp \
-    sv_networkeditor.cpp
+    sv_networkeditor.cpp \
+    ../qcustomplot/qcustomplot.cpp
 
 HEADERS  += mainwindow.h \
     types.h \
@@ -74,7 +75,8 @@ HEADERS  += mainwindow.h \
     sv_navtex.h \
     sv_navtexeditor.h \
     sv_echo.h \
-    sv_networkeditor.h
+    sv_networkeditor.h \
+    ../qcustomplot/qcustomplot.h
 
 FORMS    += mainwindow.ui \
     sv_vesseleditor.ui \
