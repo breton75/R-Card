@@ -97,31 +97,34 @@ void gps::SvGPSEmitter::run()
   qreal course_segment_counter = 0.0;
   qreal speed_segment_counter = 0.0;
   qreal pass1m_segment_counter = 0.0;
-  
+  int cnt = 0;
   _started = true;
   _finished = false;
 
-  quint64 calc_timer = QDateTime::currentDateTime().currentMSecsSinceEpoch();
-  quint64 emit_timer = QDateTime::currentDateTime().currentMSecsSinceEpoch();
+  quint64 calc_timer = QTime::currentTime().msecsSinceStartOfDay();
+  quint64 emit_timer = QTime::currentTime().msecsSinceStartOfDay();
   
   while(_started) {
     
-    if(QDateTime::currentDateTime().currentMSecsSinceEpoch() - calc_timer <= CLOCK - 1 /*_gps_params.gps_timeout*/) {
-      
-      msleep(1); // чтоб не грузило систему
+    if(QTime::currentTime().msecsSinceStartOfDay() - calc_timer < CLOCK /*_gps_params.gps_timeout*/) {
+      cnt++;
+      msleep(2); // чтоб не грузило систему
       continue;
     }
     
-    calc_timer = QDateTime::currentDateTime().currentMSecsSinceEpoch();
+//    if()
+//    msleep(1);
     
-    if(QDateTime::currentDateTime().currentMSecsSinceEpoch() - emit_timer >= _gps_params.gps_timeout) {
+    calc_timer = QTime::currentTime().msecsSinceStartOfDay() - 1;
+    
+    if(QTime::currentTime().msecsSinceStartOfDay() - emit_timer >= _gps_params.gps_timeout) {
       emit newGPSData(_current_geo_position);
-      emit_timer = QDateTime::currentDateTime().currentMSecsSinceEpoch();
+      emit_timer = QTime::currentTime().msecsSinceStartOfDay();
     }
     
     
     /** вычисляем новый курс **/
-    if(_gps_params.course_change_ratio * 1000 && 
+    if((_gps_params.course_change_ratio * 1000) && 
        _gps_params.course_change_segment && 
        (course_segment_counter > _gps_params.course_change_segment)) {
       
@@ -156,12 +159,13 @@ void gps::SvGPSEmitter::run()
       continue;
     }
     
-    if(round(pass1m_segment_counter) >= 1.0) {
+    if((_vessel_id = 6) && ((pass1m_segment_counter) >= 1.0)) {
       emit passed1m(new_geopos);
-      pass1m_segment_counter = -_one_tick_length;
+//      qDebug() << cnt << QTime::currentTime().msecsSinceStartOfDay() << pass1m_segment_counter;
+      pass1m_segment_counter = 0.0;
     }
-    
-    pass1m_segment_counter += _one_tick_length;
+    else
+      pass1m_segment_counter += _one_tick_length;
     
     _current_geo_position = new_geopos;
     

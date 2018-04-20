@@ -113,6 +113,13 @@ private:
   QTimer _timer_x10;
   
   QCustomPlot *_customplot;
+//  QCPGraph* _graph;
+  QCPCurve* _curve;
+  QCPFinancial* _scatt;
+  
+  QCPCurveDataMap* _curve_data;
+  QCPFinancialDataMap* _scatt_data;
+  
   int _echoXcounter = 0;
   
   void updateGPSInitParams(gps::SvGPS* g);
@@ -176,7 +183,7 @@ private slots:
   
   void on_bnECHOEditNetworkParams_clicked();
   
-  void on_echoBeamsUpdated(const ech::Beam *bl);
+  void on_echoBeamsUpdated(ech::Beam *bl);
   
 signals:
   void newState(States state);

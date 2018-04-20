@@ -40,7 +40,7 @@ namespace ech {
   
   #pragma pack(1)
   struct Beam {
-    quint32 index;
+    int index;
     qreal X;
     qreal Y;
     qreal Z;
@@ -105,7 +105,7 @@ public:
 private:
   ech::echoData _data;
   
-  QList<ech::Beam> _beams;
+  QList<ech::Beam*> _beams;
   
   QUdpSocket *_udp = nullptr;
   ech::Header _udp_header;
@@ -115,6 +115,9 @@ private:
   int _vessel_id = -1;
   
   int _beam_count = 1;
+  
+  qreal _koeff_lat = 1.0;
+  qreal _koeff_lon = 1.0;
   
   svlog::SvLog _log;
   
@@ -133,7 +136,7 @@ private:
   
 signals:
   void write_message(const QByteArray& message);
-  void beamsUpdated(const ech::Beam* bl);
+  void beamsUpdated(ech::Beam* bl);
   
 private slots:
   void write(const QByteArray& message);

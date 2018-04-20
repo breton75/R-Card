@@ -20,10 +20,16 @@ ech::SvECHO::SvECHO(int vessel_id, const geo::GEOPOSITION &geopos, geo::BOUNDS *
     
   }
   
+  _koeff_lat = qreal(_depth_map_image.height()) / (_bounds.max_lat - _bounds.min_lat);
+  _koeff_lon = qreal(_depth_map_image.width()) / (_bounds.max_lon - _bounds.min_lon);
+  
 }
 
 ech::SvECHO::~SvECHO()
 {
+  while(_beams.count())
+    delete _beams.takeFirst();
+  
   deleteLater();
 }
 
@@ -35,18 +41,17 @@ void ech::SvECHO::setBeamCount(int count)
   
   qreal stepA = qreal(HEADRANGE) / qreal(_beam_count - 1);
   int A = HEADRANGE / 2;
-  int I = (_beam_count % 2 == 0) ? _beam_count / 2 : (_beam_count + 1) / 2;
+  int I = (_beam_count % 2 == 0) ? _beam_count / 2 : (_beam_count - 1) / 2;
   for(int i = 0; i < _beam_count; i++) {
         
-    ech:Beam b;
-    b.index = I - i;
-    if(b.index == 0 && _beam_count % 2 == 0)
-      b.index -= 1;
+    _beams.append(new ech::Beam);
+    _beams.last()->index = I - i;
+    if(_beams.last()->index == 0 && _beam_count % 2 == 0)
+      _beams.last()->index -= 1;
     
-    qDebug() << b.index;
-    b.angle = A - stepA * i;
-    _beams.append(b);
-    
+//    qDebug() << _beams.last()->index;
+    _beams.last()->angle = A - stepA * i;
+        
   }
   
 }
@@ -109,13 +114,15 @@ void ech::SvECHO::passed1m(const geo::GEOPOSITION& geopos)
   
   _current_geoposition = geopos;
   
-  for(ech::Beam beam: _beams) {
+//  for(ech::Beam* beam: _beams) {
+    qreal x0 = (_current_geoposition.longtitude - _bounds.max_lon) * _koeff_lon;
+    qreal y0 = (_current_geoposition.latitude - _bounds.max_lat) * _koeff_lat;
+               
+//    int x0 = quint32(geo::lon2lon_distance(_bounds.min_lon, geopos.longtitude, geopos.latitude) * 1000) % 129; //_depth_map_image.width();
+//    int y0 = quint32(geo::lat2lat_distance(_bounds.min_lat, geopos.latitude, geopos.longtitude) * 1000) % 129; //_depth_map_image.height();
     
-    int x0 = quint32(geo::lon2lon_distance(_bounds.min_lon, geopos.longtitude, geopos.latitude) * 1000) % _depth_map_image.width();
-    int y0 = quint32(geo::lat2lat_distance(_bounds.min_lat, geopos.latitude, geopos.longtitude) * 1000) % _depth_map_image.height();
-    
-    int x = x0 - beam.index * cos(qDegreesToRadians(_current_geoposition.course));
-    int y = y0 + beam.index * sin(qDegreesToRadians(_current_geoposition.course));
+    int x = x0; // * 2 - beam->index * cos(qDegreesToRadians(_current_geoposition.course));
+    int y = y0; // * 2 + beam->index * sin(qDegreesToRadians(_current_geoposition.course));
     
     if(x < 0) x += _depth_map_image.width();
     if(x >= _depth_map_image.width()) x -= _depth_map_image.width();
@@ -123,20 +130,23 @@ void ech::SvECHO::passed1m(const geo::GEOPOSITION& geopos)
     if(y < 0) y += _depth_map_image.height();
     if(y >= _depth_map_image.height()) y -= _depth_map_image.height();
     
-    beam.Z = _depth_map_image.pixelIndex(x, y);
-    beam.X = cos(qDegreesToRadians(beam.angle));
-    beam.Y = 0.0;
+    _beams[0]->Z = qGray(_depth_map_image.pixel(x, y));
+    _beams[0]->X = cos(qDegreesToRadians(_beams[0]->angle));
+    _beams[0]->Y = 0.0;
+    
+    _beams[0]->backscatter = qreal(qGray(_depth_map_image.pixel(y, x)) % 50);
     
     qsrand(QTime::currentTime().msecsSinceStartOfDay());
     if(qrand() % 10 == 0)
-      beam.fish = 1 << (qrand() % 32);
+      _beams[0]->fish = 1 << (qrand() % 32);
     
 //    qDebug() << "x" << x << "y" << y << _depth_map_image.pixelIndex(x, y);
-  }
+//  }
   
+  
+  emit beamsUpdated(_beams.at(0));
   prepare_message();
   
-  emit beamsUpdated(&(_beams.at(0)));
   
 }
 
@@ -156,8 +166,8 @@ void ech::SvECHO::prepare_message()
   
   msg.append((const char*)(&_udp_header), sizeof(ech::Header));
   
-  for(ech::Beam beam: _beams) 
-    msg.append((const char*)(&beam), sizeof(ech::Beam));
+  for(ech::Beam *beam: _beams) 
+    msg.append((const char*)(beam), sizeof(ech::Beam));
   
   msg.append(4, 32);
       
