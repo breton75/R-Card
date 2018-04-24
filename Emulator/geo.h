@@ -44,7 +44,7 @@ namespace geo {
       this->latitude = latitude; this->longtitude = longtitude; 
       this->course = course; this->speed = speed; this->utc = QDateTime::currentDateTime();
     }
-    
+    double counter = 0.0;
     qreal latitude = -1.0;
     qreal longtitude = -1.0; 
     qreal course = -1.0;

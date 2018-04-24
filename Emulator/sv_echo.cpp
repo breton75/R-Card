@@ -10,8 +10,8 @@ ech::SvECHO::SvECHO(int vessel_id, const geo::GEOPOSITION &geopos, geo::BOUNDS *
   _log = log;
   
   /// вычисляем ширину карты и высоту в метрах
-//  _map_width_meters =  1000 * geo::lon2lon_distance(_bounds.min_lon, _bounds.max_lon, (_bounds.max_lat + _bounds.min_lat) / 2.0);
-//  _map_height_meters = 1000 * geo::lat2lat_distance(_bounds.min_lat, _bounds.max_lat, (_bounds.max_lon + _bounds.min_lon) / 2.0);
+  _map_width_meters =  1000 * geo::lon2lon_distance(_bounds.min_lon, _bounds.max_lon, (_bounds.max_lat + _bounds.min_lat) / 2.0);
+  _map_height_meters = 1000 * geo::lat2lat_distance(_bounds.min_lat, _bounds.max_lat, (_bounds.max_lon + _bounds.min_lon) / 2.0);
 //  qDebug() << _map_width_meters << _map_height_meters;
   
   if(!_depth_map_image.load(imgpath)) {
@@ -20,8 +20,8 @@ ech::SvECHO::SvECHO(int vessel_id, const geo::GEOPOSITION &geopos, geo::BOUNDS *
     
   }
   
-  _koeff_lat = qreal(_depth_map_image.height()) / (_bounds.max_lat - _bounds.min_lat);
-  _koeff_lon = qreal(_depth_map_image.width()) / (_bounds.max_lon - _bounds.min_lon);
+  _koeff_lon = _map_width_meters / (_bounds.max_lon - _bounds.min_lon); // / 1000;
+  _koeff_lat = _map_height_meters / (_bounds.max_lat - _bounds.min_lat); // / 1000;
   
 }
 
@@ -60,7 +60,7 @@ bool ech::SvECHO::open()
 {
   
 //  connect(&_timer, &QTimer::timeout, this, &ech::SvECHO::prepare_message);
-//  connect(this, &ech::SvECHO::write_message, this, &ech::SvECHO::write);
+  connect(this, &ech::SvECHO::write_message, this, &ech::SvECHO::write);
   
   _isOpened = true;
   
@@ -72,7 +72,7 @@ void ech::SvECHO::close()
 {
 
 //  disconnect(&_timer, &QTimer::timeout, this, &ech::SvECHO::prepare_message);
-//  disconnect(this, &ech::SvECHO::write_message, this, &ech::SvECHO::write);
+  disconnect(this, &ech::SvECHO::write_message, this, &ech::SvECHO::write);
   
   _isOpened = false;
 }
@@ -95,7 +95,7 @@ bool ech::SvECHO::start(quint32 msecs)
 
 void ech::SvECHO::stop()
 {
-  _timer.stop();
+  if(_udp) delete _udp;
 }
 
 void ech::SvECHO::newGPSData(const geo::GEOPOSITION& geopos)
@@ -114,36 +114,31 @@ void ech::SvECHO::passed1m(const geo::GEOPOSITION& geopos)
   
   _current_geoposition = geopos;
   
-//  for(ech::Beam* beam: _beams) {
-    qreal x0 = (_current_geoposition.longtitude - _bounds.max_lon) * _koeff_lon;
-    qreal y0 = (_current_geoposition.latitude - _bounds.max_lat) * _koeff_lat;
-               
-//    int x0 = quint32(geo::lon2lon_distance(_bounds.min_lon, geopos.longtitude, geopos.latitude) * 1000) % 129; //_depth_map_image.width();
-//    int y0 = quint32(geo::lat2lat_distance(_bounds.min_lat, geopos.latitude, geopos.longtitude) * 1000) % 129; //_depth_map_image.height();
+  for(ech::Beam* beam: _beams) {
+    qreal x0 = (_current_geoposition.longtitude - _bounds.min_lon) * _koeff_lon;
+    qreal y0 = (_bounds.max_lat - _current_geoposition.latitude) * _koeff_lat;
     
-    int x = x0; // * 2 - beam->index * cos(qDegreesToRadians(_current_geoposition.course));
-    int y = y0; // * 2 + beam->index * sin(qDegreesToRadians(_current_geoposition.course));
+    qreal dx = beam->index * cos(qDegreesToRadians(_current_geoposition.course));
+    qreal dy = beam->index * sin(qDegreesToRadians(_current_geoposition.course));
     
-    if(x < 0) x += _depth_map_image.width();
-    if(x >= _depth_map_image.width()) x -= _depth_map_image.width();
+    int x = int(round(x0 / 1000 + dx)) % _depth_map_image.width(); // * 2 -;
+    int y = _depth_map_image.height() - int(round(y0 / 1000 + dy)) % _depth_map_image.height() - 1; // * 2 + beam->index * sin(qDegreesToRadians(_current_geoposition.course));
     
-    if(y < 0) y += _depth_map_image.height();
-    if(y >= _depth_map_image.height()) y -= _depth_map_image.height();
+    beam->Z = qGray(_depth_map_image.pixel(x, y)) + 10;
+    beam->X = dx;
+    beam->Y = dy;
     
-    _beams[0]->Z = qGray(_depth_map_image.pixel(x, y));
-    _beams[0]->X = cos(qDegreesToRadians(_beams[0]->angle));
-    _beams[0]->Y = 0.0;
-    
-    _beams[0]->backscatter = qreal(qGray(_depth_map_image.pixel(y, x)) % 50);
-    
-    qsrand(QTime::currentTime().msecsSinceStartOfDay());
-    if(qrand() % 10 == 0)
-      _beams[0]->fish = 1 << (qrand() % 32);
-    
-//    qDebug() << "x" << x << "y" << y << _depth_map_image.pixelIndex(x, y);
-//  }
+    beam->backscatter = qreal(qGray(_depth_map_image.pixel(y, x)) % 50);
+  }
   
-  
+  qsrand(_beams[0]->Z * QTime::currentTime().msecsSinceStartOfDay());
+  if((_fish_counter % 10) == 0)
+      _beams[0]->fish = (1 << (qrand() % 48)) & 0xFFFC;
+  else
+    _beams[0]->fish = 0;
+    
+  _fish_counter++;
+      
   emit beamsUpdated(_beams.at(0));
   prepare_message();
   
@@ -181,7 +176,7 @@ void ech::SvECHO::write(const QByteArray &message)
   if(!message.isEmpty()) {
     _udp->writeDatagram(message, QHostAddress(_params.ip), _params.port);
    
-    _log << svlog::Attention << svlog::Time << QString("written: % bytes").arg(message.length()) << svlog::endl;
+    _log << svlog::Attention << svlog::Time << QString("written: %1 bytes").arg(message.length()) << svlog::endl;
     
   }
 }

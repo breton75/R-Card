@@ -200,7 +200,7 @@ void area::SvArea::setUp(QString areaName)
   view->setAreaScene(scene);
   
   /* задаем масштаб */
-  _area_data.scale = 1;
+  _area_data.scale = AppParams::readParam(this, QString("AREA_%1").arg(_area_data.area_name), "Scale", 1.0).toReal();
   setScale(_area_data.scale);
   
   connect(view, SIGNAL(mouseMoved(QMouseEvent*)), this, SLOT(mouseMoved(QMouseEvent*)));
@@ -227,7 +227,8 @@ area::SvArea::~SvArea()
 //  view->~SvAreaView();
 //  scene->~SvAreaScene();
   
-  AppParams::saveWindowParams(this, size(), pos(), windowState(), "AREA_" + _area_data.area_name);
+  AppParams::saveWindowParams(this, size(), pos(), windowState(), QString("AREA_%1").arg(_area_data.area_name));
+  AppParams::saveParam(this, QString("AREA_%1").arg(_area_data.area_name), "Scale", _area_data.scale);
   
   deleteLater();
 }

@@ -2,7 +2,7 @@
 #include "ui_mainwindow.h"
 #include <stdio.h>
 
-#define ECHO_MONITOR_WIDTH 1200
+#define ECHO_MONITOR_WIDTH 500
 
 extern SvSQLITE *SQLITE;
 extern SvSerialEditor* SERIALEDITOR_UI;
@@ -48,9 +48,9 @@ MainWindow::MainWindow(QWidget *parent) :
 //  ui->dockWidget->setWindowState(gw.state);
   
   /* параметры окна информации о текущем объекте */
-  AppParams::WindowParams iw = AppParams::readWindowParams(this, "INFO WINDOW");
-  ui->dockCarrentInfo->resize(iw.size);
-  ui->dockCarrentInfo->move(iw.position);
+//  AppParams::WindowParams iw = AppParams::readWindowParams(this, "INFO WINDOW");
+//  ui->dockCarrentInfo->resize(iw.size);
+//  ui->dockCarrentInfo->move(iw.position);
 //  ui->dockWidget->setWindowState(gw.state);
 
   /* лог */
@@ -60,12 +60,14 @@ MainWindow::MainWindow(QWidget *parent) :
   _font_inactive.setItalic(true);
   _font_nolink.setItalic(true);
   
+//  SQLITE = new SvSQLITE(this, "D:/c++/R_Card/Emulator/rcard.db");
+//  QSqlError err = SQLITE->connectToDB();
+  
 }
 
 bool MainWindow::init()
 {
   try {
-    QString map_file_name = AppParams::readParam(this, "General", "xml", "").toString();
     QString db_file_name = AppParams::readParam(this, "General", "db", "").toString();
     
     
@@ -95,71 +97,50 @@ bool MainWindow::init()
     _customplot->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     _customplot->xAxis->setRange(-ECHO_MONITOR_WIDTH, 0);// , Qt::AlignLeft);
     _customplot->yAxis2->setRange(-300, 0); //, Qt::AlignBottom);
-//    _customplot->yAxis2->setRange(-255, 0); //, Qt::AlignBottom)
     _customplot->legend->setVisible(false);
     ui->vlayEchoMonitor->addWidget(_customplot);
-    _customplot->setVisible(true);
-//    _customplot->axisRect()->setupFullAxesBox(true);
-    
+    _customplot->setBackground(QBrush(QColor("whitesmoke"))); // plotGradient);
     _customplot->yAxis->setVisible(false); // addAxes(QCPAxis::atRight);
     _customplot->yAxis2->setVisible(true);
-//    _customplot->axisRect()->axis(QCPAxis::atRight)->setRange(-255, 0);
-//    _customplot->axisRect()->axis(QCPAxis::at)->ticker()->setTickCount(2);
+    _customplot->setVisible(true);
     
-//      QCPAxisRect *rrect = new QCPAxisRect(_customplot, false);
-//      rrect->addAxes(QCPAxis::atRight);
-//    subRectRight->addAxes(QCPAxis::atBottom | QCPAxis::atRight);
-//    subRectLeft->axis(QCPAxis::atLeft)->ticker()->setTickCount(2);
-//    subRectRight->axis(QCPAxis::atBottom)->ticker()->setTickCount(2);
-    
-//    _customplot->xAxis->setTicks(false);
-//    _customplot->yAxis2->setTicks(false);
-//    _customplot->xAxis->setsuTicks(false);
-//    _customplot->yAxis->setScaleType(QCPAxis::stLogarithmic);
-    
-    _curve = new QCPCurve(_customplot->xAxis, _customplot->yAxis2);
+    _curve = new QCPGraph(_customplot->xAxis, _customplot->yAxis2);
     _curve->setAntialiased(true);
     _curve->setPen(QPen(QBrush(QColor("black")), 2));
+    QLinearGradient plotGradient;
+    plotGradient.setStart(0, 0);
+    plotGradient.setFinalStop(0, 255);
+    plotGradient.setColorAt(1, QColor("lavender"));
+    plotGradient.setColorAt(0, QColor("white"));
+    _curve->setBrush(QBrush(plotGradient)); // QColor("whitesmoke")));
+    _curve->setLineStyle(QCPGraph::lsLine);
     
     _customplot->addPlottable(_curve);
     
     _scatt = new QCPFinancial(_customplot->xAxis, _customplot->yAxis2);
     _scatt->setChartStyle(QCPFinancial::csOhlc);
     _scatt->setTwoColored(false);
-    _scatt->setPen(QPen(QBrush(QColor("lightgray")), 1, Qt::SolidLine));
+    _scatt->setPen(QPen(QBrush(QColor("black")), 1, Qt::DotLine));
+    _scatt->setBrush(QBrush(QColor("green")));
     _customplot->addPlottable(_scatt);
     
-    _curve_data = new QCPCurveDataMap;
+    _curve_data = new QCPDataMap;
     _scatt_data = new QCPFinancialDataMap;
+    _fish_data = new QCPDataMap;
+    
     for(double i = -ECHO_MONITOR_WIDTH; i < 0; i++) {
-      _curve_data->insert(i, QCPCurveData(i, i, 0));
-      _scatt_data->insert(i, QCPFinancialData(i, 0, 0, 0, 0));
+      _curve_data->insert(i, QCPData(i, 1));
+      _scatt_data->insert(i, QCPFinancialData(i, 1, 1, 1, 1));
     }
+    
+    _fish = _customplot->addGraph(_customplot->xAxis, _customplot->yAxis2);
+    _fish->setLineStyle(QCPGraph::lsNone);
+    _fish->setScatterStyle(QCPScatterStyle(QPixmap(":/icons/Icons/fish.png"))); // (QCPScatterStyle::ssPixmap, 4));
     
     _curve->setData(_curve_data);
     _scatt->setData(_scatt_data);
-    
-    QLinearGradient plotGradient;
-    plotGradient.setStart(0, 0);
-    plotGradient.setFinalStop(0, 255);
-    plotGradient.setColorAt(1, QColor("lavender"));
-    plotGradient.setColorAt(0, QColor("white"));
-    _customplot->setBackground(plotGradient);
-    
-//    _graph = _customplot->addGraph();
-//    _graph->setPen(QPen(QBrush(QColor("black")), 2));
-//    _graph->setAdaptiveSampling(true);
-    
-//    _graph->setAntialiased(true);
-//    _customplot->graph(0)->setAntialiasedScatters(true);
-//    _customplot->graph(0)->setAntialiasedFill(true);
-    
-//    QCPErrorBars *errorBars = new QCPErrorBars(customPlot->xAxis, customPlot->yAxis);
-//    errorBars->removeFromLegend();
-//    errorBars->setDataPlottable(customPlot->graph(1));
-    
-//    _customplot->graph(0)->setLineStyle(QCustomPlot::LineStyle);
-        
+    _fish->setData(_fish_data);
+       
     
     qInfo() << "init 0";
     
@@ -368,10 +349,22 @@ MainWindow::~MainWindow()
   
   save_devices_params();
   
+  foreach (QListWidgetItem* item, LISTITEMs.values())
+    delete item;
+  
+  foreach (vsl::SvVessel* vsl, VESSELs.values())
+    delete vsl;
+
+  delete _self_multi_echo;
+  delete _navtex;
+  
+  
+  
   AppParams::saveWindowParams(this, this->size(), this->pos(), this->windowState());
   AppParams::saveWindowParams(ui->dockGraphics, ui->dockGraphics->size(), ui->dockGraphics->pos(), ui->dockGraphics->windowState(), "AREA WINDOW");
-  AppParams::saveWindowParams(ui->dockCarrentInfo, ui->dockCarrentInfo->size(), ui->dockCarrentInfo->pos(), ui->dockCarrentInfo->windowState(), "INFO WINDOW");
-  
+//  AppParams::saveWindowParams(ui->dockCarrentInfo, ui->dockCarrentInfo->size(), ui->dockCarrentInfo->pos(), ui->dockCarrentInfo->windowState(), "INFO WINDOW");
+  AppParams::saveParam(this, "General", "LastTab", ui->tabWidget->currentIndex());
+//  AppParams::saveParam(this, "General", "LastTab", ui->->currentIndex());
 //  AppParams::saveParam(this, "GENERAL", "AISRadius", QVariant(ui->dspinAISRadius->value()));
   
   delete ui;
@@ -1738,21 +1731,27 @@ void MainWindow::on_echoBeamsUpdated(ech::Beam* bl)
 {
   double min = _curve_data->firstKey();
   _curve_data->take(min);
-  qDebug() << min;
+  
   double max = _curve_data->lastKey() + 1;
   
-  _curve_data->insert(max, QCPCurveData(max, max, -bl->Z));
-  
+  _curve_data->insert(max, QCPData(max, -bl->Z));
+//  qDebug() << mins << max << -bl->Z;
   _scatt_data->take(min);
   _scatt_data->insert(max, QCPFinancialData(max, -bl->Z, -bl->Z, -bl->Z - bl->backscatter, -bl->Z - bl->backscatter));
   
+    if(bl->fish) {
+      qreal step = bl->Z / qreal(sizeof(bl->fish));
+      for(int i = 0; i < sizeof(bl->fish); i++)
+        if(bl->fish & (1 << i)) _fish_data->insert(max, QCPData(max, -(step * i)));
+    }
+  
   _customplot->xAxis->setRange(min + 1, max);
   
-//  _curve->setData( addData(double(_echoXcounter), );
-//  _scatt->setData( addData(double(_echoXcounter), -bl->Z, -bl->Z, -bl->Z - bl->backscatter, -bl->Z - bl->backscatter);
-//  _scatt->addData(double(_echoXcounter), -bl->Z - bl->backscatter);
-  
-//  _echoXcounter++;
-  
   _customplot->replot();
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+    qDebug() << ui->dockLog->features(); // ->stackUnder(ui->dockCarrentInfo);
+//    QDockWidget
 }

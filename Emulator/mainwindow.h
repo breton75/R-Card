@@ -10,6 +10,7 @@
 #include <QSerialPort>
 #include <QSerialPortInfo>
 #include <QCommandLineParser>
+#include <QGradient>
 
 #include "../../svlib/sv_settings.h"
 #include "../../svlib/sv_sqlite.h"
@@ -114,11 +115,13 @@ private:
   
   QCustomPlot *_customplot;
 //  QCPGraph* _graph;
-  QCPCurve* _curve;
+  QCPGraph* _curve;
   QCPFinancial* _scatt;
+  QCPGraph* _fish;
   
-  QCPCurveDataMap* _curve_data;
+  QCPDataMap* _curve_data;
   QCPFinancialDataMap* _scatt_data;
+  QCPDataMap* _fish_data;
   
   int _echoXcounter = 0;
   
@@ -184,6 +187,8 @@ private slots:
   void on_bnECHOEditNetworkParams_clicked();
   
   void on_echoBeamsUpdated(ech::Beam *bl);
+  
+  void on_pushButton_clicked();
   
 signals:
   void newState(States state);

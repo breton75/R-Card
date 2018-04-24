@@ -97,7 +97,6 @@ void gps::SvGPSEmitter::run()
   qreal course_segment_counter = 0.0;
   qreal speed_segment_counter = 0.0;
   qreal pass1m_segment_counter = 0.0;
-  int cnt = 0;
   _started = true;
   _finished = false;
 
@@ -107,13 +106,9 @@ void gps::SvGPSEmitter::run()
   while(_started) {
     
     if(QTime::currentTime().msecsSinceStartOfDay() - calc_timer < CLOCK /*_gps_params.gps_timeout*/) {
-      cnt++;
-      msleep(2); // чтоб не грузило систему
+      msleep(1); // чтоб не грузило систему
       continue;
     }
-    
-//    if()
-//    msleep(1);
     
     calc_timer = QTime::currentTime().msecsSinceStartOfDay() - 1;
     
@@ -159,13 +154,16 @@ void gps::SvGPSEmitter::run()
       continue;
     }
     
-    if((_vessel_id = 6) && ((pass1m_segment_counter) >= 1.0)) {
-      emit passed1m(new_geopos);
-//      qDebug() << cnt << QTime::currentTime().msecsSinceStartOfDay() << pass1m_segment_counter;
-      pass1m_segment_counter = 0.0;
-    }
-    else
-      pass1m_segment_counter += _one_tick_length;
+//    if(_vessel_id == 6) {
+      if(pass1m_segment_counter >= 1.0) {
+        emit passed1m(new_geopos);
+        pass1m_segment_counter = 0.0;
+      }
+      else {
+        pass1m_segment_counter += _one_tick_length;
+//        qDebug() << "not pass" << pass1m_segment_counter;
+      }
+//    }
     
     _current_geo_position = new_geopos;
     

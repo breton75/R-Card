@@ -25,6 +25,7 @@
     <file>Icons/Search.ico</file>
   </qresource>
   <qresource prefix="icons">
+    <file>Icons/fish.png</file>
     <file>Icons/order.ico</file>
     <file>Icons/pause.ico</file>
     <file>Icons/wave_new.ico</file>

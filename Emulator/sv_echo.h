@@ -133,6 +133,7 @@ private:
   
   quint32 _clearance = 1;
   quint32 _clearance_counter = 0;
+  quint32 _fish_counter = 0;
   
 signals:
   void write_message(const QByteArray& message);
